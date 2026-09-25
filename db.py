@@ -41,8 +41,8 @@ def _translate_sql(sql):
 
 def _postgres_schema(sql):
     """Convertit le schéma historique SQLite en DDL PostgreSQL."""
-    sql = sql.replace("INTEGER PRIMARY KEY AUTOINCREMENT", "BIGSERIAL PRIMARY KEY")
-    sql = sql.replace("INTEGER PRIMARY KEY", "BIGSERIAL PRIMARY KEY")
+    sql = sql.replace("INTEGER PRIMARY KEY AUTOINCREMENT", "SERIAL PRIMARY KEY")
+    sql = sql.replace("INTEGER PRIMARY KEY", "SERIAL PRIMARY KEY")
     sql = sql.replace(" REAL ", " DOUBLE PRECISION ")
     sql = sql.replace(" REAL NOT NULL", " DOUBLE PRECISION NOT NULL")
     sql = sql.replace("DEFAULT (datetime('now'))", "DEFAULT to_char(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS')")
