@@ -14,4 +14,8 @@ services:
       - key: SEO_BASE_URL
         sync: false
       - key: INPP_ENFORCE_FEES
+        value: "1"
+      - key: INPP_SEED_DEMO
         value: "0"
+      - key: SESSION_COOKIE_SECURE
+        value: "1"
