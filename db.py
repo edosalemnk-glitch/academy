@@ -429,6 +429,13 @@ def _migrate_presence(conn):
     return
 
 
+
+def _migrate_registration_section(conn):
+    """Ajoute le rattachement des inscriptions aux sections introduit après le schéma initial."""
+    conn.execute(
+        "ALTER TABLE registrations ADD COLUMN IF NOT EXISTS section_id INTEGER REFERENCES sections(id)"
+    )
+
 def _migrate_filiere_details(conn):
     """Ajoute les colonnes des filières introduites après le schéma initial."""
     conn.execute(
@@ -446,6 +453,7 @@ def init_db():
     _migrate_users_roles(conn)
     _migrate_presence(conn)
     _migrate_filiere_details(conn)
+    _migrate_registration_section(conn)
     _migrate_bank_settings(conn)
     conn.executemany("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", DEFAULT_SETTINGS.items())
     conn.commit()
