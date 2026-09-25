@@ -33,7 +33,7 @@ from utils import render_content
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 ALLOWED_EXT = {"gif", "png", "jpg", "jpeg", "webp"}
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
 SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 SUPABASE_STORAGE_BUCKET = os.environ.get("SUPABASE_STORAGE_BUCKET", "inpp-uploads")
 SUPABASE_STORAGE_SIGNED_TTL = int(os.environ.get("SUPABASE_STORAGE_SIGNED_TTL", "3600"))
@@ -1040,13 +1040,22 @@ def exam_results(course_id):
 
 
 def _storage_enabled():
-    return bool(SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY)
+    return bool(
+        SUPABASE_URL
+        and SUPABASE_SERVICE_ROLE_KEY
+        and SUPABASE_URL.startswith(("http://", "https://"))
+    )
 
 
 def _storage_request(method, path, body=None, content_type=None):
     """Appelle l'API Storage Supabase avec la clé service-role côté serveur uniquement."""
-    if not _storage_enabled():
+    if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
         raise RuntimeError("Supabase Storage n'est pas configuré.")
+    if not SUPABASE_URL.startswith(("http://", "https://")):
+        raise RuntimeError(
+            "SUPABASE_URL doit être l'URL du projet Supabase, par exemple "
+            "'https://<project-ref>.supabase.co', et non l'hôte PostgreSQL."
+        )
     url = f"{SUPABASE_URL}/storage/v1/{path.lstrip('/')}"
     headers = {
         "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
