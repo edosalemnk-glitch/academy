@@ -4,7 +4,7 @@
 <h1>{{ lesson.title }}</h1>
 {% if completed and mode == 'learner' %}<p><span class="tag ok">Leçon validée</span></p>{% endif %}
 <article class="lesson-body">
-  {% if lesson.image %}<p><img src="{{ url_for('static', filename='uploads/' + lesson.image) }}" alt="Illustration de la leçon"></p>{% endif %}
+  {% if lesson.image %}<p><img src="{{ lesson_image_url(lesson.image) }}" alt="Illustration de la leçon"></p>{% endif %}
   {{ lesson.content|render }}
 </article>
 <hr style="margin:28px 0;border:0;border-top:1px solid var(--line)">
