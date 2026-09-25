@@ -109,6 +109,9 @@ def ensure_ready():
     if empty and os.environ.get("INPP_SEED_DEMO", "0") == "1":
         import seed
         seed.seed(conn)
+    elif os.environ.get("INPP_RESTORE_DEMO", "0") == "1":
+        import seed
+        seed.restore_demo(conn)
     conn.close()
 
 
