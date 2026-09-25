@@ -45,8 +45,8 @@ def _postgres_schema(sql):
     sql = sql.replace("INTEGER PRIMARY KEY", "BIGSERIAL PRIMARY KEY")
     sql = sql.replace(" REAL ", " DOUBLE PRECISION ")
     sql = sql.replace(" REAL NOT NULL", " DOUBLE PRECISION NOT NULL")
-    sql = sql.replace("DEFAULT (datetime('now'))", "DEFAULT CURRENT_TIMESTAMP")
-    sql = sql.replace("DEFAULT (date('now'))", "DEFAULT CURRENT_DATE")
+    sql = sql.replace("DEFAULT (datetime('now'))", "DEFAULT to_char(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS')")
+    sql = sql.replace("DEFAULT (date('now'))", "DEFAULT to_char(CURRENT_DATE, 'YYYY-MM-DD')")
     return sql
 
 
