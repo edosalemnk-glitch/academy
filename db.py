@@ -37,7 +37,7 @@ def _translate_sql(sql):
     sql = sql.replace("date('now','-3 days')", "to_char(CURRENT_DATE - INTERVAL '3 days', 'YYYY-MM-DD')")
     sql = sql.replace("datetime('now')", "to_char(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS')")
     sql = sql.replace("date('now')", "to_char(CURRENT_DATE, 'YYYY-MM-DD')")
-    sql = sql.replace("datetime('now',?)", "to_char(CURRENT_TIMESTAMP + (%s || ' days')::interval, 'YYYY-MM-DD HH24:MI:SS')")
+    sql = sql.replace("datetime('now',?)", "to_char(CURRENT_TIMESTAMP + (%s)::interval, 'YYYY-MM-DD HH24:MI:SS')")
     sql = sql.replace("date('now',?)", "to_char(CURRENT_DATE + (%s || ' days')::interval, 'YYYY-MM-DD')")
     sql = sql.replace("?", "%s")
     return sql
