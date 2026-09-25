@@ -1,31 +1,47 @@
-# Déploiement sur Render
+# Déploiement Render — INPP Académie
 
-Le dépôt est préparé pour Render avec un service Web Python.
+Le projet est configuré pour un **Web Service Render Free** avec **PostgreSQL Supabase** comme base de données principale.
 
-## Configuration
+## 1. Créer le Web Service
 
-Le fichier `render.yaml` configure :
+Dans Render :
+1. **New → Web Service**
+2. Sélectionner `edosalemnk-glitch/academy`
+3. Branche : `main`
+4. Root Directory : vide
+5. Runtime : Python 3
+6. Build Command : `pip install -r requirements.txt`
+7. Start Command : `gunicorn --bind 0.0.0.0:$PORT wsgi:app`
+8. Compute : **Free** pour les essais.
 
-- Python + Gunicorn avec `wsgi:app`
-- une clé `SECRET_KEY` générée par Render
-- SQLite sur un disque persistant monté dans `/var/data`
-- `INPP_DB=/var/data/formation.db`
-- `SEO_BASE_URL` à renseigner avec l'URL publique du service
+## 2. Supabase PostgreSQL
 
-## Mise en ligne
+Créer un projet PostgreSQL sur Supabase, puis ouvrir **Connect**.
+Pour Render, utiliser de préférence la chaîne de connexion PostgreSQL fournie par Supabase, idéalement le **Session pooler** si la connexion directe n'est pas accessible depuis l'environnement IPv4.
 
-1. Dans Render, créez un nouveau **Blueprint** depuis ce dépôt GitHub.
-2. Render détectera `render.yaml`.
-3. Validez la création du service.
-4. Après création, renseignez `SEO_BASE_URL` avec l'URL HTTPS publique, par exemple `https://inpp-academie.onrender.com`.
-5. Déployez.
+Dans Render → **Environment Variables**, ajouter :
+- `DATABASE_URL` = chaîne PostgreSQL Supabase
+- `SECRET_KEY` = **Generate**
+- `INPP_ENFORCE_FEES` = `0`
+- `SEO_BASE_URL` = URL publique Render, par exemple `https://inpp-academie.onrender.com`
 
-## Données
+Ne jamais enregistrer `DATABASE_URL` dans GitHub.
 
-La base SQLite est placée sur le disque persistant Render. Les fichiers téléversés dans `static/uploads` ne sont pas encore déplacés sur ce disque : si l'application stocke des fichiers importants, il faudra ensuite externaliser ces uploads (ou les déplacer vers le disque persistant).
+## 3. Base de données
 
-## Sécurité
+L'application principale n'utilise plus SQLite pour ses données métier : elle se connecte à PostgreSQL via `DATABASE_URL`.
+Le fichier `db.py` conserve une petite couche de compatibilité pour les requêtes historiques (`?`, dates SQLite et `lastrowid`) afin d'éviter de réécrire toutes les routes Flask.
+Le **Terrain SQL pédagogique** (`sqllab.py`) reste volontairement en SQLite en mémoire : c'est une base d'exemple isolée utilisée uniquement pour les exercices SQL et elle n'est pas la base de production.
 
-Ne mettez pas la valeur réelle de `SECRET_KEY` dans GitHub. Render la génère automatiquement via `generateValue: true`.
+## 4. Fichiers téléversés
 
-Le fichier local `secret.key` est maintenant ignoré par Git.
+Le plan Free de Render possède un système de fichiers éphémère. Les fichiers placés localement dans `static/uploads/` peuvent donc être perdus lors d'un redémarrage, d'un redéploiement ou d'une mise en veille.
+Pour les documents/images de production, une prochaine étape recommandée est de migrer les uploads vers **Supabase Storage**.
+
+## 5. Secret
+
+`secret.key` ne doit pas être remis dans GitHub. En production, Render génère `SECRET_KEY`.
+
+## 6. Vérification après déploiement
+
+Tester : page d'accueil ; inscription / connexion ; catalogue ; création d'un cours ; inscription d'un stagiaire ; secrétariat ; présences ; examens ; certificats ; persistance des données après redéploiement.
