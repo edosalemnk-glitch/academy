@@ -11,8 +11,11 @@ class _CompatRow(dict):
         return super().__getitem__(key)
 
 
-def _row_factory(cursor, row):
-    return _CompatRow({desc.name: value for desc, value in zip(cursor.description, row)})
+def _row_factory(cursor):
+    """Fabrique des lignes compatibles avec sqlite3.Row pour psycopg 3."""
+    def make_row(values):
+        return _CompatRow({desc.name: value for desc, value in zip(cursor.description, values)})
+    return make_row
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
