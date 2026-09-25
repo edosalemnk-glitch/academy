@@ -1,9 +1,132 @@
 """Accès à la base SQLite et schéma de la plateforme."""
 import os
-import sqlite3
+import re
+
+import psycopg
+from psycopg.rows import dict_row
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.environ.get("INPP_DB", os.path.join(BASE_DIR, "formation.db"))
+DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("SUPABASE_DB_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL est requis. Configurez la connexion PostgreSQL Supabase dans l'environnement."
+    )
+
+
+def _translate_sql(sql):
+    """Adapte les quelques conventions SQLite historiques vers PostgreSQL."""
+    sql = sql.replace("INSERT OR IGNORE", "INSERT")
+    # PostgreSQL needs an explicit conflict action for the old INSERT OR IGNORE behavior.
+    if re.match(r"^\s*INSERT\s", sql, re.IGNORECASE) and "ON CONFLICT" not in sql.upper():
+        sql = re.sub(r"(\)\s*VALUES\s*\([^;]*?\))\s*;?\s*$",
+                     lambda m: m.group(0).rstrip(";") + " ON CONFLICT DO NOTHING",
+                     sql, flags=re.IGNORECASE | re.DOTALL)
+    sql = sql.replace("datetime('now','-10 days')", "(CURRENT_TIMESTAMP - INTERVAL '10 days')")
+    sql = sql.replace("date('now','-3 days')", "(CURRENT_DATE - INTERVAL '3 days')")
+    sql = sql.replace("datetime('now')", "CURRENT_TIMESTAMP")
+    sql = sql.replace("date('now')", "CURRENT_DATE")
+    sql = sql.replace("datetime('now',?)", "(CURRENT_TIMESTAMP + (%s || ' days')::interval)")
+    sql = sql.replace("date('now',?)", "(CURRENT_DATE + (%s || ' days')::interval)")
+    sql = sql.replace("?", "%s")
+    return sql
+
+
+def _postgres_schema(sql):
+    """Convertit le schéma historique SQLite en DDL PostgreSQL."""
+    sql = sql.replace("INTEGER PRIMARY KEY AUTOINCREMENT", "BIGSERIAL PRIMARY KEY")
+    sql = sql.replace("INTEGER PRIMARY KEY", "BIGSERIAL PRIMARY KEY")
+    sql = sql.replace(" REAL ", " DOUBLE PRECISION ")
+    sql = sql.replace(" REAL NOT NULL", " DOUBLE PRECISION NOT NULL")
+    sql = sql.replace("DEFAULT (datetime('now'))", "DEFAULT CURRENT_TIMESTAMP")
+    sql = sql.replace("DEFAULT (date('now'))", "DEFAULT CURRENT_DATE")
+    return sql
+
+
+class _PGCursor:
+    def __init__(self, conn, cursor):
+        self._conn = conn
+        self._cursor = cursor
+        self._table = None
+
+    def execute(self, sql, params=None):
+        self._table = None
+        if re.match(r"^\s*INSERT\s", sql, re.IGNORECASE):
+            m = re.search(r"INSERT\s+INTO\s+([A-Za-z_][A-Za-z0-9_]*)", sql, re.IGNORECASE)
+            self._table = m.group(1) if m else None
+        translated = _translate_sql(sql)
+        self._cursor.execute(translated, params or ())
+        return self
+
+    def executemany(self, sql, seq):
+        translated = _translate_sql(sql)
+        self._cursor.executemany(translated, seq)
+        return self
+
+    def fetchone(self):
+        return self._cursor.fetchone()
+
+    def fetchall(self):
+        return self._cursor.fetchall()
+
+    def fetchmany(self, size=None):
+        return self._cursor.fetchmany(size)
+
+    @property
+    def rowcount(self):
+        return self._cursor.rowcount
+
+    @property
+    def lastrowid(self):
+        if not self._table:
+            return None
+        row = self._conn._raw.execute(
+            "SELECT currval(pg_get_serial_sequence(%s, 'id')) AS id",
+            (self._table,),
+        ).fetchone()
+        return row["id"] if row else None
+
+    @property
+    def description(self):
+        return self._cursor.description
+
+    def __iter__(self):
+        return iter(self._cursor)
+
+    def close(self):
+        self._cursor.close()
+
+
+class _PGConnection:
+    def __init__(self, raw):
+        self._raw = raw
+
+    def execute(self, sql, params=None):
+        return _PGCursor(self, self._raw.cursor()).execute(sql, params)
+
+    def executemany(self, sql, seq):
+        return _PGCursor(self, self._raw.cursor()).executemany(sql, seq)
+
+    def executescript(self, script):
+        # The project schema is a static DDL script without semicolons inside SQL literals.
+        for statement in script.split(";"):
+            statement = statement.strip()
+            if statement:
+                self.execute(statement)
+        return self
+
+    def commit(self):
+        self._raw.commit()
+
+    def rollback(self):
+        self._raw.rollback()
+
+    def close(self):
+        self._raw.close()
+
+    def cursor(self):
+        return _PGCursor(self, self._raw.cursor())
+
 
 USERS_COLUMNS = """(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -267,68 +390,37 @@ DEFAULT_SETTINGS = {
 
 
 def connect():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+    # Supabase fournit DATABASE_URL depuis Dashboard > Connect > Session pooler.
+    # sslmode=require garantit le chiffrement de la connexion.
+    url = DATABASE_URL
+    if "sslmode=" not in url:
+        url += ("&" if "?" in url else "?") + "sslmode=require"
+    raw = psycopg.connect(url, row_factory=dict_row, prepare_threshold=None, connect_timeout=10)
+    return _PGConnection(raw)
 
 
 def _migrate_users_roles(conn):
-    """Bases créées avant le secrétariat : ajoute le rôle « secretaire » à la contrainte de users."""
-    row = conn.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").fetchone()
-    if row is None or "secretaire" in row[0]:
-        return
-    conn.commit()
-    conn.execute("PRAGMA foreign_keys = OFF")   # sinon DROP TABLE users supprimerait les données liées
-    try:
-        conn.execute("BEGIN")
-        conn.execute("CREATE TABLE users_new " + USERS_COLUMNS)
-        conn.execute("INSERT INTO users_new (id, full_name, email, password_hash, role, must_change_password, "
-                     "created_by, created_at) SELECT id, full_name, email, password_hash, role, "
-                     "must_change_password, created_by, created_at FROM users")
-        conn.execute("DROP TABLE users")
-        conn.execute("ALTER TABLE users_new RENAME TO users")
-        conn.execute("COMMIT")
-    except Exception:
-        conn.execute("ROLLBACK")
-        raise
-    finally:
-        conn.execute("PRAGMA foreign_keys = ON")
+    """Conservée pour compatibilité : le schéma PostgreSQL inclut directement le rôle secretaire."""
+    return
 
 
 def _migrate_presence(conn):
-    """Bases créées avant le module présences : ajoute les colonnes de liaison manquantes."""
-    cols = {r[1] for r in conn.execute("PRAGMA table_info(filieres)")}
-    if "service_id" not in cols:
-        conn.execute("ALTER TABLE filieres ADD COLUMN service_id INTEGER REFERENCES services(id)")
-    cols = {r[1] for r in conn.execute("PRAGMA table_info(registrations)")}
-    if "section_id" not in cols:
-        conn.execute("ALTER TABLE registrations ADD COLUMN section_id INTEGER REFERENCES sections(id)")
-    conn.commit()
+    """Conservée pour compatibilité avec les anciennes versions du schéma."""
+    return
 
 
 def _migrate_filiere_details(conn):
-    """Bases créées avant l'ajout du métier et de la durée (fiche INPP) : ajoute les colonnes manquantes."""
-    cols = {r[1] for r in conn.execute("PRAGMA table_info(filieres)")}
-    if "metier" not in cols:
-        conn.execute("ALTER TABLE filieres ADD COLUMN metier TEXT NOT NULL DEFAULT ''")
-    if "duration_months" not in cols:
-        conn.execute("ALTER TABLE filieres ADD COLUMN duration_months INTEGER NOT NULL DEFAULT 0")
-    conn.commit()
+    """Conservée pour compatibilité avec les anciennes versions du schéma."""
+    return
 
 
 def _migrate_bank_settings(conn):
-    """Bases créées avant le fractionnement du compte bancaire en Dollars / Francs congolais."""
-    row = conn.execute("SELECT value FROM settings WHERE key='bank_account'").fetchone()
-    if row is not None:
-        conn.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('bank_account_usd', ?)", (row[0],))
-        conn.execute("DELETE FROM settings WHERE key='bank_account'")
-        conn.commit()
-
+    """Conservée pour compatibilité avec les anciennes versions du schéma."""
+    return
 
 def init_db():
     conn = connect()
-    conn.executescript(SCHEMA)
+    conn.executescript(_postgres_schema(SCHEMA))
     _migrate_users_roles(conn)
     _migrate_presence(conn)
     _migrate_filiere_details(conn)
