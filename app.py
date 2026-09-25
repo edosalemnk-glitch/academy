@@ -13,6 +13,7 @@ from functools import wraps
 
 from flask import (Flask, Response, abort, flash, g, redirect, render_template,
                    request, session, url_for)
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
@@ -66,8 +67,12 @@ def seo_base_url():
 def inject_seo():
     return {"seo_base_url": seo_base_url}
 app.secret_key = load_secret()
-app.config.update(MAX_CONTENT_LENGTH=8 * 1024 * 1024, SESSION_COOKIE_HTTPONLY=True,
-                  SESSION_COOKIE_SAMESITE="Lax")
+app.config.update(
+    MAX_CONTENT_LENGTH=8 * 1024 * 1024,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE", "1" if os.environ.get("RENDER") else "0") == "1",
+)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.jinja_env.filters["render"] = render_content
 app.jinja_env.filters["todict"] = lambda row: dict(row) if row is not None else {}
@@ -91,7 +96,7 @@ def ensure_ready():
     database.init_db()
     conn = database.connect()
     empty = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0
-    if empty:
+    if empty and os.environ.get("INPP_SEED_DEMO", "0") == "1":
         import seed
         seed.seed(conn)
     conn.close()
@@ -111,6 +116,17 @@ app.jinja_env.globals.update(STATUS=STATUS, FEE=FEE, ENFORCE_FEES=ENFORCE_FEES, 
                             PSTATUS=presence.STATUS, NOTICE_KIND=presence.NOTICE_KIND)
 app.jinja_env.filters["money"] = fees.format_money
 app.jinja_env.globals["today"] = lambda: time.strftime("%Y-%m-%d")
+
+
+@app.after_request
+def security_headers(response):
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(self), microphone=(), geolocation=()")
+    if request.is_secure:
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    return response
 
 
 @app.before_request
