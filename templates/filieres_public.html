@@ -9,7 +9,8 @@
   <article class="card">
     <h2 style="margin:4px 0">{{ f.name }}</h2>
     <p class="meta">{{ f.service_name or 'Service non précisé' }}</p>
-    <p>Frais matériel : <strong>{{ f.material_fee|money('USD') }}</strong></p>
+    {% if f.metier %}<p class="meta">Métier : {{ f.metier }}</p>{% endif %}
+    <p>Durée : <strong>{{ f.duration_months }}&nbsp;mois</strong> · Frais matériel : <strong>{{ f.material_fee|money('USD') }}</strong></p>
     {% if f.nb_stagiaires %}<p class="meta">{{ f.nb_stagiaires }} stagiaire(s) inscrit(s) à ce jour</p>{% endif %}
   </article>
 {% endfor %}

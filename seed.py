@@ -7,8 +7,139 @@ FORMATEUR = ("Prof. Daniel Mbayo", "formateur@inpp.cd", "Formateur2026!")
 SECRETAIRE = ("Bibiche Kanyinda", "secretariat@inpp.cd", "Secretariat2026!")
 PWD_STAGIAIRE = "Stagiaire2026!"
 
-# Filières du centre : nom -> frais matériel en $ (40, 50 ou 80 selon projet.md)
-FILIERES = [("Informatique de gestion", 50), ("Électricité du bâtiment", 80), ("Coupe et couture", 40)]
+# Catalogue officiel des filières de l'INPP (Direction Provinciale de Kinshasa), par service :
+# nom de la filière -> (métier visé, durée en mois, frais matériel en $, payables une seule fois).
+# Source : fiche de renseignements INPP. La filière « Développement des Applications » (Informatique)
+# n'a pas de durée ni de frais matériel lisibles sur la fiche d'origine : elle n'est donc pas reprise ici.
+CATALOGUE = {
+    "Service Électronique": [
+        ("Audio radio / Vidéofréquence", "Réparateur des appareils électroniques", 4, 70),
+        ("Technique Cellulaire", "Technicien cellulaire", 2, 70),
+        ("Télécommunication", "Installateur des réseaux téléphoniques", 4, 70),
+        ("Maintenance des micro-ordinateurs et réseau local", "Maintenancier des micro-ordinateurs", 3, 70),
+        ("Prise de vue", "Preneur de vue", 2, 70),
+        ("Montage vidéo", "Monteur vidéo", 2, 70),
+        ("Domotique (Vidéo surveillance)", "Domoticien", 2, 70),
+        ("Montage des amplificateurs audio et enceinte acoustiques",
+         "Monteur des amplificateurs audio et enceintes acoustiques", 4, 70),
+        ("Pilotage de drone civil", "Pilote de Drone civil", 2, 70),
+        ("Animation et présentation des émissions TV/Radio", "Animateur / Présentateur", 3, 70),
+    ],
+    "Service Électricité": [
+        ("Électricité industrielle", "Électricien", 6, 60),
+        ("Électricité de bâtiment", "Électricien du bâtiment", 4, 60),
+        ("Bobinage", "Électricien Bobineur", 3, 60),
+    ],
+    "Service Énergies renouvelables": [
+        ("Énergie Solaire (Photovoltaïque)", "Technicien installateur des générateurs photovoltaïques", 3, 60),
+        ("Efficacité Énergétique du Bâtiment", "Technicien en efficacité énergétique du bâtiment", 2, 60),
+    ],
+    "Service Froid et Climatisation": [
+        ("Froid ménager", "Technicien en froid ménager", 2, 90),
+        ("Froid commercial et industriel", "Technicien en froid commercial et industriel", 6, 90),
+        ("Climatisation centrale", "Technicien en climatisation centrale", 4, 90),
+    ],
+    "Service Mécanique Automobile": [
+        ("Maintenance Automobile", "Maintenancier Auto", 4, 60),
+        ("Moteur à Essence", "Mécanicien en moteur à essence", 6, 60),
+        ("Moteur Diesel", "Mécanicien en moteur diesel", 6, 60),
+        ("Moteur Diesel spécial", "Mécanicien en moteur diesel", 3, 60),
+        ("Injection électronique d'essence", "Technicien en injection électronique moteur essence", 4, 60),
+        ("Électricité Automobile", "Électricien automobile", 6, 60),
+        ("Révision matérielle d'injection", "Mécanicien en pompe d'injection", 3, 50),
+        ("Réparation et entretien de groupe électrogène", "Maintenancier des groupes électrogènes", 7, 70),
+        ("Conduite Automobile", "Conducteur des véhicules automobiles légers", 3, 60),
+        ("Conduite automobile accélérée", "Conducteur des véhicules automobiles légers", 1, 250),
+        ("Climatisation automobile", "Technicien en climatisation auto", 3, 90),
+    ],
+    "Service Mécanique Générale": [
+        ("Tournage", "Tourneur sur machines conventionnelles", 5, 60),
+        ("Fraisage", "Fraiseur sur machines conventionnelles", 5, 60),
+        ("Conducteur de chariot élévateur à conducteur porté", "Cariste", 2, 500),
+        ("Technique de maintenance des équipements hydropneumatiques",
+         "Maintenancier des installations hydropneumatiques", 3, 200),
+    ],
+    "Service Tôlerie / Soudure": [
+        ("Ajustage-soudage", "Ajusteur-soudeur", 4, 60),
+        ("Plomberie sanitaire", "Installateur sanitaire", 3, 60),
+        ("Menuiserie en aluminium", "Menuisier en aluminium", 3, 60),
+    ],
+    "Service CCEC": [
+        ("Esthétique et Coiffure", "Esthéticien - coiffeur", 3, 60),
+        ("Coupe et Couture", "Couturier", 4, 70),
+        ("Modélisme", "Modéliste", 3, 70),
+        ("Décoration événementielle", "Décorateur des événements", 2, 70),
+        ("Maintenance de machine à coudre", "Maintenancier de machine à coudre", 2, 70),
+        ("Make up", "Maquilleuse", 1, 100),
+    ],
+    "Service CFPRP": [
+        ("Inspecteur de Protection Industrielle", "Inspecteur de protection industrielle", 4, 60),
+        ("Officier de Police Judiciaire", "Officier de police judiciaire", 4, 60),
+        ("Logistique des approvisionnements", "Logisticien des approvisionnements", 2, 60),
+        ("Gestion des Projets", "Gestionnaire des projets", 2, 60),
+        ("Maintenance des Systèmes de Détection d'incendie",
+         "Maintenancier des systèmes de détection d'incendie", 4, 60),
+        ("Entrepreneuriat", "Entrepreneur", 2, 60),
+        ("Prévention et lutte anti incendie", "Pompier auxiliaire", 1, 100),
+        ("Secourisme industriel", "Secouriste", 1, 100),
+        ("Passation des Marchés Publics", "Chargé de passation des marchés", 2, 60),
+        ("Gestion des ressources humaines", "Gestionnaire des ressources humaines", 2, 60),
+    ],
+    "Service Langues": [
+        ("Anglais débutant", "", 3, 50),
+        ("Anglais Intermédiaire", "", 3, 50),
+        ("Anglais Avancé", "", 3, 50),
+        ("Anglais des Affaires ou Business English", "", 3, 70),
+        ("ETI (Étude de Traduction et d'Interprétation)", "", 3, 70),
+        ("Français Expression Orale", "", 2, 50),
+        ("Français Expression Écrite", "", 2, 50),
+    ],
+    "Service Hôtellerie et Restauration": [
+        ("Restauration", "Serveur", 4, 70),
+        ("Pâtisserie", "Commis pâtissier", 4, 70),
+        ("Cuisine", "Commis cuisinier", 4, 70),
+        ("Hébergement", "Technicien d'hébergement", 3, 70),
+        ("Accueil et protocole", "Hôte ou Hôtesse d'accueil", 3, 70),
+    ],
+    "Service Bâtiment et Génie Civil": [
+        ("Métré et devis de bâtiment", "Métreur - deviseur", 6, 70),
+        ("Cartographie Numérique (SIG)", "Technicien en cartographie numérique", 3, 70),
+        ("Maçonnerie", "Maçon", 6, 70),
+        ("Menuiserie et ébénisterie", "Menuisier de bâtiment ébéniste", 6, 70),
+        ("Perspective et maquette", "Maquettiste", 6, 70),
+        ("Dessin de bâtiment", "Dessinateur de bâtiment", 6, 70),
+        ("Carrelage", "Carreleur", 6, 70),
+        ("Peinture", "Peintre de bâtiment", 4, 70),
+        ("Topographie", "Technicien en topographie", 6, 70),
+        ("Calcul des structures", "Analyste des structures de construction", 6, 70),
+        ("Robbot", "Analyste des structures de construction à l'aide de l'ordinateur", 3, 70),
+        ("Dessin assisté par ordinateur (DAO)", "Dessinateur de bâtiment assisté par ordinateur", 3, 70),
+        ("Conducteur des travaux", "Conducteur des travaux", 4, 70),
+        ("Staff et décoration", "Staffeur - décorateur", 4, 90),
+        ("Peinture Design", "Peintre Designer", 4, 70),
+        ("Charpente en bois & Couverture", "Charpentier couvreur", 6, 90),
+        ("Assainissement", "", 4, 90),
+        ("Aménagement paysagers", "Aménageur des jardins et espaces", 4, 90),
+    ],
+    "Service Informatique": [
+        ("Bureautique Word", "", 1, 60),
+        ("Bureautique Excel", "", 1, 60),
+        ("PowerPoint", "", 1, 60),
+        ("Académie Cisco : IT Essentials", "IT Professionnel", 3, 70),
+        ("CCNA 1 : Notion sur réseaux", "Technicien en réseaux CISCO", 2, 90),
+        ("CCNA 2 : Protocole et concept de routage", "Technicien en réseaux CISCO", 2, 90),
+        ("CCNA 3 : Communication de réseau LAN et réseau sans fil — Accès au réseau étendu",
+         "Technicien en réseaux CISCO", 2, 90),
+        ("Administration Systèmes : Conceptions et applications sur le réseau", "Administrateur système", 2, 70),
+        ("Administration Systèmes : Administration Windows 2021 server", "Administrateur système", 2, 70),
+        ("Administration des Bases de Données : Modélisation d'une base de données",
+         "Technicien de base de données", 2, 70),
+        ("Sous MS ACCESS ou SQL server 2019", "Technicien de base de données", 3, 70),
+        ("Webmaster (création d'un site dynamique)", "Concepteur et réalisateur des sites web", 3, 70),
+        ("Infographie : Adobe Photoshop / Adobe InDesign", "Graphiste", 2, 70),
+        ("Cyber - sécurité", "Technicien en Cybersécurité", 4, 100),
+    ],
+}
 STAGIAIRES = [
     "Aline Mbuyi", "Christian Tshibanda", "Divine Mukendi", "Emmanuel Ilunga", "Fabrice Kasongo",
     "Grâce Lukusa", "Héritier Banza", "Isaac Ngoy", "Jocelyne Mutombo", "Kevin Kanku",
@@ -280,25 +411,31 @@ def seed(db):
     secid = db.execute("INSERT INTO users (full_name,email,password_hash,role) VALUES (?,?,?,'secretaire')",
                        (SECRETAIRE[0], SECRETAIRE[1], pw(SECRETAIRE[2]))).lastrowid
 
-    svc_id = db.execute("INSERT INTO services (name, chef_id) VALUES (?,?)",
-                        ("Service Informatique de gestion", fid)).lastrowid
-    db.execute("INSERT INTO services (name) VALUES (?)", ("Service Électricité",))
+    # Un service par catégorie du catalogue officiel ; le formateur de démonstration dirige le service
+    # Informatique (auquel appartient la filière "Bureautique Word" utilisée plus bas).
+    svc_ids = {}
+    for service_name in CATALOGUE:
+        chef = fid if service_name == "Service Informatique" else None
+        svc_ids[service_name] = db.execute(
+            "INSERT INTO services (name, chef_id) VALUES (?,?)", (service_name, chef)).lastrowid
 
-    fil_ids = []
-    for name, fee in FILIERES:
-        fil_ids.append(db.execute("INSERT INTO filieres (name, material_fee) VALUES (?,?)", (name, fee)).lastrowid)
-    db.execute("UPDATE filieres SET service_id=? WHERE id=?", (svc_id, fil_ids[0]))
+    fil_ids = {}   # nom de filière -> id
+    for service_name, rows in CATALOGUE.items():
+        for name, metier, duration_months, fee in rows:
+            fil_ids[name] = db.execute(
+                "INSERT INTO filieres (name, metier, duration_months, material_fee, service_id) "
+                "VALUES (?,?,?,?,?)", (name, metier, duration_months, fee, svc_ids[service_name])).lastrowid
 
-    def register(name, sex, filiere_idx, trainee_type, institution="", letter_ref="", letter_status="none"):
+    def register(name, sex, filiere_name, trainee_type, institution="", letter_ref="", letter_status="none"):
         import fees as _fees
         cfg = {r["key"]: r["value"] for r in db.execute("SELECT key, value FROM settings")}
-        filiere = db.execute("SELECT * FROM filieres WHERE id=?", (fil_ids[filiere_idx],)).fetchone()
+        filiere = db.execute("SELECT * FROM filieres WHERE id=?", (fil_ids[filiere_name],)).fetchone()
         snap = _fees.fee_snapshot(trainee_type, cfg, filiere)
         return db.execute(
             "INSERT INTO registrations (full_name, sex, filiere_id, trainee_type, institution, letter_ref, "
             "letter_status, fee_inscription, fee_material, fee_formation, fee_jury, registered_by) "
             "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-            (name, sex, fil_ids[filiere_idx], trainee_type, institution, letter_ref, letter_status,
+            (name, sex, fil_ids[filiere_name], trainee_type, institution, letter_ref, letter_status,
              snap["fee_inscription"], snap["fee_material"], snap["fee_formation"], snap["fee_jury"], secid)).lastrowid
 
     def pay(rid, kind, amount, currency, ref, days_ago, period=None):
@@ -307,24 +444,24 @@ def seed(db):
                    (rid, kind, amount, currency, period, ref, f"-{days_ago} days", secid))
 
     # Stagiaire non recommandé, en ordre (inscription + matériel payés)
-    r1 = register("Josué Kalala", "M", 0, "non_recommande")
-    pay(r1, "inscription", 40000, "FC", "FN-0001", 20)
-    pay(r1, "materiel", 50, "USD", "FN-0002", 20)
-    pay(r1, "formation", 50000, "FC", "FN-0003", 20, period=__import__("time").strftime("%Y-%m"))
+    r1 = register("Josué Kalala", "M", "Bureautique Word", "non_recommande")
+    pay(r1, "inscription", 58000, "FC", "FN-0001", 20)
+    pay(r1, "materiel", 60, "USD", "FN-0002", 20)
+    pay(r1, "formation", 60000, "FC", "FN-0003", 20, period=__import__("time").strftime("%Y-%m"))
     db.commit()
 
     # Stagiaire non recommandé, paiement partiel (encore en attente)
-    r2 = register("Nadège Mwamba", "F", 1, "non_recommande")
-    pay(r2, "inscription", 40000, "FC", "FN-0004", 5)
+    r2 = register("Nadège Mwamba", "F", "Électricité de bâtiment", "non_recommande")
+    pay(r2, "inscription", 58000, "FC", "FN-0004", 5)
 
     # Stagiaire recommandé total (institution privée) : aucun frais, en ordre dès l'approbation de la lettre
-    r3 = register("Patrick Ilunga", "M", 2, "recommande_total", institution="ISP Kinshasa",
+    r3 = register("Patrick Ilunga", "M", "Coupe et Couture", "recommande_total", institution="ISP Kinshasa",
                   letter_ref="ISP/2026/014", letter_status="approved")
     db.execute("UPDATE registrations SET letter_decided_by=?, letter_decided_at=date('now','-3 days') WHERE id=?",
               ("Directeur des études", r3))
 
     # Stagiaire recommandé partiel (institution étatique) : lettre en attente d'approbation
-    r4 = register("Solange Kabeya", "F", 0, "recommande_partiel", institution="Ministère de l'Emploi",
+    r4 = register("Solange Kabeya", "F", "Bureautique Word", "recommande_partiel", institution="Ministère de l'Emploi",
                   letter_ref="MIN-EMP/2026/077", letter_status="pending")
 
     for rid in (r1, r3):
@@ -337,7 +474,8 @@ def seed(db):
     # Section de démonstration (présences) : les 4 stagiaires du secrétariat, horaire 8h30 + 15 min
     section_id = db.execute(
         "INSERT INTO sections (filiere_id, trainer_id, name, start_time, grace_minutes, end_time) "
-        "VALUES (?,?,?,?,?,?)", (fil_ids[0], fid, "Informatique de gestion - groupe A", "08:30", 15, "12:30")).lastrowid
+        "VALUES (?,?,?,?,?,?)",
+        (fil_ids["Bureautique Word"], fid, "Bureautique Word - groupe A", "08:30", 15, "12:30")).lastrowid
     for rid in (r1, r2, r3, r4):
         db.execute("UPDATE registrations SET section_id=? WHERE id=?", (section_id, rid))
     import time as _time

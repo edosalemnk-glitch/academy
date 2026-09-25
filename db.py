@@ -103,7 +103,9 @@ CREATE TABLE IF NOT EXISTS settings (
 CREATE TABLE IF NOT EXISTS filieres (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
-    material_fee REAL NOT NULL DEFAULT 0,      -- frais matériel en USD (40, 50, 80 selon la filière)
+    metier TEXT NOT NULL DEFAULT '',           -- métier visé (ex. « Électricien »), selon la fiche INPP
+    duration_months INTEGER NOT NULL DEFAULT 0,-- durée de la formation, en mois
+    material_fee REAL NOT NULL DEFAULT 0,      -- frais matériel en USD, payables une seule fois (selon la filière)
     active INTEGER NOT NULL DEFAULT 1
 );
 
@@ -251,13 +253,16 @@ CREATE INDEX IF NOT EXISTS idx_exam_attempts ON exam_attempts(exam_id, user_id);
 
 SCHEMA = SCHEMA_TEMPLATE.replace("__USERS__", USERS_COLUMNS)
 
-# Tarifs par défaut (modifiables par le secrétariat, page « Tarifs »)
+# Tarifs par défaut (modifiables par le secrétariat, page « Tarifs »).
+# Source : fiche de renseignements INPP, Direction Provinciale de Kinshasa.
 DEFAULT_SETTINGS = {
-    "inscription_fee": "40000",   # FC, obligatoire
-    "formation_fee": "50000",     # FC par mois
-    "jury_fee": "25000",          # FC, obligatoire avant de passer le jury
-    "bank_name": "FN BANK",
-    "bank_account": "",           # numéro de compte à renseigner dans la page « Tarifs »
+    "inscription_fee": "58000",     # FC, obligatoire (Carte, Certificat, Fiche et Test)
+    "formation_fee": "60000",       # FC par mois (minerval, toutes filières confondues)
+    "jury_fee": "25000",            # FC, obligatoire avant de passer le jury
+    "lettre_stage_fee": "5000",     # FC, lettre de stage, payable après la formation
+    "bank_name": "BCDC - Equity",
+    "bank_account_usd": "00101-00001340052-37",   # n° de compte en dollars
+    "bank_account_fc": "00101-00001340051-40",    # n° de compte en francs congolais
 }
 
 
@@ -302,11 +307,32 @@ def _migrate_presence(conn):
     conn.commit()
 
 
+def _migrate_filiere_details(conn):
+    """Bases créées avant l'ajout du métier et de la durée (fiche INPP) : ajoute les colonnes manquantes."""
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(filieres)")}
+    if "metier" not in cols:
+        conn.execute("ALTER TABLE filieres ADD COLUMN metier TEXT NOT NULL DEFAULT ''")
+    if "duration_months" not in cols:
+        conn.execute("ALTER TABLE filieres ADD COLUMN duration_months INTEGER NOT NULL DEFAULT 0")
+    conn.commit()
+
+
+def _migrate_bank_settings(conn):
+    """Bases créées avant le fractionnement du compte bancaire en Dollars / Francs congolais."""
+    row = conn.execute("SELECT value FROM settings WHERE key='bank_account'").fetchone()
+    if row is not None:
+        conn.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('bank_account_usd', ?)", (row[0],))
+        conn.execute("DELETE FROM settings WHERE key='bank_account'")
+        conn.commit()
+
+
 def init_db():
     conn = connect()
     conn.executescript(SCHEMA)
     _migrate_users_roles(conn)
     _migrate_presence(conn)
+    _migrate_filiere_details(conn)
+    _migrate_bank_settings(conn)
     conn.executemany("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", DEFAULT_SETTINGS.items())
     conn.commit()
     conn.close()

@@ -148,7 +148,7 @@ rid = conn.execute("SELECT id FROM registrations WHERE full_name='Smoke Test Sta
 check("inscription au centre enregistrée", rid is not None)
 check("pas de carte avant paiement", conn.execute("SELECT card_code FROM registrations WHERE id=?", (rid,)).fetchone()[0] is None)
 
-post(sec, f"/secretariat/{rid}/paiement", {"kind": "inscription", "amount": "40000", "bank_ref": "SMOKE-1"}, page=f"/secretariat/{rid}")
+post(sec, f"/secretariat/{rid}/paiement", {"kind": "inscription", "amount": "58000", "bank_ref": "SMOKE-1"}, page=f"/secretariat/{rid}")
 r = post(sec, f"/secretariat/{rid}/paiement", {"kind": "materiel", "amount": "9999", "bank_ref": "SMOKE-2"}, page=f"/secretariat/{rid}")
 check("paiement au-delà du solde refusé", "dépasse le solde" in r.get_data(as_text=True))
 reg = conn.execute("SELECT fee_material FROM registrations WHERE id=?", (rid,)).fetchone()
@@ -162,11 +162,12 @@ r = post(sec, "/secretariat/nouveau",
         {"full_name": "Smoke Recommande", "sex": "F", "filiere_id": str(fid), "trainee_type": "recommande_partiel",
          "institution": "Ministère Test", "letter_ref": "REF-1"}, page="/secretariat/nouveau")
 rid2 = conn.execute("SELECT id FROM registrations WHERE full_name='Smoke Recommande'").fetchone()[0]
-r = post(sec, f"/secretariat/{rid2}/paiement", {"kind": "materiel", "amount": "40", "bank_ref": "SMOKE-4"}, page=f"/secretariat/{rid2}")
+reg2_fee_material = conn.execute("SELECT fee_material FROM registrations WHERE id=?", (rid2,)).fetchone()[0]
+r = post(sec, f"/secretariat/{rid2}/paiement", {"kind": "materiel", "amount": str(reg2_fee_material), "bank_ref": "SMOKE-4"}, page=f"/secretariat/{rid2}")
 check("paiement refusé avant approbation de la lettre", "abord" in r.get_data(as_text=True) and "approuvée" in r.get_data(as_text=True))
 post(sec, f"/secretariat/{rid2}/lettre/approve", {"decided_by": "Directeur Général"}, page=f"/secretariat/{rid2}")
 check("lettre approuvée", conn.execute("SELECT letter_status FROM registrations WHERE id=?", (rid2,)).fetchone()[0] == "approved")
-post(sec, f"/secretariat/{rid2}/paiement", {"kind": "materiel", "amount": "40", "bank_ref": "SMOKE-5"}, page=f"/secretariat/{rid2}")
+post(sec, f"/secretariat/{rid2}/paiement", {"kind": "materiel", "amount": str(reg2_fee_material), "bank_ref": "SMOKE-5"}, page=f"/secretariat/{rid2}")
 post(sec, f"/secretariat/{rid2}/paiement", {"kind": "jury", "amount": "25000", "bank_ref": "SMOKE-6"}, page=f"/secretariat/{rid2}")
 check("recommandé partiel en ordre après matériel+jury", conn.execute("SELECT card_code FROM registrations WHERE id=?", (rid2,)).fetchone()[0] is not None)
 

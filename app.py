@@ -1929,28 +1929,36 @@ def sec_tariffs():
         action = f.get("action")
         if action == "settings":
             vals = {k: parse_number(f.get(k, "")) for k in ("inscription_fee", "formation_fee", "jury_fee")}
-            if any(v is None or v < 0 for v in vals.values()):
+            lettre = parse_number(f.get("lettre_stage_fee", "")) or 0
+            if any(v is None or v < 0 for v in vals.values()) or lettre < 0:
                 flash("Les frais doivent être des nombres positifs.", "bad")
             else:
                 for k, v in vals.items():
                     conn.execute("UPDATE settings SET value=? WHERE key=?", (str(v), k))
-                for k in ("bank_name", "bank_account"):
+                conn.execute("UPDATE settings SET value=? WHERE key=?", (str(lettre), "lettre_stage_fee"))
+                for k in ("bank_name", "bank_account_usd", "bank_account_fc"):
                     conn.execute("UPDATE settings SET value=? WHERE key=?", (f.get(k, "").strip(), k))
                 flash("Tarifs enregistrés. Ils s'appliquent aux prochaines inscriptions.", "ok")
         elif action in ("filiere_add", "filiere_update"):
             name, fee = f.get("name", "").strip(), parse_number(f.get("material_fee", ""))
+            metier = f.get("metier", "").strip()
+            duration_months = f.get("duration_months", type=int) or 0
             service_id = f.get("service_id", type=int)
             if len(name) < 2 or fee is None or fee < 0:
                 flash("Indiquez le nom de la filière et un frais matériel valide (en $).", "bad")
             else:
                 try:
                     if action == "filiere_add":
-                        conn.execute("INSERT INTO filieres (name, material_fee, service_id) VALUES (?,?,?)",
-                                     (name, fee, service_id))
+                        conn.execute(
+                            "INSERT INTO filieres (name, metier, duration_months, material_fee, service_id) "
+                            "VALUES (?,?,?,?,?)", (name, metier, duration_months, fee, service_id))
                         flash("Filière ajoutée.", "ok")
                     else:
-                        conn.execute("UPDATE filieres SET name=?, material_fee=?, active=?, service_id=? WHERE id=?",
-                                     (name, fee, 1 if f.get("active") else 0, service_id, f.get("id", type=int)))
+                        conn.execute(
+                            "UPDATE filieres SET name=?, metier=?, duration_months=?, material_fee=?, "
+                            "active=?, service_id=? WHERE id=?",
+                            (name, metier, duration_months, fee, 1 if f.get("active") else 0, service_id,
+                             f.get("id", type=int)))
                         flash("Filière mise à jour (les stagiaires déjà inscrits gardent leur tarif).", "ok")
                 except Exception:
                     flash("Une filière porte déjà ce nom.", "bad")

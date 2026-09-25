@@ -7,7 +7,8 @@
   <div class="card"><h3>Frais d'inscription</h3><p><strong>{{ cfg.inscription_fee|float|money('FC') }}</strong><br><span class="meta">Obligatoire</span></p></div>
   <div class="card"><h3>Frais de formation</h3><p><strong>{{ cfg.formation_fee|float|money('FC') }}</strong> par mois</p></div>
   <div class="card"><h3>Frais de jury</h3><p><strong>{{ cfg.jury_fee|float|money('FC') }}</strong><br><span class="meta">Obligatoire avant de passer le jury</span></p></div>
-  <div class="card"><h3>Frais matériel</h3><p>Selon la filière :</p>
+  <div class="card"><h3>Lettre de stage</h3><p><strong>{{ cfg.lettre_stage_fee|float|money('FC') }}</strong><br><span class="meta">Payable après la formation</span></p></div>
+  <div class="card"><h3>Frais matériel</h3><p>Selon la filière, payables une seule fois :</p>
     {% if filieres %}<ul style="margin:0;padding-left:18px">{% for f in filieres %}<li>{{ f.name }} : <strong>{{ f.material_fee|money('USD') }}</strong></li>{% endfor %}</ul>
     {% else %}<p class="meta">Les filières seront publiées prochainement.</p>{% endif %}</div>
 </div>
@@ -22,9 +23,11 @@
 <h2>Procédure d'inscription</h2>
 <ol class="steps">
   <li><strong>Renseignements.</strong> Présentez-vous à la réception pour vous informer, puis choisissez une filière selon votre goût.</li>
-  <li><strong>Paiement.</strong> Prenez le numéro de compte de la <strong>{{ cfg.bank_name or 'banque' }}</strong>{% if cfg.bank_account %} (<strong>{{ cfg.bank_account }}</strong>){% endif %} et payez les frais d'inscription.</li>
+  <li><strong>Paiement.</strong> Payez les frais d'inscription au compte de la <strong>{{ cfg.bank_name or 'banque' }}</strong>{% if cfg.bank_account_usd %} — Dollars : <strong>{{ cfg.bank_account_usd }}</strong>{% endif %}{% if cfg.bank_account_fc %}, Francs congolais : <strong>{{ cfg.bank_account_fc }}</strong>{% endif %}.</li>
   <li><strong>Enregistrement.</strong> Ramenez votre preuve de paiement à un agent de la réception : vous êtes enregistré dans le registre des stagiaires en ordre avec les frais.</li>
   <li><strong>Stagiaire recommandé ?</strong> Remettez votre lettre de recommandation au secrétaire. Elle est approuvée par la hiérarchie, puis vous êtes inséré dans le registre des apprenants provenant des autres institutions.</li>
   <li><strong>Carte de stagiaire.</strong> Les stagiaires en ordre avec les frais reçoivent leur carte de stagiaire.</li>
+  <li><strong>Lettre de stage.</strong> Délivrée après la formation, moyennant {{ cfg.lettre_stage_fee|float|money('FC') }}.</li>
 </ol>
+<p class="meta"><strong>NB :</strong> les frais payés ne sont pas remboursables.</p>
 {% endblock %}

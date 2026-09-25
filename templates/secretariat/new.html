@@ -35,7 +35,7 @@
   <tr><td>Inscription</td><td style="text-align:right">{{ cfg.inscription_fee|float|money('FC') }}</td></tr>
   <tr><td>Formation / mois</td><td style="text-align:right">{{ cfg.formation_fee|float|money('FC') }}</td></tr>
   <tr><td>Jury</td><td style="text-align:right">{{ cfg.jury_fee|float|money('FC') }}</td></tr></tbody></table>
-  <p class="hint">Le matériel dépend de la filière. À remettre au stagiaire : compte <strong>{{ cfg.bank_name }}</strong>{% if cfg.bank_account %} n° <strong>{{ cfg.bank_account }}</strong>{% else %} (numéro à renseigner dans Tarifs){% endif %}.</p></aside>
+  <p class="hint">Le matériel dépend de la filière. À remettre au stagiaire : compte <strong>{{ cfg.bank_name }}</strong>{% if cfg.bank_account_usd or cfg.bank_account_fc %}{% if cfg.bank_account_usd %} n° <strong>{{ cfg.bank_account_usd }}</strong> ($){% endif %}{% if cfg.bank_account_fc %} / n° <strong>{{ cfg.bank_account_fc }}</strong> (Fc){% endif %}{% else %} (numéros à renseigner dans Tarifs){% endif %}.</p></aside>
 </div>
 <script>
 (function(){var box=document.getElementById('reco');function up(){var r=document.querySelector('input[name=trainee_type]:checked');var on=r&&r.value!=='non_recommande';box.style.display=on?'':'none';document.getElementById('i').required=on;document.getElementById('l').required=on;}
