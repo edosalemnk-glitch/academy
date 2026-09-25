@@ -403,6 +403,273 @@ def _add_course(db, trainer_id, data):
     return course_id, lesson_ids
 
 
+
+def restore_demo(db):
+    """Restaure les données de démonstration manquantes sans remplacer les données existantes."""
+    pw = generate_password_hash
+
+    def user(full_name, email, password, role, created_by=None):
+        row = db.execute("SELECT id FROM users WHERE email=?", (email,)).fetchone()
+        if row:
+            return row["id"]
+        return db.execute(
+            "INSERT INTO users (full_name,email,password_hash,role,created_by) VALUES (?,?,?,?,?)",
+            (full_name, email, pw(password), role, created_by)
+        ).lastrowid
+
+    fid = user(FORMATEUR[0], FORMATEUR[1], FORMATEUR[2], "formateur")
+    secid = user(SECRETAIRE[0], SECRETAIRE[1], SECRETAIRE[2], "secretaire")
+
+    # Le catalogue officiel existe déjà en production : on ne le remplace jamais.
+    svc_ids = {}
+    for service_name in CATALOGUE:
+        row = db.execute("SELECT id FROM services WHERE name=?", (service_name,)).fetchone()
+        if row:
+            svc_ids[service_name] = row["id"]
+        else:
+            chef = fid if service_name == "Service Informatique" else None
+            svc_ids[service_name] = db.execute(
+                "INSERT INTO services (name,chef_id) VALUES (?,?)", (service_name, chef)
+            ).lastrowid
+
+    # Trois filières présentes dans la sauvegarde formation.db, hors catalogue actuel.
+    legacy_services = {
+        "Service Informatique de gestion": fid,
+        "Service Électricité": None,
+    }
+    for name, chef in legacy_services.items():
+        row = db.execute("SELECT id FROM services WHERE name=?", (name,)).fetchone()
+        if not row:
+            db.execute("INSERT INTO services (name,chef_id) VALUES (?,?)", (name, chef))
+    extra_filieres = [
+        ("Informatique de gestion", 50, 1, "Service Informatique de gestion"),
+        ("Électricité du bâtiment", 80, 1, "Service Électricité"),
+        ("Coupe et couture", 40, 1, "Service CCEC"),
+    ]
+    for name, material_fee, active, service_name in extra_filieres:
+        if not db.execute("SELECT 1 FROM filieres WHERE name=?", (name,)).fetchone():
+            sid = db.execute("SELECT id FROM services WHERE name=?", (service_name,)).fetchone()["id"]
+            db.execute(
+                "INSERT INTO filieres (name,material_fee,active,service_id) VALUES (?,?,?,?)",
+                (name, material_fee, active, sid)
+            )
+
+    trainee_ids = {}
+    for i, name in enumerate(STAGIAIRES, start=1):
+        trainee_ids[name] = user(
+            name, f"stagiaire{i:02d}@inpp.cd", PWD_STAGIAIRE, "stagiaire", fid
+        )
+
+    course_ids = {}
+    lesson_ids = {}
+    for course_data in (SQL1, SQL2, FICHIERS):
+        row = db.execute("SELECT id FROM courses WHERE title=?", (course_data["title"],)).fetchone()
+        if row:
+            cid = row["id"]
+            nlessons = db.execute("SELECT COUNT(*) AS n FROM lessons WHERE course_id=?", (cid,)).fetchone()["n"]
+            if nlessons == 0:
+                cid, lids = _add_course(db, fid, course_data)
+            else:
+                lids = [r["id"] for r in db.execute(
+                    "SELECT id FROM lessons WHERE course_id=? ORDER BY position", (cid,)
+                ).fetchall()]
+        else:
+            cid, lids = _add_course(db, fid, course_data)
+        course_ids[course_data["title"]] = cid
+        lesson_ids[course_data["title"]] = lids
+
+    c1 = course_ids[SQL1["title"]]
+    c2 = course_ids[SQL2["title"]]
+    c3 = course_ids[FICHIERS["title"]]
+
+    # Examen final du fichier de sauvegarde.
+    exam = db.execute("SELECT id FROM exams WHERE course_id=?", (c2,)).fetchone()
+    if exam:
+        exam_id = exam["id"]
+    else:
+        exam_id = db.execute(
+            "INSERT INTO exams (course_id,title,duration_minutes,pass_mark,max_attempts,published) "
+            "VALUES (?,?,?,?,?,1)",
+            (c2, "Examen final — SQL Niveau 2", 20, 60, 2)
+        ).lastrowid
+    if db.execute("SELECT COUNT(*) AS n FROM exam_questions WHERE exam_id=?", (exam_id,)).fetchone()["n"] == 0:
+        for text, opts, correct, expl in [
+            ("Quelle commande affiche toutes les colonnes d'une table ?",
+             ["SELECT * FROM table", "GET * FROM table", "SHOW table", "READ table"], "A",
+             "SELECT * FROM table affiche toutes les colonnes."),
+            ("À quoi sert la clause WHERE ?",
+             ["Trier les résultats", "Filtrer les lignes", "Compter les lignes", "Renommer une colonne"], "B",
+             "WHERE filtre les lignes selon une condition."),
+            ("Que fait ORDER BY ?",
+             ["Filtre les lignes", "Trie les résultats", "Supprime des lignes", "Crée une table"], "B",
+             "ORDER BY trie le résultat selon une ou plusieurs colonnes."),
+            ("Quelle clé identifie une ligne de façon unique ?",
+             ["Clé étrangère", "Clé primaire", "Index", "Alias"], "B",
+             "La clé primaire (souvent id) est unique pour chaque ligne.")
+        ]:
+            db.execute(
+                "INSERT INTO exam_questions (exam_id,text,option_a,option_b,option_c,option_d,correct,explanation) "
+                "VALUES (?,?,?,?,?,?,?,?)", (exam_id, text, *opts, correct, expl)
+            )
+
+    def enroll(name, course_id, status, fee_status):
+        uid = trainee_ids[name]
+        if not db.execute(
+            "SELECT 1 FROM enrollments WHERE user_id=? AND course_id=?", (uid, course_id)
+        ).fetchone():
+            db.execute(
+                "INSERT INTO enrollments (user_id,course_id,status,fee_status,decided_at,decided_by) "
+                "VALUES (?,?,?,?,CASE WHEN ?='pending' THEN NULL ELSE datetime('now','-10 days') END,"
+                "CASE WHEN ?='pending' THEN NULL ELSE ? END)",
+                (uid, course_id, status, fee_status, status, status, fid)
+            )
+
+    for name, fee in [
+        ("Aline Mbuyi", "paid"), ("Christian Tshibanda", "paid"),
+        ("Divine Mukendi", "exempt"), ("Emmanuel Ilunga", "unpaid"),
+        ("Fabrice Kasongo", "paid"), ("Grâce Lukusa", "paid")
+    ]:
+        enroll(name, c1, "approved", fee)
+    enroll("Héritier Banza", c1, "pending", "unpaid")
+    enroll("Isaac Ngoy", c1, "pending", "unpaid")
+    enroll("Jocelyne Mutombo", c1, "rejected", "unpaid")
+    enroll("Aline Mbuyi", c2, "approved", "paid")
+    enroll("Christian Tshibanda", c2, "approved", "unpaid")
+    for name in ("Divine Mukendi", "Emmanuel Ilunga", "Fabrice Kasongo"):
+        enroll(name, c3, "approved", "exempt")
+
+    def done(name, lesson_id, score, days):
+        uid = trainee_ids[name]
+        if not db.execute(
+            "SELECT 1 FROM progress WHERE user_id=? AND lesson_id=?", (uid, lesson_id)
+        ).fetchone():
+            db.execute(
+                "INSERT INTO attempts (user_id,lesson_id,score,passed,created_at) VALUES (?,?,?,1,datetime('now',?))",
+                (uid, lesson_id, score, f"-{days} days")
+            )
+            db.execute(
+                "INSERT INTO progress (user_id,lesson_id,best_score,completed_at) VALUES (?,?,?,datetime('now',?))",
+                (uid, lesson_id, score, f"-{days} days")
+            )
+
+    def fail(name, lesson_id, score, days):
+        uid = trainee_ids[name]
+        if not db.execute(
+            "SELECT 1 FROM attempts WHERE user_id=? AND lesson_id=? AND score=? AND passed=0",
+            (uid, lesson_id, score)
+        ).fetchone():
+            db.execute(
+                "INSERT INTO attempts (user_id,lesson_id,score,passed,created_at) VALUES (?,?,?,0,datetime('now',?))",
+                (uid, lesson_id, score, f"-{days} days")
+            )
+
+    l1 = lesson_ids[SQL1["title"]]
+    l3 = lesson_ids[FICHIERS["title"]]
+    for k, lid in enumerate(l1):
+        done("Aline Mbuyi", lid, [100, 100, 100, 100, 100, 100][k], 9-k)
+    done("Aline Mbuyi", lesson_ids[SQL2["title"]][0], 100, 2)
+    for k in range(4):
+        done("Christian Tshibanda", l1[k], [100, 100, 75, 100][k], 8-k)
+    done("Divine Mukendi", l1[0], 100, 6)
+    done("Divine Mukendi", l1[1], 100, 5)
+    for score in (33, 33, 0):
+        fail("Divine Mukendi", l1[2], score, 1)
+    done("Emmanuel Ilunga", l1[0], 100, 4)
+    fail("Fabrice Kasongo", l1[0], 33, 1)
+    for k in range(3):
+        done("Grâce Lukusa", l1[k], 100, 7-k)
+    done("Divine Mukendi", l3[0], 100, 3)
+    done("Divine Mukendi", l3[1], 100, 2)
+    done("Emmanuel Ilunga", l3[0], 100, 2)
+
+    if not db.execute("SELECT 1 FROM certificates WHERE code=?", ("INPP-2026-A1B2C3",)).fetchone():
+        db.execute(
+            "INSERT INTO certificates (user_id,course_id,code) VALUES (?,?,?)",
+            (trainee_ids["Aline Mbuyi"], c1, "INPP-2026-A1B2C3")
+        )
+
+    # Données administratives présentes dans formation.db : on les ajoute seulement si absentes.
+    fil_map = {
+        "Informatique de gestion": "Informatique de gestion",
+        "Électricité du bâtiment": "Électricité du bâtiment",
+        "Coupe et couture": "Coupe et couture",
+    }
+    legacy_regs = [
+        ("Josué Kalala", "M", "", "Informatique de gestion", "non_recommande", "", "", "none",
+         "", None, "", 40000, 50, 50000, 25000, "INPP-CS-2026-4471B9"),
+        ("Nadège Mwamba", "F", "", "Électricité du bâtiment", "non_recommande", "", "", "none",
+         "", None, "", 40000, 80, 50000, 25000, None),
+        ("Patrick Ilunga", "M", "", "Coupe et couture", "recommande_total", "ISP Kinshasa", "ISP/2026/014", "approved",
+         "Directeur des études", "2026-09-22", "", 0, 0, 0, 0, "INPP-CS-2026-8C6905"),
+        ("Solange Kabeya", "F", "", "Informatique de gestion", "recommande_partiel", "Ministère de l'Emploi",
+         "MIN-EMP/2026/077", "pending", "", None, "", 0, 50, 0, 25000, None),
+    ]
+    reg_ids = {}
+    for (name, sex, phone, filiere_name, trainee_type, institution, letter_ref, letter_status,
+         decided_by, decided_at, letter_note, fi, fm, ff, fj, card_code) in legacy_regs:
+        row = db.execute("SELECT id FROM registrations WHERE full_name=?", (name,)).fetchone()
+        if row:
+            reg_ids[name] = row["id"]
+            continue
+        fid_legacy = db.execute("SELECT id FROM filieres WHERE name=?", (filiere_name,)).fetchone()["id"]
+        reg_ids[name] = db.execute(
+            "INSERT INTO registrations (full_name,sex,phone,filiere_id,trainee_type,institution,letter_ref,"
+            "letter_status,letter_decided_by,letter_decided_at,letter_note,fee_inscription,fee_material,"
+            "fee_formation,fee_jury,card_code,registered_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (name,sex,phone,fid_legacy,trainee_type,institution,letter_ref,letter_status,decided_by,
+             decided_at,letter_note,fi,fm,ff,fj,card_code,secid)
+        ).lastrowid
+
+    for name, kind, amount, currency, period, ref, days in [
+        ("Josué Kalala","inscription",40000,"FC",None,"FN-0001",20),
+        ("Josué Kalala","materiel",50,"USD",None,"FN-0002",20),
+        ("Josué Kalala","formation",50000,"FC","2026-09","FN-0003",20),
+        ("Nadège Mwamba","inscription",40000,"FC",None,"FN-0004",5),
+    ]:
+        if not db.execute("SELECT 1 FROM payments WHERE bank_ref=?", (ref,)).fetchone():
+            db.execute(
+                "INSERT INTO payments (registration_id,kind,amount,currency,period,bank_ref,paid_at,recorded_by) "
+                "VALUES (?,?,?,?,?,?,date('now',?),?)",
+                (reg_ids[name],kind,amount,currency,period,ref,f"-{days} days",secid)
+            )
+
+    section = db.execute("SELECT id FROM sections WHERE name=?", ("Informatique de gestion - groupe A",)).fetchone()
+    if not section:
+        fid_legacy = db.execute("SELECT id FROM filieres WHERE name=?", ("Informatique de gestion",)).fetchone()["id"]
+        section_id = db.execute(
+            "INSERT INTO sections (filiere_id,trainer_id,name,start_time,grace_minutes,end_time) VALUES (?,?,?,?,?,?)",
+            (fid_legacy,fid,"Informatique de gestion - groupe A","08:30",15,"12:30")
+        ).lastrowid
+    else:
+        section_id = section["id"]
+    for name in ("Josué Kalala","Nadège Mwamba","Patrick Ilunga","Solange Kabeya"):
+        db.execute("UPDATE registrations SET section_id=? WHERE id=?", (section_id, reg_ids[name]))
+    today = __import__("time").strftime("%Y-%m-%d")
+    if not db.execute("SELECT 1 FROM attendance WHERE section_id=? AND registration_id=? AND day=?",
+                      (section_id,reg_ids["Josué Kalala"],today)).fetchone():
+        db.execute("INSERT INTO attendance (section_id,registration_id,day,status,checkin_at,source,marked_by) "
+                   "VALUES (?,?,?,?,?,?,?)",
+                   (section_id,reg_ids["Josué Kalala"],today,"present","08:31","qr",fid))
+    if not db.execute("SELECT 1 FROM attendance WHERE section_id=? AND registration_id=? AND day=?",
+                      (section_id,reg_ids["Patrick Ilunga"],today)).fetchone():
+        db.execute("INSERT INTO attendance (section_id,registration_id,day,status,checkin_at,source,marked_by) "
+                   "VALUES (?,?,?,?,?,?,?)",
+                   (section_id,reg_ids["Patrick Ilunga"],today,"retard","09:10","qr",fid))
+    if not db.execute("SELECT 1 FROM absence_notices WHERE registration_id=? AND section_id=? AND for_day=?",
+                      (reg_ids["Nadège Mwamba"],section_id,today)).fetchone():
+        db.execute("INSERT INTO absence_notices (registration_id,section_id,for_day,kind,message) VALUES (?,?,?,?,?)",
+                   (reg_ids["Nadège Mwamba"],section_id,today,"retard","Embouteillage, j'arriverai vers 9h."))
+
+    for key, value in [
+        ("inscription_fee","40000"),("formation_fee","50000"),("jury_fee","25000"),
+        ("bank_name","FN BANK"),("bank_account","")
+    ]:
+        if not db.execute("SELECT 1 FROM settings WHERE key=?", (key,)).fetchone():
+            db.execute("INSERT INTO settings (key,value) VALUES (?,?)", (key,value))
+
+    db.commit()
+    return {"users": 12, "courses": 3, "lessons": 13, "questions": 33}
+
 def seed(db):
     """Remplit une base vide. Retourne un résumé."""
     pw = generate_password_hash
