@@ -430,8 +430,10 @@ def _migrate_presence(conn):
 
 
 def _migrate_filiere_details(conn):
-    """Conservée pour compatibilité avec les anciennes versions du schéma."""
-    return
+    """Ajoute les colonnes des filières introduites après le schéma initial."""
+    conn.execute(
+        "ALTER TABLE filieres ADD COLUMN IF NOT EXISTS service_id INTEGER REFERENCES services(id)"
+    )
 
 
 def _migrate_bank_settings(conn):
