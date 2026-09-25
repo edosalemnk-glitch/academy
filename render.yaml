@@ -2,20 +2,16 @@ services:
   - type: web
     name: inpp-academie
     runtime: python
-    plan: starter
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --bind 0.0.0.0:$PORT wsgi:app
     autoDeploy: true
     envVars:
       - key: SECRET_KEY
         generateValue: true
-      - key: INPP_DB
-        value: /var/data/formation.db
+      - key: DATABASE_URL
+        sync: false
       - key: SEO_BASE_URL
         sync: false
       - key: INPP_ENFORCE_FEES
         value: "0"
-    disk:
-      name: inpp-data
-      mountPath: /var/data
-      sizeGB: 1
