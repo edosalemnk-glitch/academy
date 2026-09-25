@@ -118,8 +118,15 @@ class _PGConnection:
         return _PGCursor(self, self._raw.cursor()).executemany(sql, seq)
 
     def executescript(self, script):
-        # The project schema is a static DDL script without semicolons inside SQL literals.
-        for statement in script.split(";"):
+        # Retire les commentaires SQL avant de découper le DDL : certains commentaires
+        # historiques contiennent des points-virgules, qui ne doivent pas séparer une requête.
+        cleaned_lines = []
+        for line in script.splitlines():
+            if line.lstrip().startswith("--"):
+                continue
+            cleaned_lines.append(line)
+        cleaned = "\n".join(cleaned_lines)
+        for statement in cleaned.split(";"):
             statement = statement.strip()
             if statement:
                 self.execute(statement)
