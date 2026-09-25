@@ -8,6 +8,10 @@ import secrets
 import string
 import time
 import uuid
+import urllib.error
+import urllib.parse
+import urllib.request
+import json
 from datetime import datetime, timedelta
 from functools import wraps
 
@@ -29,6 +33,10 @@ from utils import render_content
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 ALLOWED_EXT = {"gif", "png", "jpg", "jpeg", "webp"}
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+SUPABASE_STORAGE_BUCKET = os.environ.get("SUPABASE_STORAGE_BUCKET", "inpp-uploads")
+SUPABASE_STORAGE_SIGNED_TTL = int(os.environ.get("SUPABASE_STORAGE_SIGNED_TTL", "3600"))
 # Contrôle des frais : mettre INPP_ENFORCE_FEES=1 pour bloquer l'accès tant que le formateur
 # n'a pas marqué l'inscription comme « payée » ou « exonérée ».
 ENFORCE_FEES = os.environ.get("INPP_ENFORCE_FEES", "0") == "1"
@@ -1024,22 +1032,99 @@ def exam_results(course_id):
     return render_template("formateur/exam_results.html", course=course, exam=exam, attempts=rows)
 
 
+def _storage_enabled():
+    return bool(SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY)
+
+
+def _storage_request(method, path, body=None, content_type=None):
+    """Appelle l'API Storage Supabase avec la clé service-role côté serveur uniquement."""
+    if not _storage_enabled():
+        raise RuntimeError("Supabase Storage n'est pas configuré.")
+    url = f"{SUPABASE_URL}/storage/v1/{path.lstrip('/')}"
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+    }
+    if content_type:
+        headers["Content-Type"] = content_type
+    request_data = body.encode("utf-8") if isinstance(body, str) else body
+    req = urllib.request.Request(url, data=request_data, headers=headers, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=20) as response:
+            return response.read()
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Supabase Storage ({exc.code}) : {detail[:300]}") from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError("Supabase Storage est momentanément inaccessible.") from exc
+
+
 def save_image(file):
     if not file or not file.filename:
         return None
     ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
-    if ext not in ALLOWED_EXT:
+    if ext not in ALLOWED_EXT or not (file.mimetype or "").startswith("image/"):
         raise ValueError("Image non acceptée (formats : gif, png, jpg, jpeg, webp).")
-    name = f"{uuid.uuid4().hex[:12]}_{secure_filename(file.filename)}"
+    safe_name = secure_filename(file.filename)
+    if not safe_name:
+        raise ValueError("Nom de fichier invalide.")
+    if _storage_enabled():
+        name = f"lessons/{uuid.uuid4().hex[:12]}_{safe_name}"
+        _storage_request(
+            "POST",
+            f"object/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe='')}/{urllib.parse.quote(name, safe='')}",
+            body=file.read(),
+            content_type=file.mimetype or "application/octet-stream",
+        )
+        return name
+
+    name = f"{uuid.uuid4().hex[:12]}_{safe_name}"
     file.save(os.path.join(UPLOAD_FOLDER, name))
     return name
 
 
 def remove_image(name):
-    if name:
-        path = os.path.join(UPLOAD_FOLDER, os.path.basename(name))
-        if os.path.exists(path):
-            os.remove(path)
+    if not name:
+        return
+    if _storage_enabled() and str(name).startswith("lessons/"):
+        try:
+            _storage_request(
+                "DELETE",
+                f"object/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe='')}",
+                body=json.dumps({"prefixes": [name]}),
+                content_type="application/json",
+            )
+        except RuntimeError:
+            app.logger.exception("Impossible de supprimer l'image Supabase %s", name)
+        return
+    path = os.path.join(UPLOAD_FOLDER, os.path.basename(name))
+    if os.path.exists(path):
+        os.remove(path)
+
+
+def lesson_image_url(name):
+    """Retourne une URL signée Supabase, ou le chemin local en développement."""
+    if not name:
+        return ""
+    if not (_storage_enabled() and str(name).startswith("lessons/")):
+        return url_for("static", filename=f"uploads/{os.path.basename(name)}")
+    try:
+        raw = _storage_request(
+            "POST",
+            f"object/sign/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe='')}/{urllib.parse.quote(name, safe='')}",
+            body=json.dumps({"expiresIn": SUPABASE_STORAGE_SIGNED_TTL}),
+            content_type="application/json",
+        )
+        data = json.loads(raw.decode("utf-8"))
+        signed = data.get("signedURL") or data.get("signedUrl")
+        if not signed:
+            raise RuntimeError("URL signée absente de la réponse Supabase.")
+        if signed.startswith("http"):
+            return signed
+        return f"{SUPABASE_URL}/storage/v1{signed if signed.startswith('/') else '/' + signed}"
+    except (RuntimeError, ValueError, json.JSONDecodeError):
+        app.logger.exception("Impossible de générer l'URL signée pour %s", name)
+        return ""
 
 
 @app.route("/formateur/cours/<int:course_id>/lecons/nouvelle", methods=["GET", "POST"])
