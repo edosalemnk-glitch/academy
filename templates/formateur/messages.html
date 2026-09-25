@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% block title %}Messages - {{ section.name }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('sections_list') }}">Présences</a> &rsaquo;
+<a href="{{ url_for('section_detail', sid=section.id) }}">{{ section.name }}</a> &rsaquo; Messages</p>
+<h1>Messages des stagiaires</h1>
+<p class="meta">Un stagiaire qui prévient d'une absence ou d'un retard depuis sa carte apparaît ici. Choisissez le
+statut à poser pour la date concernée.</p>
+<div class="scroll"><table><thead><tr>
+  <th>Stagiaire</th><th>Motif</th><th>Date concernée</th><th>Message</th><th>Statut</th><th></th>
+</tr></thead><tbody>
+{% for n in notices %}<tr>
+  <td>{{ n.full_name }}</td>
+  <td>{{ NOTICE_KIND[n.kind] }}</td>
+  <td>{{ n.for_day }}</td>
+  <td style="max-width:280px">{{ n.message }}</td>
+  <td>{% if n.status == 'attente' %}<span class="tag warn">En attente</span>
+      {% else %}<span class="tag {{ PSTATUS[n.decided_status][1] }}">{{ PSTATUS[n.decided_status][0] }}</span>{% endif %}</td>
+  <td>
+  {% if n.status == 'attente' %}
+    <form method="post" action="{{ url_for('section_notice_decide', sid=section.id, nid=n.id) }}" class="row" style="gap:6px">{{ csrf_field() }}
+      <select name="status">
+        {% for code, (label, _) in PSTATUS.items() %}<option value="{{ code }}" {{ 'selected' if code==('absent' if n.kind=='absence' else 'retard') else '' }}>{{ label }}</option>{% endfor %}
+      </select>
+      <button class="btn small">Poser</button>
+    </form>
+  {% else %}<span class="meta">Traité</span>{% endif %}
+  </td>
+</tr>{% else %}<tr><td colspan="6">Aucun message pour le moment.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

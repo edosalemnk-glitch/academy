@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block title %}{{ 'Modifier la leçon' if lesson else 'Nouvelle leçon' }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('course_manage', course_id=course.id) }}">{{ course.title }}</a></div>
+<h1>{{ 'Modifier la leçon' if lesson else 'Nouvelle leçon' }}</h1>
+{% set v = request.form if request.method == 'POST' else (lesson|todict) %}
+<form method="post" enctype="multipart/form-data" class="card form wide">{{ csrf_field() }}
+  <label for="t">Titre de la leçon</label><input id="t" type="text" name="title" required value="{{ v.get('title', '') }}">
+  <label for="c">Contenu</label><textarea id="c" name="content" class="code" style="min-height:320px">{{ v.get('content', '') }}</textarea>
+  <p class="hint">Mise en forme : <code>## Titre</code>, <code>- élément de liste</code>, <code>&gt; remarque importante</code>, <code>**gras**</code>, <code>`code`</code>. Pour un bloc de code, entourez-le de lignes contenant ```.</p>
+  <label for="i">Image ou GIF (facultatif)</label><input id="i" type="file" name="image" accept="image/*">
+  {% if lesson and lesson.image %}<p class="hint">Image actuelle : {{ lesson.image }}</p><label class="opt"><input type="checkbox" name="remove_image" value="1"><span>Retirer l'image actuelle</span></label>{% endif %}
+  <p class="row"><button class="btn">Enregistrer</button><a class="btn alt" href="{{ url_for('course_manage', course_id=course.id) }}">Annuler</a></p>
+</form>
+{% endblock %}

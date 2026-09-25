@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% block title %}Inscriptions · {{ course.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('course_manage', course_id=course.id) }}">{{ course.title }}</a> / Inscriptions</div>
+<h1>Inscriptions</h1>
+<p class="meta">Seuls les stagiaires validés ici ont accès au contenu. Cette validation est le contrôle anti-fraude : vous vérifiez qui suit la formation. Suivi des frais : marquez chaque inscription comme payée, non payée ou exonérée{% if ENFORCE_FEES %} (l'accès est bloqué tant que les frais ne sont pas réglés){% else %} (information pour l'instant, sans blocage d'accès){% endif %}.</p>
+
+<h2>À valider ({{ groups.pending|length }})</h2>
+{% if groups.pending %}<div class="scroll"><table><thead><tr><th>Stagiaire</th><th>Demande</th><th></th></tr></thead><tbody>
+{% for e in groups.pending %}<tr><td><strong>{{ e.full_name }}</strong><br><span class="meta">{{ e.email }}</span></td><td>{{ e.requested_at[:16] }}</td>
+<td><div class="row" style="gap:6px">
+<form method="post" action="{{ url_for('enrollment_action', eid=e.id, action='approve') }}">{{ csrf_field() }}<button class="btn small">Valider</button></form>
+<form method="post" action="{{ url_for('enrollment_action', eid=e.id, action='reject') }}">{{ csrf_field() }}<button class="btn bad small">Refuser</button></form></div></td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="card">Aucune demande en attente.</div>{% endif %}
+
+<h2 style="margin-top:28px">Stagiaires inscrits ({{ groups.approved|length }})</h2>
+{% if groups.approved %}<div class="scroll"><table><thead><tr><th>Stagiaire</th><th>Depuis</th><th>Frais</th><th></th></tr></thead><tbody>
+{% for e in groups.approved %}<tr><td><strong>{{ e.full_name }}</strong><br><span class="meta">{{ e.email }}</span></td><td>{{ (e.decided_at or e.requested_at)[:10] }}</td>
+<td><span class="tag {{ 'ok' if e.fee_status != 'unpaid' else 'warn' }}">{{ FEE[e.fee_status] }}</span></td>
+<td><div class="row" style="gap:6px">
+{% for act, label in [('paid','Payé'),('unpaid','Non payé'),('exempt','Exonéré')] if act != e.fee_status %}<form method="post" action="{{ url_for('enrollment_action', eid=e.id, action=act) }}">{{ csrf_field() }}<button class="btn alt small">{{ label }}</button></form>{% endfor %}
+<form method="post" action="{{ url_for('enrollment_action', eid=e.id, action='revoke') }}" onsubmit="return confirm('Retirer l\'accès à ce stagiaire ?')">{{ csrf_field() }}<button class="btn bad small">Retirer l'accès</button></form></div></td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="card">Aucun stagiaire inscrit.</div>{% endif %}
+
+<h2 style="margin-top:28px">Ajouter des stagiaires directement</h2>
+{% if available %}
+<form method="post" action="{{ url_for('enroll_learners', course_id=course.id) }}" class="card">{{ csrf_field() }}
+  <div style="columns:2 260px;max-height:260px;overflow:auto">{% for u in available %}<label class="opt"><input type="checkbox" name="user_ids" value="{{ u.id }}"><span>{{ u.full_name }}<br><span class="meta">{{ u.email }}</span></span></label>{% endfor %}</div>
+  <label for="fs">Frais</label><select id="fs" name="fee_status" style="max-width:220px"><option value="unpaid">Non payé</option><option value="paid">Payé</option><option value="exempt">Exonéré</option></select>
+  <p><button class="btn">Inscrire les stagiaires cochés</button></p>
+</form>
+{% else %}<div class="card">Tous les comptes stagiaires sont déjà inscrits ou en attente. <a href="{{ url_for('learners') }}">Créer de nouveaux comptes</a>.</div>{% endif %}
+
+{% if groups.rejected or groups.revoked %}
+<h2 style="margin-top:28px">Refusés ou retirés</h2>
+<div class="scroll"><table><tbody>
+{% for e in groups.rejected + groups.revoked %}<tr><td>{{ e.full_name }}<br><span class="meta">{{ e.email }}</span></td><td><span class="tag bad">{{ STATUS[e.status][0] }}</span></td>
+<td><form method="post" action="{{ url_for('enrollment_action', eid=e.id, action='approve') }}">{{ csrf_field() }}<button class="btn alt small">Valider quand même</button></form></td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+{% endblock %}

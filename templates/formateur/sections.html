@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% block title %}Présences{% endblock %}
+{% block content %}
+<h1>Présences</h1>
+<p class="meta">Chaque section a son propre horaire (heure de début, tolérance, heure de fin) et sa propre liste de
+stagiaires. Le pointage se fait en scannant la carte du stagiaire sur l'écran « Pointage » de la section.</p>
+<div class="scroll" style="margin:18px 0"><table><thead><tr>
+  <th>Section</th><th>Filière</th><th>Horaire</th><th>Stagiaires</th><th>Messages</th><th></th>
+</tr></thead><tbody>
+{% for s in sections %}<tr>
+  <td><strong>{{ s.name }}</strong>{% if not s.active %} <span class="tag">Inactive</span>{% endif %}</td>
+  <td>{{ s.filiere }}</td>
+  <td>{{ s.start_time }} (+{{ s.grace_minutes }} min) &rarr; {{ s.end_time }}</td>
+  <td>{{ s.nb_membres }}</td>
+  <td>{% if s.nb_attente %}<span class="tag warn">{{ s.nb_attente }} en attente</span>{% else %}—{% endif %}</td>
+  <td class="row">
+    <a class="btn small" href="{{ url_for('section_detail', sid=s.id) }}">Grille</a>
+    <a class="btn alt small" href="{{ url_for('section_kiosk', sid=s.id) }}">Pointage</a>
+    <a class="btn alt small" href="{{ url_for('section_messages', sid=s.id) }}">Messages</a>
+  </td>
+</tr>{% else %}<tr><td colspan="6">Vous n'avez pas encore de section. Créez-en une ci-dessous.</td></tr>{% endfor %}
+</tbody></table></div>
+<div class="card" style="max-width:640px">
+  <h2>Nouvelle section</h2>
+  <form method="post" action="{{ url_for('section_new') }}" class="form">{{ csrf_field() }}
+    <label for="n">Nom (ex. « SQL Niveau 1 - groupe A »)</label>
+    <input id="n" type="text" name="name" required minlength="2">
+    <label for="f">Filière</label>
+    <select id="f" name="filiere_id" required>
+      <option value="">Choisir…</option>
+      {% for f in filieres %}<option value="{{ f.id }}">{{ f.name }}</option>{% endfor %}
+    </select>
+    <label for="st">Heure de début</label>
+    <input id="st" type="time" name="start_time" value="08:30" required>
+    <label for="gm">Tolérance avant retard (minutes)</label>
+    <input id="gm" type="number" name="grace_minutes" value="15" min="0" max="120" required>
+    <label for="et">Heure de fin</label>
+    <input id="et" type="time" name="end_time" value="12:30" required>
+    <p><button class="btn">Créer la section</button></p>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% block title %}Résultats de l'examen · {{ course.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('course_manage', course_id=course.id) }}">{{ course.title }}</a> / <a href="{{ url_for('exam_config', course_id=course.id) }}">Examen final</a> / Résultats</div>
+<h1>Résultats — {{ exam.title }}</h1>
+<div class="scroll"><table><thead><tr><th>Stagiaire</th><th>Commencé</th><th>Soumis</th><th>Score</th><th>Résultat</th></tr></thead><tbody>
+{% for a in attempts %}
+  <tr>
+    <td>{{ a.full_name }}</td>
+    <td>{{ a.started_at }}</td>
+    <td>{{ a.submitted_at or '—' }}</td>
+    <td>{% if a.score is not none %}{{ a.score }} %{% else %}—{% endif %}</td>
+    <td>
+      {% if a.submitted_at is none %}<span class="tag warn">En cours</span>
+      {% elif a.late %}<span class="tag bad">Hors délai</span>
+      {% elif a.passed %}<span class="tag ok">Réussi</span>
+      {% else %}<span class="tag bad">Échoué</span>{% endif %}
+    </td>
+  </tr>
+{% else %}<tr><td colspan="5">Aucune tentative pour le moment.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

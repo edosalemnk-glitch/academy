@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% block title %}Contact{% endblock %}
+{% block meta_description %}Coordonnées de l'INPP : adresse des centres, téléphone et e-mail pour toute question sur les formations.{% endblock %}
+{% block content %}
+<h1>Nous contacter</h1>
+<p class="meta">Pour une inscription, présentez-vous directement à la réception du centre (voir la <a href="{{ url_for('procedure') }}">procédure d'inscription</a>). Pour toute autre question :</p>
+<div class="grid">
+  <div class="card">
+    <h3>Adresse</h3>
+    <p>[Adresse du centre INPP à compléter]<br>Kinshasa, République Démocratique du Congo</p>
+  </div>
+  <div class="card">
+    <h3>Téléphone</h3>
+    <p>[Numéro de la réception à compléter]</p>
+  </div>
+  <div class="card">
+    <h3>E-mail</h3>
+    <p>[Adresse e-mail du secrétariat à compléter]</p>
+  </div>
+  <div class="card">
+    <h3>Horaires</h3>
+    <p>[Jours et heures d'ouverture à compléter]</p>
+  </div>
+</div>
+<p class="meta" style="margin-top:18px">Ces coordonnées sont à compléter par le secrétariat avant la mise en ligne réelle du site.</p>
+{% endblock %}

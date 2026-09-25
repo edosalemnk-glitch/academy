@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% block title %}Signaler une absence{% endblock %}
+{% block content %}
+<div class="card" style="max-width:560px;margin:0 auto">
+  <h1>Signaler une absence ou un retard</h1>
+  <p class="meta">{{ reg.full_name }} · {{ section.name }} ({{ section.filiere }})<br>
+  Votre formateur verra ce message et décidera du statut de votre présence pour la date indiquée.</p>
+  <form method="post" class="form">{{ csrf_field() }}
+    <label for="k">Motif</label>
+    <select id="k" name="kind" required>
+      <option value="absence">Je serai absent(e)</option>
+      <option value="retard">J'arriverai en retard</option>
+    </select>
+    <label for="d">Date concernée</label>
+    <input id="d" type="date" name="for_day" value="{{ today }}" required>
+    <label for="m">Raison (quelques mots)</label>
+    <textarea id="m" name="message" rows="4" required minlength="3" placeholder="Ex. : rendez-vous médical ce matin"></textarea>
+    <p><button class="btn">Envoyer au formateur</button></p>
+  </form>
+  <p class="meta"><a href="{{ url_for('card_verify', code=reg.card_code) }}">&larr; Retour à ma carte</a></p>
+</div>
+{% endblock %}

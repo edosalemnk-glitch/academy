@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% block title %}{{ course.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('trainer_dashboard') }}">Tableau de bord</a> / Cours</div>
+<div class="row between"><h1>{{ course.title }}</h1>
+  <div class="row"><a class="btn alt" href="{{ url_for('enrollments', course_id=course.id) }}">Inscriptions{% if pending %}<span class="badge">{{ pending }}</span>{% endif %}</a><a class="btn alt" href="{{ url_for('tracking', course_id=course.id) }}">Suivi des stagiaires</a><a class="btn alt" href="{{ url_for('learn', course_id=course.id) }}">Aperçu</a><a class="btn alt" href="{{ url_for('course_edit', course_id=course.id) }}">Modifier</a></div></div>
+<p class="meta">{{ course.category }} · {{ course.level }} · quiz réussi à {{ course.pass_mark }} % · {% if course.fee_amount %}{{ '%g'|format(course.fee_amount) }} {{ course.currency }}{% else %}gratuit{% endif %}{% if not course.published %} · <span class="tag warn">Brouillon</span>{% endif %}</p>
+<div class="row between"><h2>Leçons</h2><a class="btn sun" href="{{ url_for('lesson_new', course_id=course.id) }}">Ajouter une leçon</a></div>
+<div class="scroll"><table><thead><tr><th>#</th><th>Titre</th><th>Quiz</th><th></th></tr></thead><tbody>
+{% for l in lessons %}<tr>
+  <td>{{ loop.index }}</td><td>{{ l.title }}</td>
+  <td><a href="{{ url_for('questions', lesson_id=l.id) }}">{{ l.nb_questions }} question(s)</a>{% if not l.nb_questions %} <span class="tag warn">Sans quiz</span>{% endif %}</td>
+  <td><div class="row" style="gap:6px">
+    <form method="post" action="{{ url_for('lesson_move', lesson_id=l.id) }}">{{ csrf_field() }}<input type="hidden" name="dir" value="up"><button class="btn alt small" {{ 'disabled' if loop.first }} aria-label="Monter">↑</button></form>
+    <form method="post" action="{{ url_for('lesson_move', lesson_id=l.id) }}">{{ csrf_field() }}<input type="hidden" name="dir" value="down"><button class="btn alt small" {{ 'disabled' if loop.last }} aria-label="Descendre">↓</button></form>
+    <a class="btn alt small" href="{{ url_for('lesson_edit', lesson_id=l.id) }}">Modifier</a>
+    <a class="btn alt small" href="{{ url_for('questions', lesson_id=l.id) }}">Quiz</a>
+    <form method="post" action="{{ url_for('lesson_delete', lesson_id=l.id) }}" onsubmit="return confirm('Supprimer cette leçon et son quiz ?')">{{ csrf_field() }}<button class="btn bad small">Supprimer</button></form>
+  </div></td></tr>
+{% else %}<tr><td colspan="4">Aucune leçon. Ajoutez la première.</td></tr>{% endfor %}
+</tbody></table></div>
+<div class="row between" style="margin-top:30px"><h2>Examen final</h2>
+  <a class="btn alt" href="{{ url_for('exam_config', course_id=course.id) }}">{{ 'Modifier' if exam else 'Configurer un examen' }}</a></div>
+{% if exam %}
+<div class="card">
+  <p class="row between">
+    <span>{{ exam.title }} · {{ exam.duration_minutes }} min · réussite à {{ exam.pass_mark }} % · {{ exam.max_attempts }} tentative(s)
+      {% if not exam.published %} · <span class="tag warn">Non publié</span>{% endif %}</span>
+    <a class="btn alt small" href="{{ url_for('exam_results', course_id=course.id) }}">{{ exam_nb_attempts }} tentative(s) enregistrée(s)</a>
+  </p>
+  <p class="meta" style="margin:6px 0 0"><a href="{{ url_for('exam_questions', course_id=course.id) }}">{{ exam_nb_questions }} question(s)</a>{% if not exam_nb_questions %} <span class="tag warn">Sans question</span>{% endif %}</p>
+</div>
+{% else %}<div class="card">Aucun examen configuré. Les stagiaires n'ont accès qu'aux quiz de leçon.</div>{% endif %}
+
+<form method="post" action="{{ url_for('course_delete', course_id=course.id) }}" onsubmit="return confirm('Supprimer définitivement ce cours, ses leçons, quiz et inscriptions ?')" style="margin-top:28px">{{ csrf_field() }}<button class="btn bad small">Supprimer ce cours</button></form>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% block title %}Suivi · {{ course.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('course_manage', course_id=course.id) }}">{{ course.title }}</a> / Suivi</div>
+<div class="row between"><h1>Suivi des stagiaires</h1><a class="btn alt" href="{{ url_for('tracking_csv', course_id=course.id) }}">Exporter en CSV (Excel)</a></div>
+{% if rows %}
+{% set n = rows|length %}
+<div class="stats">
+  <div class="stat"><b>{{ n }}</b>stagiaires actifs</div>
+  <div class="stat"><b>{{ rows|selectattr('cert')|list|length }}</b>certifiés</div>
+  <div class="stat"><b>{{ rows|selectattr('blocked')|list|length }}</b>bloqués (3 échecs ou +)</div>
+  <div class="stat"><b>{{ (rows|sum(attribute='pct') / n)|round|int }} %</b>progression moyenne</div>
+</div>
+<div class="scroll"><table class="matrix"><thead><tr><th>Stagiaire</th>{% for l in lessons %}<th title="{{ l.title }}">L{{ loop.index }}</th>{% endfor %}<th>Progression</th><th>Moy. quiz</th><th>Dernière activité</th></tr></thead><tbody>
+{% for r in rows %}<tr>
+  <td><strong>{{ r.u.full_name }}</strong>{% if r.cert %} <span class="tag ok">Certifié</span>{% endif %}{% if r.blocked %}<br><span class="tag bad">Bloqué : {{ r.blocked }}</span>{% endif %}<br><span class="meta">Frais : {{ FEE[r.u.fee_status] }}</span></td>
+  {% for c in r.cells %}<td>{% if c.state == 'done' %}<span class="cell-done">✓ {{ c.score }}%</span>{% elif c.state == 'fail' %}<span class="cell-fail">✗ {{ c.fails }}</span>{% else %}<span class="cell-todo">–</span>{% endif %}</td>{% endfor %}
+  <td style="min-width:110px"><div class="bar"><b style="width:{{ r.pct }}%"></b></div>{{ r.done }}/{{ r.total }} ({{ r.pct }} %)</td>
+  <td>{{ (r.avg ~ ' %') if r.avg is not none else '–' }}</td><td>{{ r.last[:16] if r.last else '–' }}</td></tr>{% endfor %}
+</tbody></table></div>
+<p class="hint">✓ = quiz réussi (meilleur score) · ✗ = nombre d'échecs sans réussite · – = pas encore tenté. Survolez « L1, L2… » pour voir le titre de la leçon.</p>
+<ul class="hint">{% for l in lessons %}<li>L{{ loop.index }} : {{ l.title }}</li>{% endfor %}</ul>
+{% else %}<div class="card">Aucun stagiaire validé pour ce cours. <a href="{{ url_for('enrollments', course_id=course.id) }}">Gérer les inscriptions</a>.</div>{% endif %}
+{% endblock %}

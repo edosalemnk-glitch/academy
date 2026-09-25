@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% block title %}Questions de l'examen · {{ course.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('course_manage', course_id=course.id) }}">{{ course.title }}</a> / <a href="{{ url_for('exam_config', course_id=course.id) }}">Examen final</a> / Questions</div>
+<h1>Questions de l'examen</h1>
+<p class="meta">Chaque question a 4 réponses dont une seule est correcte. Les stagiaires voient les réponses dans un ordre aléatoire à chaque tentative.</p>
+{% for q in questions %}
+  <div class="q"><strong>{{ loop.index }}. {{ q.text }}</strong>
+    <ul style="margin:6px 0">{% for k in ['a','b','c','d'] %}<li>{{ q['option_' ~ k] }}{% if q.correct == k|upper %} <span class="tag ok">Bonne réponse</span>{% endif %}</li>{% endfor %}</ul>
+    {% if q.explanation %}<p class="meta">{{ q.explanation }}</p>{% endif %}
+    <div class="row"><a class="btn alt small" href="{{ url_for('exam_questions', course_id=course.id, edit=q.id) }}">Modifier</a>
+    <form method="post" action="{{ url_for('exam_question_delete', qid=q.id) }}" onsubmit="return confirm('Supprimer cette question ?')">{{ csrf_field() }}<button class="btn bad small">Supprimer</button></form></div>
+  </div>
+{% else %}<div class="card">Aucune question pour le moment. L'examen ne peut pas être commencé sans question.</div>{% endfor %}
+<h2 style="margin-top:26px">{{ 'Modifier la question' if edit else 'Ajouter une question' }}</h2>
+{% set v = request.form if request.method == 'POST' else (edit|todict) %}
+<form method="post" class="card form wide">{{ csrf_field() }}
+  {% if edit %}<input type="hidden" name="qid" value="{{ edit.id }}">{% endif %}
+  <label for="q">Question</label><input id="q" type="text" name="text" required value="{{ v.get('text', '') }}">
+  {% for k in ['a','b','c','d'] %}<label for="o{{ k }}">Réponse {{ k|upper }}</label><input id="o{{ k }}" type="text" name="option_{{ k }}" required value="{{ v.get('option_' ~ k, '') }}">{% endfor %}
+  <label for="cr">Bonne réponse</label><select id="cr" name="correct">{% for k in 'ABCD' %}<option {{ 'selected' if v.get('correct') == k }}>{{ k }}</option>{% endfor %}</select>
+  <label for="ex">Explication (affichée après la correction)</label><input id="ex" type="text" name="explanation" value="{{ v.get('explanation', '') }}">
+  <p class="row"><button class="btn">{{ 'Enregistrer la modification' if edit else 'Ajouter la question' }}</button>{% if edit %}<a class="btn alt" href="{{ url_for('exam_questions', course_id=course.id) }}">Annuler</a>{% endif %}</p>
+</form>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% block title %}{{ exam.title }} · {{ course.title }}{% endblock %}
+{% block content %}
+<h1>{{ exam.title }}</h1>
+<div class="flash warn noprint" id="timer-box">Temps restant : <strong id="timer">--:--</strong></div>
+<p class="meta">Réussite à partir de {{ exam.pass_mark }} %. La soumission est automatique lorsque le temps est écoulé.</p>
+<form method="post" class="form wide" id="exam-form" style="max-width:780px">{{ csrf_field() }}
+{% for it in items %}
+  <fieldset class="q" style="border:1px solid var(--line)"><legend style="font-weight:700;padding:0 6px">Question {{ loop.index }} sur {{ items|length }}</legend>
+    <p style="margin:0 0 6px">{{ it.q.text }}</p>
+    {% for key, text in it.opts %}<label class="opt"><input type="radio" name="q_{{ it.q.id }}" value="{{ key }}"><span>{{ text }}</span></label>{% endfor %}
+  </fieldset>
+{% endfor %}
+<button class="btn sun">Soumettre l'examen</button>
+</form>
+<script>
+(function () {
+  var seconds = {{ seconds_left|int }};
+  var timerEl = document.getElementById('timer');
+  var form = document.getElementById('exam-form');
+  function render() {
+    var m = Math.floor(seconds / 60), s = seconds % 60;
+    timerEl.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+  render();
+  var iv = setInterval(function () {
+    seconds -= 1;
+    if (seconds <= 0) { clearInterval(iv); form.submit(); return; }
+    render();
+  }, 1000);
+})();
+</script>
+{% endblock %}

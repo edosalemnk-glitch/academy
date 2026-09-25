@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% block title %}Frais et procédure d'inscription{% endblock %}
+{% block content %}
+<h1>Inscription au centre : frais et procédure</h1>
+<p class="meta">Pour les formations suivies au centre. (Pour créer un compte sur la plateforme en ligne, utilisez « Créer un compte ».)</p>
+
+<div class="grid" style="margin:18px 0 26px">
+  <div class="card"><h3>Frais d'inscription</h3><p><strong>{{ cfg.inscription_fee|float|money('FC') }}</strong><br><span class="meta">Obligatoire</span></p></div>
+  <div class="card"><h3>Frais de formation</h3><p><strong>{{ cfg.formation_fee|float|money('FC') }}</strong> par mois</p></div>
+  <div class="card"><h3>Frais de jury</h3><p><strong>{{ cfg.jury_fee|float|money('FC') }}</strong><br><span class="meta">Obligatoire avant de passer le jury</span></p></div>
+  <div class="card"><h3>Frais matériel</h3><p>Selon la filière :</p>
+    {% if filieres %}<ul style="margin:0;padding-left:18px">{% for f in filieres %}<li>{{ f.name }} : <strong>{{ f.material_fee|money('USD') }}</strong></li>{% endfor %}</ul>
+    {% else %}<p class="meta">Les filières seront publiées prochainement.</p>{% endif %}</div>
+</div>
+
+<h2>Types de stagiaires</h2>
+<div class="scroll" style="margin-bottom:26px"><table><thead><tr><th>Type</th><th>Provenance</th><th>Frais à payer</th></tr></thead><tbody>
+<tr><td><strong>Non recommandé</strong></td><td>Inscription à titre personnel</td><td>Tous les frais</td></tr>
+<tr><td><strong>Recommandé total</strong></td><td>Institution privée</td><td>Aucun (pris en charge par l'institution)</td></tr>
+<tr><td><strong>Recommandé partiel</strong></td><td>Institution étatique</td><td>Frais matériel et frais de jury (selon la filière)</td></tr>
+</tbody></table></div>
+
+<h2>Procédure d'inscription</h2>
+<ol class="steps">
+  <li><strong>Renseignements.</strong> Présentez-vous à la réception pour vous informer, puis choisissez une filière selon votre goût.</li>
+  <li><strong>Paiement.</strong> Prenez le numéro de compte de la <strong>{{ cfg.bank_name or 'banque' }}</strong>{% if cfg.bank_account %} (<strong>{{ cfg.bank_account }}</strong>){% endif %} et payez les frais d'inscription.</li>
+  <li><strong>Enregistrement.</strong> Ramenez votre preuve de paiement à un agent de la réception : vous êtes enregistré dans le registre des stagiaires en ordre avec les frais.</li>
+  <li><strong>Stagiaire recommandé ?</strong> Remettez votre lettre de recommandation au secrétaire. Elle est approuvée par la hiérarchie, puis vous êtes inséré dans le registre des apprenants provenant des autres institutions.</li>
+  <li><strong>Carte de stagiaire.</strong> Les stagiaires en ordre avec les frais reçoivent leur carte de stagiaire.</li>
+</ol>
+{% endblock %}

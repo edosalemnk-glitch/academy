@@ -1,0 +1,124 @@
+{% extends "base.html" %}{% block title %}Pointage - {{ section.name }}{% endblock %}
+{% block content %}
+<p class="crumbs noprint"><a href="{{ url_for('sections_list') }}">Présences</a> &rsaquo;
+<a href="{{ url_for('section_detail', sid=section.id) }}">{{ section.name }}</a> &rsaquo; Pointage</p>
+<h1>{{ section.name }}</h1>
+<p class="meta">Scannez la carte de stagiaire avec la caméra, ou saisissez le code à la main. Présent jusqu'à {{ limit_hm }}, en retard ensuite
+(section {{ section.start_time }} &rarr; {{ section.end_time }}).</p>
+
+{% if result %}
+<div class="card" style="border-left:6px solid var({{ '--' + result.css if result.ok else '--bad' }});margin:18px 0;text-align:center;padding:30px">
+  {% if result.ok %}
+    <h1 style="margin:0">{{ result.name }}</h1>
+    <p><span class="tag {{ result.css }}" style="font-size:1.1rem">{{ result.label }}</span> · pointé à {{ result.time }}</p>
+  {% else %}
+    <h2 style="margin:0;color:var(--bad)">{{ result.message }}</h2>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="card" id="cam-card" style="margin-bottom:18px">
+  <div class="row between" style="align-items:center">
+    <strong>Caméra</strong>
+    <button type="button" class="btn alt small" id="cam-toggle">Activer la caméra</button>
+  </div>
+  <div id="cam-wrap" style="display:none;margin-top:12px;position:relative;max-width:420px">
+    <video id="cam-video" playsinline muted style="width:100%;border-radius:8px;background:#000;display:block"></video>
+    <div id="cam-frame" style="position:absolute;inset:12%;border:3px solid var(--river);border-radius:12px;pointer-events:none;opacity:.75"></div>
+  </div>
+  <p class="meta" id="cam-status" style="margin:10px 0 0"></p>
+</div>
+
+<form method="post" action="{{ url_for('section_scan', sid=section.id) }}" id="scanform">{{ csrf_field() }}
+  <label for="code" class="meta">Code de la carte (lecteur physique, caméra, ou saisie manuelle)</label>
+  <input id="code" name="code" type="text" autocomplete="off" autofocus
+         style="font-size:1.4rem;padding:14px;width:100%;box-sizing:border-box;border:2px solid var(--river);border-radius:8px">
+</form>
+
+<canvas id="cam-canvas" style="display:none"></canvas>
+<script src="{{ url_for('static', filename='js/jsqr.min.js') }}"></script>
+<script>
+(function () {
+  var codeInput = document.getElementById('code');
+  var form = document.getElementById('scanform');
+
+  // Lecteur physique (USB/Bluetooth) ou saisie manuelle : Entrée soumet.
+  codeInput.focus();
+  codeInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); form.submit(); }
+  });
+
+  // Scanner caméra (jsQR), activé sur demande.
+  var toggleBtn = document.getElementById('cam-toggle');
+  var wrap = document.getElementById('cam-wrap');
+  var video = document.getElementById('cam-video');
+  var canvas = document.getElementById('cam-canvas');
+  var ctx = canvas.getContext('2d', { willReadFrequently: true });
+  var statusEl = document.getElementById('cam-status');
+  var stream = null;
+  var raf = null;
+  var locked = false;
+
+  function setStatus(msg) { statusEl.textContent = msg; }
+
+  function stopCamera() {
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
+    if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+    wrap.style.display = 'none';
+    toggleBtn.textContent = 'Activer la caméra';
+  }
+
+  function tick() {
+    if (video.readyState === video.HAVE_ENOUGH_DATA && !locked) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      var img;
+      try { img = ctx.getImageData(0, 0, canvas.width, canvas.height); }
+      catch (err) { img = null; }
+      if (img && window.jsQR) {
+        var qr = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+        if (qr && qr.data) {
+          locked = true;
+          setStatus('Carte détectée, envoi en cours…');
+          codeInput.value = qr.data;
+          stopCamera();
+          form.submit();
+          return;
+        }
+      }
+    }
+    raf = requestAnimationFrame(tick);
+  }
+
+  function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setStatus("Ce navigateur ne permet pas d'utiliser la caméra ici. Utilisez la saisie manuelle ci-dessous.");
+      return;
+    }
+    setStatus('Ouverture de la caméra…');
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(function (s) {
+        stream = s;
+        video.srcObject = s;
+        video.play();
+        wrap.style.display = 'block';
+        toggleBtn.textContent = 'Désactiver la caméra';
+        locked = false;
+        setStatus('Présentez la carte devant la caméra.');
+        raf = requestAnimationFrame(tick);
+      })
+      .catch(function () {
+        setStatus("Caméra indisponible ou accès refusé. Utilisez la saisie manuelle ci-dessous.");
+      });
+  }
+
+  toggleBtn.addEventListener('click', function () {
+    if (stream) { stopCamera(); setStatus(''); } else { startCamera(); }
+  });
+
+  window.addEventListener('pagehide', stopCamera);
+})();
+</script>
+{% endblock %}

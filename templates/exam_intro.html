@@ -1,0 +1,42 @@
+{% extends "base.html" %}{% block title %}{{ exam.title }} · {{ course.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('learn', course_id=course.id) }}">{{ course.title }}</a> / {{ exam.title }}</div>
+<h1>{{ exam.title }}</h1>
+<div class="card" style="margin-bottom:18px">
+  <p><strong>Durée :</strong> {{ exam.duration_minutes }} minutes, une fois commencé — pas de pause.</p>
+  <p><strong>Seuil de réussite :</strong> {{ exam.pass_mark }} %</p>
+  <p><strong>Tentatives :</strong> {{ attempts|length }} / {{ exam.max_attempts }} utilisée(s)</p>
+  {% if exam.opens_at or exam.closes_at %}
+  <p><strong>Créneau :</strong>
+    {% if exam.opens_at %}à partir du {{ exam.opens_at }}{% endif %}
+    {% if exam.closes_at %} jusqu'au {{ exam.closes_at }}{% endif %}</p>
+  {% endif %}
+</div>
+
+{% if not lessons_done %}
+  <div class="flash warn">Terminez d'abord toutes les leçons de ce cours pour débloquer l'examen.</div>
+  <a class="btn alt" href="{{ url_for('learn', course_id=course.id) }}">Retour au cours</a>
+{% elif ongoing %}
+  <div class="flash info">Vous avez une tentative en cours, non encore soumise.</div>
+  <a class="btn sun" href="{{ url_for('exam_take', attempt_id=ongoing.id) }}">Reprendre l'examen</a>
+{% elif attempts|length >= exam.max_attempts %}
+  <div class="flash bad">Vous avez utilisé toutes vos tentatives pour cet examen.</div>
+{% elif state == 'a_venir' %}
+  <div class="flash warn">L'examen n'est pas encore ouvert. Revenez au créneau annoncé par votre formateur.</div>
+{% elif state == 'ferme' %}
+  <div class="flash bad">Le créneau de cet examen est terminé.</div>
+{% else %}
+  <p>Une fois commencé, le chrono de {{ exam.duration_minutes }} minutes ne s'arrête pas. Assurez-vous d'être prêt avant de cliquer sur « Commencer ».</p>
+  <form method="post" action="{{ url_for('exam_start', course_id=course.id) }}">{{ csrf_field() }}<button class="btn sun">Commencer l'examen</button></form>
+{% endif %}
+
+{% if attempts %}
+<h2 style="margin-top:26px">Tentatives précédentes</h2>
+<div class="scroll"><table><thead><tr><th>Soumis</th><th>Score</th><th>Résultat</th></tr></thead><tbody>
+{% for a in attempts %}
+  <tr><td>{{ a.submitted_at or 'en cours' }}</td><td>{% if a.score is not none %}{{ a.score }} %{% else %}—{% endif %}</td>
+  <td>{% if a.submitted_at is none %}<span class="tag warn">En cours</span>{% elif a.late %}<span class="tag bad">Hors délai</span>{% elif a.passed %}<span class="tag ok">Réussi</span>{% else %}<span class="tag bad">Échoué</span>{% endif %}</td></tr>
+{% endfor %}
+</tbody></table></div>
+{% endif %}
+{% endblock %}

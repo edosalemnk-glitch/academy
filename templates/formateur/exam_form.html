@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% block title %}Examen final · {{ course.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('course_manage', course_id=course.id) }}">{{ course.title }}</a> / Examen final</div>
+<h1>Examen final</h1>
+<p class="meta">Distinct des quiz de leçon : il porte sur tout le cours, s'ouvre sur un créneau que vous fixez (souvent pendant une séance en salle) et se déroule avec un temps limité. Un stagiaire doit avoir terminé toutes les leçons pour pouvoir le commencer.</p>
+
+<form method="post" class="card form wide">{{ csrf_field() }}
+  <label for="title">Titre</label>
+  <input id="title" name="title" value="{{ exam.title if exam else 'Examen final' }}">
+
+  <label for="duration_minutes">Durée (minutes)</label>
+  <input id="duration_minutes" type="number" min="5" max="240" name="duration_minutes" value="{{ exam.duration_minutes if exam else 30 }}">
+
+  <label for="pass_mark">Seuil de réussite (%)</label>
+  <input id="pass_mark" type="number" min="1" max="100" name="pass_mark" value="{{ exam.pass_mark if exam else 70 }}">
+
+  <label for="max_attempts">Nombre de tentatives autorisées</label>
+  <input id="max_attempts" type="number" min="1" max="10" name="max_attempts" value="{{ exam.max_attempts if exam else 1 }}">
+
+  <label for="opens_at">Ouverture (optionnel — laisser vide pour ouvrir dès la publication)</label>
+  <input id="opens_at" type="datetime-local" name="opens_at" value="{{ exam.opens_at.replace(' ', 'T')[:16] if exam and exam.opens_at else '' }}">
+
+  <label for="closes_at">Fermeture (optionnel)</label>
+  <input id="closes_at" type="datetime-local" name="closes_at" value="{{ exam.closes_at.replace(' ', 'T')[:16] if exam and exam.closes_at else '' }}">
+
+  <label style="display:flex;align-items:center;gap:8px;font-weight:400">
+    <input type="checkbox" name="published" style="width:auto" {{ 'checked' if exam and exam.published }}>
+    Publier l'examen (visible et accessible aux stagiaires ayant terminé les leçons)
+  </label>
+
+  <p class="row"><button class="btn">Enregistrer</button></p>
+</form>
+
+{% if exam %}
+<div class="row" style="margin-top:20px">
+  <a class="btn alt" href="{{ url_for('exam_questions', course_id=course.id) }}">Questions ({{ nb_questions }})</a>
+  <a class="btn alt" href="{{ url_for('exam_results', course_id=course.id) }}">Résultats des stagiaires</a>
+</div>
+{% if not nb_questions %}<p class="meta" style="margin-top:10px">Ajoutez des questions avant de publier l'examen : sans question, personne ne peut le passer.</p>{% endif %}
+{% endif %}
+{% endblock %}

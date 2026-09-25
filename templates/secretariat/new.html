@@ -1,0 +1,45 @@
+{% extends "base.html" %}{% block title %}Nouvelle inscription{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('sec_dashboard') }}">Secrétariat</a> / Nouvelle inscription</div>
+<h1>Nouvelle inscription</h1>
+{% if not filieres %}<div class="card">Aucune filière n'est définie. Ajoutez-les d'abord dans <a href="{{ url_for('sec_tariffs') }}">Tarifs</a>.</div>{% else %}
+<div class="lab">
+<form method="post" class="form wide card">{{ csrf_field() }}
+  <label for="n">Noms &amp; post-noms</label>
+  <input id="n" type="text" name="full_name" value="{{ form.get('full_name', '') }}" required minlength="3" autocomplete="off">
+  <div class="row" style="align-items:flex-start;gap:20px">
+    <div style="flex:1;min-width:150px"><label>Sexe</label>
+      <label class="opt"><input type="radio" name="sex" value="M" {{ 'checked' if form.get('sex') == 'M' }} required><span>Masculin</span></label>
+      <label class="opt"><input type="radio" name="sex" value="F" {{ 'checked' if form.get('sex') == 'F' }}><span>Féminin</span></label></div>
+    <div style="flex:2;min-width:200px"><label for="p">Téléphone (facultatif)</label><input id="p" type="text" name="phone" value="{{ form.get('phone', '') }}"></div>
+  </div>
+  <label for="f">Filière choisie</label>
+  <select id="f" name="filiere_id" required><option value="">— Choisir —</option>{% for f in filieres %}<option value="{{ f.id }}" {{ 'selected' if form.get('filiere_id')|string == f.id|string }}>{{ f.name }} (matériel : {{ f.material_fee|money('USD') }})</option>{% endfor %}</select>
+
+  <label>Type de stagiaire</label>
+  {% for code, t in TYPES.items() %}<label class="opt"><input type="radio" name="trainee_type" value="{{ code }}" {{ 'checked' if form.get('trainee_type', 'non_recommande') == code }} required>
+    <span><strong>{{ t[0] }}</strong><br><span class="meta">{{ {'non_recommande': 'Paie tous les frais.', 'recommande_total': 'Ne paie aucun frais.', 'recommande_partiel': 'Paie le matériel et le jury.'}[code] }}</span></span></label>{% endfor %}
+
+  <div id="reco" style="border-left:4px solid var(--sun);padding-left:14px;margin-top:10px">
+    <label for="i">Institution d'origine</label>
+    <input id="i" type="text" name="institution" value="{{ form.get('institution', '') }}">
+    <label for="l">Référence de la lettre de recommandation</label>
+    <input id="l" type="text" name="letter_ref" value="{{ form.get('letter_ref', '') }}" placeholder="N° / date de la lettre">
+    <p class="hint">La lettre sera approuvée par la hiérarchie avant l'insertion dans le registre des apprenants d'autres institutions.</p>
+  </div>
+  {% if dup %}<label class="opt" style="margin-top:14px"><input type="checkbox" name="force" value="1"><span><strong>Confirmer :</strong> c'est un homonyme, pas la même personne.</span></label>{% endif %}
+  <p style="margin-top:18px"><button class="btn">Enregistrer</button></p>
+</form>
+<aside class="card"><h3>Frais en vigueur</h3>
+  <table><tbody>
+  <tr><td>Inscription</td><td style="text-align:right">{{ cfg.inscription_fee|float|money('FC') }}</td></tr>
+  <tr><td>Formation / mois</td><td style="text-align:right">{{ cfg.formation_fee|float|money('FC') }}</td></tr>
+  <tr><td>Jury</td><td style="text-align:right">{{ cfg.jury_fee|float|money('FC') }}</td></tr></tbody></table>
+  <p class="hint">Le matériel dépend de la filière. À remettre au stagiaire : compte <strong>{{ cfg.bank_name }}</strong>{% if cfg.bank_account %} n° <strong>{{ cfg.bank_account }}</strong>{% else %} (numéro à renseigner dans Tarifs){% endif %}.</p></aside>
+</div>
+<script>
+(function(){var box=document.getElementById('reco');function up(){var r=document.querySelector('input[name=trainee_type]:checked');var on=r&&r.value!=='non_recommande';box.style.display=on?'':'none';document.getElementById('i').required=on;document.getElementById('l').required=on;}
+document.querySelectorAll('input[name=trainee_type]').forEach(function(e){e.addEventListener('change',up)});up();})();
+</script>
+{% endif %}
+{% endblock %}

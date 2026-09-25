@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% block title %}{{ 'Modifier le cours' if course else 'Nouveau cours' }}{% endblock %}
+{% block content %}
+<h1>{{ 'Modifier le cours' if course else 'Nouveau cours' }}</h1>
+{% set v = request.form if request.method == 'POST' else (course|todict) %}
+<form method="post" class="card form wide">{{ csrf_field() }}
+  <label for="t">Titre</label><input id="t" type="text" name="title" required value="{{ v.get('title', '') }}">
+  <div class="row" style="align-items:flex-start">
+    <div style="flex:1;min-width:200px"><label for="cat">Catégorie</label><input id="cat" type="text" name="category" value="{{ v.get('category', '') }}" placeholder="Bases de données"></div>
+    <div style="flex:1;min-width:200px"><label for="lv">Niveau</label><select id="lv" name="level">{% for l in levels %}<option {{ 'selected' if v.get('level') == l }}>{{ l }}</option>{% endfor %}</select></div>
+  </div>
+  <label for="d">Description</label><textarea id="d" name="description">{{ v.get('description', '') }}</textarea>
+  <div class="row" style="align-items:flex-start">
+    <div style="flex:1;min-width:200px"><label for="f">Frais d'inscription (USD, 0 = gratuit)</label><input id="f" type="number" name="fee_amount" min="0" step="0.5" value="{{ '%g'|format(v.get('fee_amount', 0)|float) }}"></div>
+    <div style="flex:1;min-width:200px"><label for="m">Note minimale pour réussir un quiz (%)</label><input id="m" type="number" name="pass_mark" min="1" max="100" value="{{ v.get('pass_mark', 70) }}"></div>
+  </div>
+  <label class="opt"><input type="checkbox" name="published" value="1" {{ 'checked' if (not course and request.method != 'POST') or v.get('published') }}><span>Publié dans le catalogue</span></label>
+  <p class="row"><button class="btn">Enregistrer</button><a class="btn alt" href="{{ url_for('course_manage', course_id=course.id) if course else url_for('trainer_dashboard') }}">Annuler</a></p>
+</form>
+{% endblock %}

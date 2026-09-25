@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% block title %}FAQ{% endblock %}
+{% block meta_description %}Réponses aux questions fréquentes sur l'inscription à l'INPP, le fonctionnement des cours en ligne et l'examen final.{% endblock %}
+{% block content %}
+<h1>Questions fréquentes</h1>
+
+<div class="card" style="margin-bottom:14px">
+  <h3>Est-ce que je peux suivre toute la formation en ligne, sans venir au centre ?</h3>
+  <p>Non. L'explication en direct — travaux pratiques, matériel, ateliers — se donne en présentiel dans les salles de l'INPP. Le site en ligne sert à s'informer avant l'inscription, puis à s'entraîner et à passer l'examen une fois inscrit au centre.</p>
+</div>
+<div class="card" style="margin-bottom:14px">
+  <h3>Comment je m'inscris ?</h3>
+  <p>Présentez-vous à la réception du centre : voir la <a href="{{ url_for('procedure') }}">procédure et les frais d'inscription</a>. Créer un compte sur ce site ne remplace pas l'inscription physique.</p>
+</div>
+<div class="card" style="margin-bottom:14px">
+  <h3>Pourquoi mon compte n'a-t-il pas accès aux leçons d'un cours ?</h3>
+  <p>Un formateur doit valider votre demande d'inscription au cours en ligne. Sans validation, aucune leçon n'est visible, ce qui évite qu'un compte non suivi accède au contenu.</p>
+</div>
+<div class="card" style="margin-bottom:14px">
+  <h3>Qu'est-ce que l'examen final, et en quoi diffère-t-il des quiz de leçon ?</h3>
+  <p>Chaque leçon a son propre quiz, pour avancer dans le cours. L'examen final est distinct : il porte sur l'ensemble du cours, s'ouvre sur un créneau fixé par le formateur (souvent pendant une séance en salle), et se déroule avec un temps limité et un nombre de tentatives limité.</p>
+</div>
+<div class="card" style="margin-bottom:14px">
+  <h3>Comment vérifier un certificat ou une carte de stagiaire ?</h3>
+  <p>Chaque certificat porte un code unique, vérifiable depuis la page du certificat. Chaque carte de stagiaire est vérifiable publiquement à son propre lien (scan du QR code ou saisie du code).</p>
+</div>
+<div class="card">
+  <h3>Une autre question ?</h3>
+  <p><a href="{{ url_for('contact') }}">Contactez-nous</a>.</p>
+</div>
+{% endblock %}

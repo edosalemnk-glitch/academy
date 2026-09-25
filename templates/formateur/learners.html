@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% block title %}Stagiaires{% endblock %}
+{% block content %}
+<h1>Comptes stagiaires</h1>
+{% if created %}
+<div class="card" style="border-left:5px solid var(--ok);margin-bottom:22px">
+  <h2>{{ created|length }} compte(s) créé(s)</h2>
+  <p class="meta">Notez ou imprimez ces mots de passe temporaires maintenant : ils ne seront plus affichés. Chaque stagiaire devra en choisir un nouveau à sa première connexion.</p>
+  <table class="creds"><thead><tr><th>Nom</th><th>E-mail (identifiant)</th><th>Mot de passe temporaire</th></tr></thead><tbody>
+  {% for c in created %}<tr><td>{{ c.name }}</td><td>{{ c.email }}</td><td>{{ c.password }}</td></tr>{% endfor %}</tbody></table>
+  <p class="noprint"><button class="btn alt" onclick="window.print()">Imprimer</button></p>
+</div>{% endif %}
+<div class="card noprint" style="margin-bottom:24px">
+  <h2>Créer des comptes stagiaires</h2>
+  <form method="post" class="form wide">{{ csrf_field() }}
+    <label for="b">Un stagiaire par ligne : nom, puis e-mail</label>
+    <textarea id="b" name="bulk" class="code" placeholder="Marie Kabeya ; marie.kabeya@exemple.cd&#10;Paul Mwanza ; paul.mwanza@exemple.cd" required></textarea>
+    <label for="c">Inscrire directement à un cours (facultatif)</label>
+    <select id="c" name="course_id"><option value="">Aucun</option>{% for c in courses %}<option value="{{ c.id }}">{{ c.title }}</option>{% endfor %}</select>
+    <p><button class="btn">Créer les comptes</button></p>
+  </form>
+</div>
+<h2 class="noprint">Tous les stagiaires ({{ learners|length }})</h2>
+<div class="scroll noprint"><table><thead><tr><th>Nom</th><th>E-mail</th><th>Cours validés</th><th></th></tr></thead><tbody>
+{% for u in learners %}<tr><td>{{ u.full_name }}{% if u.must_change_password %} <span class="tag warn">Mot de passe temporaire</span>{% endif %}</td><td>{{ u.email }}</td><td>{{ u.nb_courses }}</td>
+<td><form method="post" action="{{ url_for('reset_password', uid=u.id) }}" onsubmit="return confirm('Générer un nouveau mot de passe temporaire ?')">{{ csrf_field() }}<button class="btn alt small">Réinitialiser le mot de passe</button></form></td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

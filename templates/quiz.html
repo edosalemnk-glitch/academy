@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block title %}Quiz · {{ lesson.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('lesson', lesson_id=lesson.id) }}">← {{ lesson.title }}</a></div>
+<h1>Quiz : {{ lesson.title }}</h1>
+<p class="meta">Réussite à partir de {{ course.pass_mark }} %. L'ordre des questions et des réponses change à chaque tentative.{% if mode == 'preview' %} (Aperçu : non enregistré.){% endif %}</p>
+<form method="post" class="form wide" style="max-width:780px">{{ csrf_field() }}
+{% for it in items %}
+  <fieldset class="q" style="border:1px solid var(--line)"><legend style="font-weight:700;padding:0 6px">Question {{ loop.index }} sur {{ items|length }}</legend>
+    <p style="margin:0 0 6px">{{ it.q.text }}</p>
+    {% for key, text in it.opts %}<label class="opt"><input type="radio" name="q_{{ it.q.id }}" value="{{ key }}" required><span>{{ text }}</span></label>{% endfor %}
+  </fieldset>
+{% endfor %}
+<button class="btn sun">Valider mes réponses</button>
+</form>
+{% endblock %}

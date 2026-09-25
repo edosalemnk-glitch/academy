@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% block title %}Résultat du quiz{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('lesson', lesson_id=lesson.id) }}">← {{ lesson.title }}</a></div>
+<div class="card" style="max-width:780px">
+  <div class="score" style="color:{{ 'var(--ok)' if passed else 'var(--bad)' }}">{{ score }} %</div>
+  <p><strong>{{ good }} bonne(s) réponse(s) sur {{ total }}.</strong>
+  {% if passed %}Quiz réussi{% if mode == 'learner' %} : la leçon est validée.{% endif %}
+  {% else %}Il faut au moins {{ course.pass_mark }} % pour valider la leçon.{% endif %}</p>
+  {% if certificate %}<div class="flash ok">Formation terminée. Votre certificat est disponible dans « Mes formations ».</div>{% endif %}
+  <div class="row">
+    {% if passed and next_id %}<a class="btn" href="{{ url_for('lesson', lesson_id=next_id) }}">Leçon suivante</a>{% endif %}
+    {% if passed and not next_id %}<a class="btn" href="{{ url_for('learn', course_id=course.id) }}">Retour au parcours</a>{% endif %}
+    {% if not passed %}<a class="btn" href="{{ url_for('quiz', lesson_id=lesson.id) }}">Réessayer</a><a class="btn alt" href="{{ url_for('lesson', lesson_id=lesson.id) }}">Relire la leçon</a>{% endif %}
+  </div>
+</div>
+<h2 style="margin-top:26px">Correction</h2>
+{% if not passed %}<p class="meta">Les bonnes réponses seront affichées quand vous aurez réussi le quiz. Relisez la leçon pour les questions ratées.</p>{% endif %}
+{% for r in results %}
+  <div class="q {{ 'ok' if r.ok else 'wrong' }}" style="max-width:780px">
+    <strong>{{ loop.index }}. {{ r.q.text }}</strong>
+    <div>{% if r.ok %}<span class="tag ok">Correct</span>{% else %}<span class="tag bad">Incorrect</span>{% endif %}</div>
+    {% if passed %}
+      <p style="margin:8px 0 0">Bonne réponse : <strong>{{ r.q['option_' ~ r.q.correct|lower] }}</strong></p>
+      {% if r.q.explanation %}<p class="meta" style="margin:4px 0 0">{{ r.q.explanation }}</p>{% endif %}
+    {% endif %}
+  </div>
+{% endfor %}
+{% endblock %}

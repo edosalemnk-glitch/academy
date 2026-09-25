@@ -1,0 +1,59 @@
+{% extends "base.html" %}{% block title %}Tarifs{% endblock %}
+{% block content %}
+<h1>Tarifs et filières</h1>
+<div class="lab">
+<div>
+  <h2>Frais généraux</h2>
+  <form method="post" class="form">{{ csrf_field() }}<input type="hidden" name="action" value="settings">
+    <label for="ins">Frais d'inscription (Fc, obligatoire)</label><input id="ins" type="text" name="inscription_fee" value="{{ cfg.inscription_fee }}" required>
+    <label for="frm">Frais de formation (Fc/mois)</label><input id="frm" type="text" name="formation_fee" value="{{ cfg.formation_fee }}" required>
+    <label for="jur">Frais de jury (Fc, obligatoire avant le jury)</label><input id="jur" type="text" name="jury_fee" value="{{ cfg.jury_fee }}" required>
+    <label for="bn">Banque</label><input id="bn" type="text" name="bank_name" value="{{ cfg.bank_name }}">
+    <label for="ba">N° de compte bancaire</label><input id="ba" type="text" name="bank_account" value="{{ cfg.bank_account }}" placeholder="À renseigner">
+    <p><button class="btn">Enregistrer</button></p>
+  </form>
+  <p class="hint">Une modification s'applique aux <strong>prochaines</strong> inscriptions ; les stagiaires déjà enregistrés gardent le tarif qui était en vigueur lors de leur inscription.</p>
+</div>
+<div>
+  <h2>Filières (frais matériel)</h2>
+  <div class="scroll"><table><thead><tr><th>Filière</th><th>Service</th><th>Matériel</th><th>Stagiaires</th><th>Active</th></tr></thead><tbody>
+  {% for f in filieres %}<tr><td>{{ f.name }}</td><td>{{ f.service_name or '—' }}</td><td>{{ f.material_fee|money('USD') }}</td><td>{{ f.nb }}</td><td>{{ 'Oui' if f.active else 'Non' }}</td>
+  <td><form method="post" style="display:inline">{{ csrf_field() }}<input type="hidden" name="action" value="filiere_update"><input type="hidden" name="id" value="{{ f.id }}">
+  <input type="hidden" name="name" value="{{ f.name }}"><input type="hidden" name="material_fee" value="{{ f.material_fee }}">
+  <input type="hidden" name="service_id" value="{{ f.service_id or '' }}">
+  <input type="hidden" name="active" value="{{ '' if f.active else '1' }}"><button class="btn alt small">{{ 'Désactiver' if f.active else 'Réactiver' }}</button></form></td></tr>{% endfor %}
+  </tbody></table></div>
+  <h3 style="margin-top:20px">Ajouter une filière</h3>
+  <form method="post" class="form">{{ csrf_field() }}<input type="hidden" name="action" value="filiere_add">
+    <label for="fn">Nom</label><input id="fn" type="text" name="name" required minlength="2">
+    <label for="fs">Service</label>
+    <select id="fs" name="service_id"><option value="">Aucun</option>{% for sv in services %}<option value="{{ sv.id }}">{{ sv.name }}</option>{% endfor %}</select>
+    <label for="fm">Frais matériel ($)</label><input id="fm" type="text" name="material_fee" required placeholder="40, 50 ou 80">
+    <p><button class="btn">Ajouter</button></p>
+  </form>
+</div>
+</div>
+<div class="lab" style="margin-top:26px">
+<div>
+  <h2>Services</h2>
+  <p class="hint">À l'INPP, les formations sont regroupées par filière au sein d'un service (ex. Service
+  Informatique, Service Électronique). Chaque service a un chef, qui est aussi formateur.</p>
+  <div class="scroll"><table><thead><tr><th>Service</th><th>Chef de service</th><th>Filières</th><th>Actif</th></tr></thead><tbody>
+  {% for sv in services %}<tr><td>{{ sv.name }}</td><td>{{ sv.chef_name or '—' }}</td><td>{{ sv.nb_filieres }}</td><td>{{ 'Oui' if sv.active else 'Non' }}</td>
+  <td><form method="post" style="display:inline">{{ csrf_field() }}<input type="hidden" name="action" value="service_update"><input type="hidden" name="id" value="{{ sv.id }}">
+  <input type="hidden" name="name" value="{{ sv.name }}"><input type="hidden" name="chef_id" value="{{ sv.chef_id or '' }}">
+  <input type="hidden" name="active" value="{{ '' if sv.active else '1' }}"><button class="btn alt small">{{ 'Désactiver' if sv.active else 'Réactiver' }}</button></form></td></tr>
+  {% else %}<tr><td colspan="5">Aucun service pour le moment.</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+<div>
+  <h3>Ajouter un service</h3>
+  <form method="post" class="form">{{ csrf_field() }}<input type="hidden" name="action" value="service_add">
+    <label for="sn">Nom (ex. Service Informatique)</label><input id="sn" type="text" name="name" required minlength="2">
+    <label for="sc">Chef de service (formateur)</label>
+    <select id="sc" name="chef_id"><option value="">À désigner</option>{% for u in formateurs %}<option value="{{ u.id }}">{{ u.full_name }}</option>{% endfor %}</select>
+    <p><button class="btn">Ajouter</button></p>
+  </form>
+</div>
+</div>
+{% endblock %}

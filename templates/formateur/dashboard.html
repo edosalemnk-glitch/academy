@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% block title %}Tableau de bord formateur{% endblock %}
+{% block content %}
+<div class="row between"><h1>Tableau de bord</h1><a class="btn sun" href="{{ url_for('course_new') }}">Nouveau cours</a></div>
+{% set total_pending = courses|sum(attribute='nb_pending') %}
+<div class="stats">
+  <div class="stat"><b>{{ courses|length }}</b>cours</div>
+  <div class="stat"><b>{{ courses|sum(attribute='nb_learners') }}</b>inscriptions validées</div>
+  <div class="stat"><b>{{ total_pending }}</b>demandes à valider</div>
+  <div class="stat"><b>{{ nb_stagiaires }}</b>comptes stagiaires</div>
+</div>
+{% if blocked %}
+<div class="card" style="border-left:5px solid var(--bad);margin-bottom:22px">
+  <h2>Stagiaires en difficulté</h2>
+  <p class="meta">Trois échecs ou plus au même quiz, sans réussite : un accompagnement peut aider.</p>
+  <table><thead><tr><th>Stagiaire</th><th>Cours</th><th>Leçon bloquante</th><th>Échecs</th></tr></thead><tbody>
+  {% for b in blocked %}<tr><td>{{ b.full_name }}</td><td><a href="{{ url_for('tracking', course_id=b.course_id) }}">{{ b.course }}</a></td><td>{{ b.lesson }}</td><td><span class="tag bad">{{ b.fails }}</span></td></tr>{% endfor %}
+  </tbody></table>
+</div>{% endif %}
+<h2>Mes cours</h2>
+<div class="scroll" style="margin-bottom:24px"><table><thead><tr><th>Cours</th><th>Leçons</th><th>Inscrits</th><th>En attente</th><th></th></tr></thead><tbody>
+{% for c in courses %}<tr>
+  <td><strong>{{ c.title }}</strong><br><span class="meta">{{ c.category }} · {{ c.level }}{% if not c.published %} · <span class="tag warn">Brouillon</span>{% endif %}</span></td>
+  <td>{{ c.nb_lessons }}</td><td>{{ c.nb_learners }}</td>
+  <td>{% if c.nb_pending %}<span class="tag warn">{{ c.nb_pending }}</span>{% else %}0{% endif %}</td>
+  <td class="row"><a class="btn small" href="{{ url_for('course_manage', course_id=c.id) }}">Gérer</a><a class="btn alt small" href="{{ url_for('enrollments', course_id=c.id) }}">Inscriptions</a><a class="btn alt small" href="{{ url_for('tracking', course_id=c.id) }}">Suivi</a></td>
+</tr>{% else %}<tr><td colspan="5">Vous n'avez pas encore de cours. Créez le premier.</td></tr>{% endfor %}
+</tbody></table></div>
+<h2>Dernières tentatives de quiz</h2>
+<div class="scroll"><table><thead><tr><th>Stagiaire</th><th>Leçon</th><th>Score</th><th>Date</th></tr></thead><tbody>
+{% for r in recent %}<tr><td>{{ r.full_name }}</td><td>{{ r.lesson }}<br><span class="meta">{{ r.course }}</span></td><td><span class="tag {{ 'ok' if r.passed else 'bad' }}">{{ r.score }} %</span></td><td>{{ r.created_at[:16] }}</td></tr>
+{% else %}<tr><td colspan="4">Aucune tentative pour le moment.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% macro cell(k, cur) -%}
+{%- if not k.applicable -%}<span class="meta">Dispensé</span>
+{%- elif k.settled -%}<span class="tag ok">{{ k.paid|money(cur) }}</span>
+{%- elif k.paid > 0 -%}<span class="tag warn">{{ k.paid|money(cur) }} / {{ k.due|money(cur) }}</span>
+{%- else -%}<span class="tag bad">À payer : {{ k.due|money(cur) }}</span>{%- endif -%}
+{%- endmacro %}
+
+{% macro formation_cell(k) -%}
+{%- if not k.applicable -%}<span class="meta">Dispensé</span>
+{%- elif not k.months -%}<span class="tag warn">Aucun mois payé</span>
+{%- else -%}<span class="tag {{ 'ok' if k.current_ok else 'warn' }}">{{ k.months|length }} mois · jusqu'à {{ k.months[-1] }}</span>{%- endif -%}
+{%- endmacro %}
+
+{% macro status_tag(code) -%}<span class="tag {{ REG_STATUS[code][1] }}">{{ REG_STATUS[code][0] }}</span>{%- endmacro %}

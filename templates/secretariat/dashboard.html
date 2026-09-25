@@ -1,0 +1,38 @@
+{% extends "base.html" %}{% from "secretariat/_macros.html" import status_tag with context %}
+{% block title %}Secrétariat{% endblock %}
+{% block content %}
+<div class="row between"><h1>Secrétariat · Réception</h1><a class="btn sun" href="{{ url_for('sec_new') }}">+ Nouvelle inscription</a></div>
+<div class="stats">
+  <div class="stat"><b>{{ total }}</b>Stagiaires enregistrés</div>
+  <div class="stat"><b>{{ count.en_ordre }}</b>En ordre avec les frais</div>
+  <div class="stat"><b>{{ count.attente_paiement }}</b>En attente de paiement</div>
+  <div class="stat"><b>{{ count.lettre_attente }}</b>Lettres à approuver</div>
+  <div class="stat"><b>{{ cards }}</b>Cartes délivrées</div>
+  <div class="stat"><b>{{ jury_ok }}</b>Autorisés au jury</div>
+</div>
+
+{% if letters %}
+<h2>Lettres de recommandation à faire approuver</h2>
+<div class="scroll" style="margin-bottom:26px"><table><thead><tr><th>Stagiaire</th><th>Institution</th><th>Lettre</th><th>Type</th><th></th></tr></thead><tbody>
+{% for x in letters %}<tr><td><strong>{{ x.r.full_name }}</strong><br><span class="meta">{{ x.r.filiere }}</span></td><td>{{ x.r.institution }}</td><td>{{ x.r.letter_ref }}</td><td>{{ TYPES[x.r.trainee_type][1] }}</td>
+<td><a class="btn small" href="{{ url_for('sec_detail', rid=x.r.id) }}">Traiter</a></td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+
+<div class="lab" style="grid-template-columns:1fr 320px">
+  <div>
+    <h2>Dernières inscriptions</h2>
+    {% if latest %}<div class="scroll"><table><thead><tr><th>N°</th><th>Stagiaire</th><th>Type</th><th>Situation</th></tr></thead><tbody>
+    {% for x in latest %}<tr><td>{{ x.r.id }}</td><td><a href="{{ url_for('sec_detail', rid=x.r.id) }}"><strong>{{ x.r.full_name }}</strong></a><br><span class="meta">{{ x.r.filiere }}</span></td><td>{{ TYPES[x.r.trainee_type][1] }}</td><td>{{ status_tag(x.s.status) }}</td></tr>{% endfor %}
+    </tbody></table></div>
+    <p><a href="{{ url_for('sec_registry') }}">Voir tout le registre →</a></p>
+    {% else %}<div class="card">Aucun stagiaire enregistré pour l'instant. Commencez par <a href="{{ url_for('sec_new') }}">une nouvelle inscription</a>. Si la liste des filières est vide, ajoutez-les dans <a href="{{ url_for('sec_tariffs') }}">Tarifs</a>.</div>{% endif %}
+  </div>
+  <div>
+    <h2>Encaissements</h2>
+    <div class="card">
+    {% if collected %}<table><tbody>{% for c in collected %}<tr><td>{{ KINDS[c.kind][0] }}</td><td style="text-align:right"><strong>{{ c.total|money(c.currency) }}</strong></td></tr>{% endfor %}</tbody></table>
+    {% else %}<span class="meta">Aucun paiement enregistré.</span>{% endif %}
+    <p class="hint">Paiements enregistrés (hors annulations), par nature de frais.</p></div>
+  </div>
+</div>
+{% endblock %}

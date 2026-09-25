@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}Carte de stagiaire{% endblock %}
+{% block content %}
+<div class="cardstag">
+  <div class="brand" style="color:var(--navy)"><i></i>INPP Académie</div>
+  <p class="meta">Carte de stagiaire</p>
+  <h2>{{ reg.full_name }}</h2>
+  <p>Filière : <strong>{{ reg.filiere }}</strong><br>Sexe : {{ reg.sex }} · Type : {{ TYPES[reg.trainee_type][1] }}</p>
+  <img src="{{ url_for('card_qr', code=reg.card_code) }}" alt="QR code de la carte" width="150" height="150" style="margin:10px auto">
+  <p class="meta">N° {{ reg.card_code }}<br>Délivrée le {{ reg.card_issued_at[:10] }}<br>Vérifiable à l'adresse {{ request.host_url }}carte/{{ reg.card_code }}</p>
+</div>
+<p class="noprint" style="text-align:center;margin-top:18px"><button class="btn" onclick="window.print()">Imprimer</button></p>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}Créer un compte{% endblock %}
+{% block content %}
+<h1>Créer un compte INPP Académie</h1>
+<p class="meta">Un compte vous permet de demander votre inscription aux formations. L'accès au contenu est ouvert par le formateur après validation.</p>
+<form method="post" class="card form">{{ csrf_field() }}
+  <label for="n">Nom complet</label><input id="n" type="text" name="full_name" required value="{{ request.form.full_name }}">
+  <label for="e">Adresse e-mail</label><input id="e" type="email" name="email" required value="{{ request.form.email }}">
+  <label for="p">Mot de passe (8 caractères minimum)</label><input id="p" type="password" name="password" required minlength="8">
+  <label for="c">Confirmer le mot de passe</label><input id="c" type="password" name="confirm" required minlength="8">
+  <p><button class="btn">Créer mon compte</button></p>
+</form>
+{% endblock %}

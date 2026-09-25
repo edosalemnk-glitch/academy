@@ -1,0 +1,77 @@
+{% extends "base.html" %}{% from "secretariat/_macros.html" import cell, formation_cell, status_tag with context %}
+{% block title %}{{ reg.full_name }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('sec_registry') }}">Registre</a> / {{ reg.full_name }}</div>
+<div class="row between"><h1>{{ reg.full_name }}</h1>{{ status_tag(s.status) }}</div>
+<p class="meta">Filière : <strong>{{ reg.filiere }}</strong> · Sexe : {{ reg.sex }}{% if reg.phone %} · Tél. {{ reg.phone }}{% endif %} · Type : <strong>{{ TYPES[reg.trainee_type][1] }}</strong> · Enregistré le {{ reg.created_at[:10] }}</p>
+
+{% if reg.trainee_type != 'non_recommande' %}
+<div class="card" style="margin-bottom:22px;border-left:5px solid var(--sun)">
+  <h2>Lettre de recommandation</h2>
+  <p>Institution : <strong>{{ reg.institution }}</strong> · Référence : {{ reg.letter_ref }} · Statut : <strong>{{ LETTER[reg.letter_status] }}</strong>
+  {% if reg.letter_decided_by %}<br><span class="meta">Décidé par {{ reg.letter_decided_by }} le {{ (reg.letter_decided_at or '')[:10] }}{% if reg.letter_note %} — {{ reg.letter_note }}{% endif %}</span>{% endif %}</p>
+  {% if reg.letter_status == 'pending' %}
+  <form method="post" class="form" style="max-width:420px">{{ csrf_field() }}
+    <label for="db">Approuvé/refusé par (nom et fonction, hiérarchie)</label>
+    <input id="db" type="text" name="decided_by" required minlength="3">
+    <label for="nt">Remarque (facultatif)</label><input id="nt" type="text" name="note">
+    <div class="row" style="margin-top:10px">
+      <button class="btn" formaction="{{ url_for('sec_letter', rid=reg.id, action='approve') }}">Approuver</button>
+      <button class="btn bad" formaction="{{ url_for('sec_letter', rid=reg.id, action='reject') }}">Refuser</button>
+    </div>
+  </form>
+  {% else %}
+  <form method="post" onsubmit="return confirm('Remettre cette lettre en attente ?')">{{ csrf_field() }}
+    <button class="btn alt small" formaction="{{ url_for('sec_letter', rid=reg.id, action='reopen') }}">Remettre en attente</button>
+  </form>{% endif %}
+</div>{% endif %}
+
+<div class="lab">
+<div>
+  <h2>Frais</h2>
+  <div class="scroll"><table><thead><tr><th>Nature</th><th>Situation</th></tr></thead><tbody>
+  <tr><td>Frais d'inscription</td><td>{{ cell(s.kinds.inscription, 'FC') }}</td></tr>
+  <tr><td>Frais matériel</td><td>{{ cell(s.kinds.materiel, 'USD') }}</td></tr>
+  <tr><td>Frais de formation</td><td>{{ formation_cell(s.kinds.formation) }}</td></tr>
+  <tr><td>Frais de jury</td><td>{{ cell(s.kinds.jury, 'FC') }}</td></tr>
+  </tbody></table></div>
+
+  {% if reg.trainee_type == 'non_recommande' or reg.letter_status == 'approved' %}
+  <h2 style="margin-top:24px">Enregistrer un paiement</h2>
+  <form method="post" action="{{ url_for('sec_payment', rid=reg.id) }}" class="form" id="payform">{{ csrf_field() }}
+    <label for="k">Nature du frais</label>
+    <select id="k" name="kind" required>
+      {% for code, k in s.kinds.items() if k.applicable %}<option value="{{ code }}">{{ KINDS[code][0] }}{% if code != 'formation' and not k.settled %} — solde {{ k.balance|money(KINDS[code][1]) }}{% endif %}</option>{% endfor %}
+    </select>
+    <div id="amount-row"><label for="a">Montant</label><input id="a" type="text" name="amount" inputmode="decimal"></div>
+    <div id="months-row" style="display:none"><label for="m">Nombre de mois</label><input id="m" type="number" name="months" min="1" max="12" value="1">
+      <p class="hint">Prochain mois à couvrir : {{ next_month or '—' }}</p></div>
+    <label for="r">Référence de la preuve de paiement ({{ cfg.bank_name or 'banque' }})</label>
+    <input id="r" type="text" name="bank_ref" required minlength="3" placeholder="N° de bordereau">
+    <label for="d">Date du paiement</label><input id="d" type="date" name="paid_at" value="{{ today() }}">
+    <p><button class="btn">Enregistrer le paiement</button></p>
+  </form>
+  <script>
+  (function(){var k=document.getElementById('k'),a=document.getElementById('amount-row'),m=document.getElementById('months-row');
+  function up(){var f=k.value==='formation';a.style.display=f?'none':'';m.style.display=f?'':'none';
+  document.getElementById('a').required=!f;document.getElementById('m').required=f;}
+  k.addEventListener('change',up);up();})();
+  </script>
+  {% else %}<div class="card" style="margin-top:20px">Les paiements ne peuvent être enregistrés qu'après approbation de la lettre de recommandation.</div>{% endif %}
+
+  <h2 style="margin-top:24px">Historique des paiements</h2>
+  {% if pays %}<div class="scroll"><table><thead><tr><th>Date</th><th>Nature</th><th>Montant</th><th>Référence</th><th>Agent</th><th></th></tr></thead><tbody>
+  {% for p in pays %}<tr {% if p.voided %}style="opacity:.5;text-decoration:line-through"{% endif %}>
+  <td>{{ p.paid_at }}{% if p.period %}<br><span class="meta">{{ p.period }}</span>{% endif %}</td><td>{{ KINDS[p.kind][0] }}</td><td>{{ p.amount|money(p.currency) }}</td><td>{{ p.bank_ref }}</td><td>{{ p.agent }}</td>
+  <td>{% if not p.voided %}<form method="post" action="{{ url_for('sec_payment_void', pid=p.id) }}" onsubmit="return confirm('Annuler ce paiement ?')">{{ csrf_field() }}<button class="btn bad small">Annuler</button></form>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div>{% else %}<div class="card">Aucun paiement enregistré.</div>{% endif %}
+</div>
+<aside class="card">
+  <h3>Carte de stagiaire</h3>
+  {% if reg.card_code %}<p>N° <strong>{{ reg.card_code }}</strong><br>Délivrée le {{ reg.card_issued_at[:10] }}</p>
+  <p><a class="btn small" href="{{ url_for('sec_card', rid=reg.id) }}">Voir / imprimer la carte</a></p>
+  {% else %}<p class="meta">La carte sera délivrée automatiquement dès que le stagiaire sera en ordre avec les frais.</p>{% endif %}
+  <p><a class="btn alt small" href="{{ url_for('sec_registry_csv') }}">Exporter le registre</a></p>
+</aside>
+</div>
+{% endblock %}

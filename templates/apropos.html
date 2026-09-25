@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% block title %}À propos{% endblock %}
+{% block meta_description %}Ce que fait l'INPP Académie : donner à l'INPP une visibilité sur Internet et accompagner, en ligne, les stagiaires qui se forment en présentiel dans les centres de l'Institut.{% endblock %}
+{% block content %}
+<h1>À propos de ce site</h1>
+<p class="meta">Ce site est la plateforme de l'Institut National de Préparation Professionnelle (INPP). Il a deux objectifs distincts.</p>
+
+<h2>Donner à l'INPP une visibilité sur Internet</h2>
+<p>Toute personne, inscrite ou non, peut consulter ici les <a href="{{ url_for('filieres_public') }}">filières</a> proposées par l'INPP, la <a href="{{ url_for('procedure') }}">procédure et les frais d'inscription</a>, et le <a href="{{ url_for('catalogue') }}">catalogue des cours en ligne</a>. C'est une vitrine publique : aucun compte n'est nécessaire pour s'informer.</p>
+
+<h2>La formation elle-même se donne en présentiel</h2>
+<p>L'INPP dispose de ses propres salles de formation. L'explication en direct — démonstrations, matériel, ateliers pratiques — exige la présence d'un formateur et des stagiaires dans ces salles : c'est là que se transmet réellement le métier, avec le formateur qui se réfère à ses guides et supports.</p>
+<p>Ce fonctionnement suit le même principe que des réseaux internationaux de centres de formation professionnelle, comme les académies locales du programme Cisco Networking Academy (NetAcad) : un partenaire physique organise l'enseignement en salle, et une plateforme en ligne vient en complément.</p>
+
+<h2>Les cours en ligne servent à s'entraîner et à évaluer</h2>
+<p>Une fois inscrit au centre et validé par un formateur, un stagiaire retrouve sur ce site :</p>
+<ul class="steps">
+  <li><strong>des leçons et des quiz</strong> pour réviser et s'exercer entre deux séances en présentiel ;</li>
+  <li><strong>un examen final</strong>, programmé par le formateur sur un créneau précis, pour vérifier les acquis ;</li>
+  <li><strong>un certificat vérifiable</strong>, délivré une fois le parcours et l'examen réussis.</li>
+</ul>
+<p class="meta">Le site ne remplace pas la salle de formation : il en prolonge le travail, pour ceux qui sont déjà inscrits au centre.</p>
+
+<h2>Le secrétariat et le suivi des stagiaires</h2>
+<p>En interne, le site donne aussi à l'INPP les outils pour gérer l'inscription physique des stagiaires (frais, types de stagiaires, lettres de recommandation, carte de stagiaire) et leur présence en cours, filière par filière.</p>
+
+<p><a class="btn alt" href="{{ url_for('faq') }}">Questions fréquentes</a> <a class="btn alt" href="{{ url_for('contact') }}">Nous contacter</a></p>
+{% endblock %}

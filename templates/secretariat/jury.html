@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block title %}Autorisation au jury{% endblock %}
+{% block content %}
+<h1>Autorisation à passer le jury</h1>
+<p class="meta">Le passage au jury nécessite les frais de jury réglés (et, pour un stagiaire recommandé, la lettre approuvée).</p>
+<form method="get" class="row noprint" style="margin-bottom:14px"><select name="filiere" onchange="this.form.submit()"><option value="">Toutes les filières</option>{% for f in filieres %}<option value="{{ f.id }}" {{ 'selected' if filiere == f.id }}>{{ f.name }}</option>{% endfor %}</select></form>
+
+<h2>Autorisés ({{ ok|length }})</h2>
+{% if ok %}<div class="scroll"><table><thead><tr><th>N°</th><th>Stagiaire</th><th>Filière</th></tr></thead><tbody>
+{% for x in ok %}<tr><td>{{ x.r.id }}</td><td><a href="{{ url_for('sec_detail', rid=x.r.id) }}">{{ x.r.full_name }}</a></td><td>{{ x.r.filiere }}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="card">Aucun stagiaire autorisé pour l'instant.</div>{% endif %}
+
+<h2 style="margin-top:26px">Non autorisés ({{ blocked|length }})</h2>
+{% if blocked %}<div class="scroll"><table><thead><tr><th>N°</th><th>Stagiaire</th><th>Filière</th><th>Motif</th></tr></thead><tbody>
+{% for x in blocked %}<tr><td>{{ x.r.id }}</td><td><a href="{{ url_for('sec_detail', rid=x.r.id) }}">{{ x.r.full_name }}</a></td><td>{{ x.r.filiere }}</td>
+<td>{% if x.r.trainee_type != 'non_recommande' and x.r.letter_status != 'approved' %}Lettre non approuvée{% else %}Frais de jury non réglés{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="card">Tous les stagiaires sont autorisés.</div>{% endif %}
+{% endblock %}

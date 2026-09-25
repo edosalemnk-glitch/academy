@@ -1,0 +1,63 @@
+{% extends "base.html" %}{% block title %}{{ section.name }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('sections_list') }}">Présences</a> &rsaquo; {{ section.name }}</p>
+<div class="row between"><h1>{{ section.name }}</h1>
+  <div class="row">
+    <a class="btn alt small" href="{{ url_for('section_kiosk', sid=section.id) }}">Ouvrir le pointage</a>
+    <a class="btn alt small" href="{{ url_for('section_messages', sid=section.id) }}">Messages</a>
+  </div>
+</div>
+<p class="meta">{{ section.filiere }} · Formateur : {{ section.trainer_name }}<br>
+Début {{ section.start_time }}, tolérance {{ section.grace_minutes }} min (présent jusqu'à {{ limit_hm }}), fin {{ section.end_time }}</p>
+
+<details style="margin-bottom:20px"><summary style="cursor:pointer;font-weight:600">Modifier l'horaire de la section</summary>
+<form method="post" action="{{ url_for('section_edit', sid=section.id) }}" class="form" style="margin-top:12px">{{ csrf_field() }}
+  <label for="n">Nom</label><input id="n" type="text" name="name" value="{{ section.name }}" required minlength="2">
+  <label for="st">Heure de début</label><input id="st" type="time" name="start_time" value="{{ section.start_time }}" required>
+  <label for="gm">Tolérance (minutes)</label><input id="gm" type="number" name="grace_minutes" value="{{ section.grace_minutes }}" min="0" max="120" required>
+  <label for="et">Heure de fin</label><input id="et" type="time" name="end_time" value="{{ section.end_time }}" required>
+  <label class="row"><input type="checkbox" name="active" {{ 'checked' if section.active else '' }} style="width:auto"> Section active</label>
+  <p><button class="btn">Enregistrer</button></p>
+</form></details>
+
+<form method="get" class="row" style="margin-bottom:16px">
+  <label for="jour" style="margin:0">Jour</label>
+  <input id="jour" type="date" name="jour" value="{{ day }}" onchange="this.form.submit()">
+</form>
+
+<div class="grid">
+{% for m in members %}
+{% set a = att.get(m.id) %}
+<div class="card">
+  <div class="row between"><strong>{{ m.full_name }}</strong>
+    {% if a %}<span class="tag {{ PSTATUS[a.status][1] }}">{{ PSTATUS[a.status][0] }}</span>{% else %}<span class="tag">Non pointé</span>{% endif %}</div>
+  <p class="meta">N° carte : {{ m.card_code or '—' }}{% if a and a.checkin_at %}<br>Scanné à {{ a.checkin_at }}{% endif %}{% if a and a.note %}<br>{{ a.note }}{% endif %}</p>
+  <form method="post" action="{{ url_for('section_mark', sid=section.id, rid=m.id) }}" class="row" style="gap:6px">{{ csrf_field() }}
+    <input type="hidden" name="day" value="{{ day }}">
+    <select name="status" style="flex:1">
+      {% for code, (label, _) in PSTATUS.items() %}<option value="{{ code }}" {{ 'selected' if a and a.status==code else '' }}>{{ label }}</option>{% endfor %}
+    </select>
+    <button class="btn alt small">Poser</button>
+  </form>
+  <form method="post" action="{{ url_for('section_remove_member', sid=section.id, rid=m.id) }}" style="margin-top:6px" onsubmit="return confirm('Retirer {{ m.full_name }} de la section ?')">{{ csrf_field() }}
+    <button class="btn bad small">Retirer de la section</button>
+  </form>
+</div>
+{% else %}<p>Aucun stagiaire dans cette section pour le moment.</p>{% endfor %}
+</div>
+
+<h2 style="margin-top:28px">Ajouter un stagiaire</h2>
+<form method="get" class="row" style="margin-bottom:12px">
+  <input type="hidden" name="jour" value="{{ day }}">
+  <input type="text" name="q" value="{{ q }}" placeholder="Nom ou n° de carte, dans la filière {{ section.filiere }}" style="flex:1">
+  <button class="btn alt">Chercher</button>
+</form>
+{% if q %}
+<div class="scroll"><table><thead><tr><th>Nom</th><th>N° carte</th><th></th></tr></thead><tbody>
+{% for c in candidates %}<tr><td>{{ c.full_name }}</td><td>{{ c.card_code or '—' }}</td>
+<td><form method="post" action="{{ url_for('section_add_member', sid=section.id) }}">{{ csrf_field() }}
+<input type="hidden" name="rid" value="{{ c.id }}"><button class="btn small">Ajouter</button></form></td></tr>
+{% else %}<tr><td colspan="3">Aucun stagiaire de la filière {{ section.filiere }} ne correspond.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% block title %}Terrain SQL{% endblock %}
+{% block content %}
+<h1>Terrain SQL</h1>
+<p class="meta">Entraînez-vous sur une base d'exemple. Lecture seule : seules les requêtes SELECT sont acceptées, vous ne pouvez rien casser. Une requête à la fois.</p>
+<div class="lab">
+  <div>
+    <form method="post">{{ csrf_field() }}
+      <input type="hidden" name="challenge" value="{{ challenge_id or '' }}">
+      {% if challenge_id %}{% for c in challenges if c.id == challenge_id %}<div class="flash info"><strong>Défi {{ c.id }} : {{ c.title }}.</strong> {{ c.text }}</div>{% endfor %}{% endif %}
+      <label for="sql">Votre requête</label>
+      <textarea id="sql" name="sql" class="code" spellcheck="false">{{ sql }}</textarea>
+      <p><button class="btn sun">Exécuter</button></p>
+    </form>
+    {% if error %}<div class="flash bad">{{ error }}</div>{% endif %}
+    {% if verdict is not none and challenge_id %}
+      <div class="flash {{ 'ok' if verdict else 'warn' }}">{{ 'Bravo : votre résultat correspond à celui attendu.' if verdict else 'Le résultat ne correspond pas encore à celui attendu. Vérifiez les colonnes, le filtre et le tri.' }}</div>
+    {% endif %}
+    {% if result %}
+      <p class="meta">{{ result.rows|length }} ligne(s){% if result.truncated %} (affichage limité à {{ max_rows }}){% endif %}</p>
+      <div class="scroll"><table><thead><tr>{% for c in result.cols %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for r in result.rows %}<tr>{% for v in r %}<td>{% if v is none %}<em class="meta">NULL</em>{% else %}{{ v }}{% endif %}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
+    {% endif %}
+    <h2 style="margin-top:28px">Défis</h2>
+    <p class="meta">Choisissez un défi : la plateforme compare votre résultat à celui attendu.</p>
+    <div class="row">
+    {% for c in challenges %}<a class="btn alt small" href="{{ url_for('sql_lab', defi=c.id) }}">Défi {{ c.id }} : {{ c.title }}</a>{% endfor %}
+    </div>
+  </div>
+  <aside class="card">
+    <h3>Tables disponibles</h3>
+    {% for t, cols in tables.items() %}<p><strong>{{ t }}</strong><br><span class="meta">{{ cols|join(', ') }}</span></p>{% endfor %}
+    <p class="hint">Exemple : <code>SELECT * FROM employes;</code></p>
+  </aside>
+</div>
+{% endblock %}

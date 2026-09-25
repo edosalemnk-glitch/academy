@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block title %}Filières{% endblock %}
+{% block meta_description %}Les filières de formation proposées par l'INPP, leurs frais de matériel et le service dont elles dépendent.{% endblock %}
+{% block content %}
+<h1>Nos filières</h1>
+<p class="meta">Formation donnée en présentiel dans les centres de l'INPP. Voir aussi la <a href="{{ url_for('procedure') }}">procédure et les frais d'inscription</a>.</p>
+{% if not filieres %}<div class="card">Les filières seront publiées prochainement.</div>{% endif %}
+<div class="grid">
+{% for f in filieres %}
+  <article class="card">
+    <h2 style="margin:4px 0">{{ f.name }}</h2>
+    <p class="meta">{{ f.service_name or 'Service non précisé' }}</p>
+    <p>Frais matériel : <strong>{{ f.material_fee|money('USD') }}</strong></p>
+    {% if f.nb_stagiaires %}<p class="meta">{{ f.nb_stagiaires }} stagiaire(s) inscrit(s) à ce jour</p>{% endif %}
+  </article>
+{% endfor %}
+</div>
+<p style="margin-top:22px"><a class="btn" href="{{ url_for('procedure') }}">S'inscrire au centre</a> <a class="btn alt" href="{{ url_for('catalogue') }}">Cours en ligne associés</a></p>
+{% endblock %}

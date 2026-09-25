@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% from "secretariat/_macros.html" import cell, formation_cell, status_tag with context %}
+{% block title %}Registre des stagiaires{% endblock %}
+{% block content %}
+<div class="row between noprint"><h1>Registre des stagiaires</h1>
+<div class="row"><a class="btn alt small" href="{{ url_for('sec_registry_csv', **request.args) }}">Exporter (CSV)</a><button class="btn alt small" onclick="window.print()">Imprimer</button><a class="btn sun small" href="{{ url_for('sec_new') }}">+ Nouvelle inscription</a></div></div>
+<div class="row noprint" style="margin:6px 0 14px">
+  {% for key, label in [('all','Tous'),('direct','Stagiaires en ordre (registre principal)'),('autres','Apprenants d\'autres institutions')] %}
+  <a class="btn {{ '' if flt.groupe == key else 'alt' }} small" href="{{ url_for('sec_registry', groupe=key, filiere=flt.filiere, statut=flt.statut, q=flt.q) }}">{{ label }}</a>{% endfor %}
+</div>
+<form method="get" class="row noprint" style="margin-bottom:14px">
+  <input type="hidden" name="groupe" value="{{ flt.groupe }}">
+  <input type="search" name="q" value="{{ flt.q }}" placeholder="Nom, institution ou n° de carte" style="max-width:260px" aria-label="Recherche">
+  <select name="filiere" style="max-width:220px" aria-label="Filière"><option value="">Toutes les filières</option>{% for f in filieres %}<option value="{{ f.id }}" {{ 'selected' if flt.filiere == f.id }}>{{ f.name }}</option>{% endfor %}</select>
+  <select name="statut" style="max-width:240px" aria-label="Situation"><option value="">Toutes les situations</option>{% for k, v in REG_STATUS.items() %}<option value="{{ k }}" {{ 'selected' if flt.statut == k }}>{{ v[0] }}</option>{% endfor %}</select>
+  <button class="btn alt small">Filtrer</button>
+</form>
+
+{% if rows %}
+<div class="scroll"><table class="registry"><thead><tr><th>N°</th><th>Noms &amp; Post-noms</th><th>Sexe</th><th>Montant inscription</th><th>Type de stagiaire</th><th>Frais matériel</th><th>Frais de formation</th><th>Frais de jury / Paiement</th><th>Situation</th></tr></thead><tbody>
+{% for x in rows %}{% set k = x.s.kinds %}<tr>
+<td>{{ x.r.id }}</td>
+<td><a href="{{ url_for('sec_detail', rid=x.r.id) }}"><strong>{{ x.r.full_name }}</strong></a><br><span class="meta">{{ x.r.filiere }}{% if x.r.institution %} · {{ x.r.institution }}{% endif %}</span></td>
+<td>{{ x.r.sex }}</td>
+<td>{{ cell(k.inscription, 'FC') }}</td>
+<td>{{ TYPES[x.r.trainee_type][1] }}</td>
+<td>{{ cell(k.materiel, 'USD') }}</td>
+<td>{{ formation_cell(k.formation) }}</td>
+<td>{{ cell(k.jury, 'FC') }}</td>
+<td>{{ status_tag(x.s.status) }}</td></tr>{% endfor %}
+</tbody></table></div>
+<p class="meta">{{ rows|length }} stagiaire(s).</p>
+{% else %}<div class="card">Aucun stagiaire ne correspond.</div>{% endif %}
+{% endblock %}

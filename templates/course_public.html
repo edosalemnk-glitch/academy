@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% block title %}{{ course.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('catalogue') }}">Catalogue</a> / {{ course.category }}</div>
+<div class="row between" style="align-items:flex-start">
+  <div style="flex:1;min-width:280px">
+    <h1>{{ course.title }}</h1>
+    <p class="meta">{{ course.level }} · Formateur : {{ course.trainer_name }} · Réussite d'un quiz à {{ course.pass_mark }} % · {% if course.fee_amount %}{{ '%g'|format(course.fee_amount) }} {{ course.currency }}{% else %}Gratuit{% endif %}</p>
+    <p style="max-width:65ch">{{ course.description }}</p>
+  </div>
+  <div class="card" style="min-width:270px">
+    {% if not g.user %}
+      <p>Connectez-vous pour demander votre inscription.</p>
+      <a class="btn" href="{{ url_for('login', next=request.path) }}">Se connecter</a> <a class="btn alt" href="{{ url_for('register') }}">Créer un compte</a>
+    {% elif g.user.role == 'formateur' %}
+      {% if g.user.id == course.trainer_id %}<a class="btn" href="{{ url_for('course_manage', course_id=course.id) }}">Gérer ce cours</a>{% else %}<p class="meta">Cours d'un autre formateur.</p>{% endif %}
+    {% elif not enrollment %}
+      <p>Votre demande sera envoyée au formateur, qui la valide avant l'ouverture du cours.</p>
+      <form method="post" action="{{ url_for('subscribe', course_id=course.id) }}">{{ csrf_field() }}<button class="btn sun">S'abonner à cette formation</button></form>
+    {% else %}
+      <p><span class="tag {{ STATUS[enrollment.status][1] }}">{{ STATUS[enrollment.status][0] }}</span></p>
+      {% if enrollment.status == 'approved' %}
+        {% if ENFORCE_FEES and course.fee_amount and enrollment.fee_status == 'unpaid' %}<p class="meta">Frais à régler : {{ FEE[enrollment.fee_status] }}. Contactez le formateur.</p>
+        {% else %}<a class="btn" href="{{ url_for('learn', course_id=course.id) }}">Accéder au cours</a>{% endif %}
+      {% elif enrollment.status == 'pending' %}<p class="meta">Le formateur va examiner votre demande.</p>
+      {% else %}<form method="post" action="{{ url_for('subscribe', course_id=course.id) }}">{{ csrf_field() }}<button class="btn alt">Refaire une demande</button></form>{% endif %}
+    {% endif %}
+  </div>
+</div>
+<h2>Programme ({{ lessons|length }} leçons)</h2>
+<ol class="path">
+{% for l in lessons %}<li><span class="n">{{ loop.index }}</span><span class="grow">{{ l.title }}</span></li>{% endfor %}
+</ol>
+{% endblock %}
