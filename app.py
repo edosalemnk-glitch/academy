@@ -55,6 +55,15 @@ def load_secret():
         return fh.read().strip()
 
 
+def seo_base_url():
+    return os.environ.get("SEO_BASE_URL", request.url_root).rstrip("/")
+
+
+@app.context_processor
+def inject_seo():
+    return {"seo_base_url": seo_base_url()}
+
+
 app = Flask(__name__)
 app.secret_key = load_secret()
 app.config.update(MAX_CONTENT_LENGTH=8 * 1024 * 1024, SESSION_COOKIE_HTTPONLY=True,
@@ -426,7 +435,7 @@ def contact():
 @app.route("/robots.txt")
 def robots_txt():
     lines = ["User-agent: *", "Allow: /", "Disallow: /formateur", "Disallow: /secretariat",
-             "Disallow: /mes-cours", "Disallow: /profil", f"Sitemap: {request.url_root}sitemap.xml"]
+             "Disallow: /mes-cours", "Disallow: /profil", f"Sitemap: {seo_base_url()}/sitemap.xml"]
     return Response("\n".join(lines), mimetype="text/plain")
 
 
@@ -439,7 +448,7 @@ def sitemap_xml():
         urls.append(url_for("course_public", course_id=c["id"]))
     body = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     for u in urls:
-        body.append(f"<url><loc>{request.url_root.rstrip('/')}{u}</loc></url>")
+        body.append(f"<url><loc>{seo_base_url()}{u}</loc></url>")
     body.append("</urlset>")
     return Response("\n".join(body), mimetype="application/xml")
 
