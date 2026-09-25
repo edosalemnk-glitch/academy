@@ -6,9 +6,9 @@ Démarrage : voir **ACTIONS.md** (double-clic sur `lancer.bat` sous Windows).
 
 ## Technique
 
-- Python 3.10+ · Flask · SQLite (fichier `formation.db`, créé au premier lancement). Aucune connexion Internet requise pour fonctionner.
+- Python 3.10+ · Flask · PostgreSQL (Supabase en production, via `DATABASE_URL`). Le terrain SQL pédagogique reste en SQLite en mémoire.
 - `app.py` : routes · `db.py` : schéma · `seed.py` : démonstration · `sqllab.py` : terrain SQL en lecture seule · `utils.py` : rendu des leçons · `fees.py` : règles de frais et de situation financière du secrétariat.
-- Variables d'environnement : `SECRET_KEY`, `PORT`, `INPP_HOST` (`0.0.0.0` pour ouvrir au réseau local), `INPP_DB`, `INPP_ENFORCE_FEES=1`, `INPP_DEBUG=1`.
+- Variables d'environnement : `SECRET_KEY`, `PORT`, `DATABASE_URL` (PostgreSQL Supabase), `INPP_HOST` (`0.0.0.0` pour ouvrir au réseau local), `INPP_ENFORCE_FEES=1`, `INPP_DEBUG=1`.
 
 ## Module Secrétariat / Réception (inscription au centre)
 
@@ -63,9 +63,9 @@ Le serveur lancé par `python app.py` (ou `lancer.bat`) est un serveur de **dév
 2. **HTTPS** : placez un reverse proxy (nginx, Caddy, ou IIS sous Windows) devant, avec un certificat (Let's Encrypt via Caddy est le plus simple), qui redirige vers `127.0.0.1:8000`. Ne jamais exposer le port 8000 directement sans HTTPS : mots de passe et cookies de session transiteraient en clair.
 3. **Variables d'environnement** : définissez une vraie valeur secrète et aléatoire pour `SECRET_KEY` (`python -c "import secrets; print(secrets.token_hex(32))"`), et `INPP_ENFORCE_FEES=1` pour activer les règles de frais en production.
 4. **Mots de passe de démonstration** : changez les mots de passe créés par `seed.py` (ou ne lancez pas le seed en production — voir `manage.py` pour créer de vrais comptes formateur/secrétaire).
-5. **Sauvegardes** : `formation.db` est un simple fichier SQLite ; programmez une copie régulière (tâche planifiée / cron) vers un autre disque ou un stockage externe.
+5. **Base de données** : les données métier sont stockées dans PostgreSQL Supabase. Configurez les sauvegardes et la protection du projet depuis le tableau de bord Supabase.
 6. **Contenu de la vitrine** : complétez la page `/contact` (adresse, téléphone, e-mail, horaires réels) avant la mise en ligne — les champs sont volontairement laissés en `[à compléter]`.
 
 ## Limites connues
 
-Pas de récupération de mot de passe par e-mail · pas de rôle administrateur (les formateurs supplémentaires se créent avec `manage.py`) · pas de paiement en ligne (suivi manuel des frais) · pas de vidéo hébergée · SQLite convient à quelques centaines d'utilisateurs, au-delà prévoir PostgreSQL · le scanner caméra du pointage demande un navigateur récent avec accès à la caméra (Chrome, Firefox, Safari mobiles récents) — la saisie manuelle ou un lecteur QR physique restent disponibles en secours.
+Pas de récupération de mot de passe par e-mail · pas de rôle administrateur (les formateurs supplémentaires se créent avec `manage.py`) · pas de paiement en ligne (suivi manuel des frais) · pas de vidéo hébergée · les fichiers téléversés localement nécessitent encore un stockage persistant (Supabase Storage recommandé) · le scanner caméra du pointage demande un navigateur récent avec accès à la caméra (Chrome, Firefox, Safari mobiles récents) — la saisie manuelle ou un lecteur QR physique restent disponibles en secours.
