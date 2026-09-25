@@ -1,4 +1,5 @@
-{% extends "base.html" %}{% block title %}{{ course.title }}{% endblock %}
+{% extends "base.html" %}{% block title %}{{ course.title }} | Formation INPP Académie{% endblock %}
+{% block meta_description %}Découvrez le programme, le niveau, les leçons et les modalités d’inscription de la formation {{ course.title }} à l’INPP Académie.{% endblock %}
 {% block content %}
 <div class="crumbs"><a href="{{ url_for('catalogue') }}">Catalogue</a> / {{ course.category }}</div>
 <div class="row between" style="align-items:flex-start">
