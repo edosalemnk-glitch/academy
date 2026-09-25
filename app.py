@@ -55,16 +55,16 @@ def load_secret():
         return fh.read().strip()
 
 
+app = Flask(__name__)
+
+
 def seo_base_url():
     return os.environ.get("SEO_BASE_URL", request.url_root).rstrip("/")
 
 
 @app.context_processor
 def inject_seo():
-    return {"seo_base_url": seo_base_url()}
-
-
-app = Flask(__name__)
+    return {"seo_base_url": seo_base_url}
 app.secret_key = load_secret()
 app.config.update(MAX_CONTENT_LENGTH=8 * 1024 * 1024, SESSION_COOKIE_HTTPONLY=True,
                   SESSION_COOKIE_SAMESITE="Lax")
