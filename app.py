@@ -828,7 +828,7 @@ def trainer_dashboard():
         "FROM attempts a JOIN users u ON u.id=a.user_id JOIN lessons l ON l.id=a.lesson_id "
         "JOIN courses c ON c.id=l.course_id WHERE c.trainer_id=? AND a.passed=0 AND NOT EXISTS "
         "(SELECT 1 FROM progress p WHERE p.user_id=a.user_id AND p.lesson_id=a.lesson_id) "
-        "GROUP BY a.user_id, a.lesson_id HAVING COUNT(*)>=3 ORDER BY fails DESC LIMIT 10",
+        "GROUP BY a.user_id, a.lesson_id, u.full_name, c.id, c.title, l.title HAVING COUNT(*)>=3 ORDER BY fails DESC LIMIT 10",
         (g.user["id"],)).fetchall()
     recent = conn.execute(
         "SELECT u.full_name, c.title AS course, l.title AS lesson, a.score, a.passed, a.created_at "
