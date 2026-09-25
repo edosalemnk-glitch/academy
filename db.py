@@ -16,12 +16,10 @@ if not DATABASE_URL:
 
 def _translate_sql(sql):
     """Adapte les quelques conventions SQLite historiques vers PostgreSQL."""
-    sql = sql.replace("INSERT OR IGNORE", "INSERT")
-    # PostgreSQL needs an explicit conflict action for the old INSERT OR IGNORE behavior.
-    if re.match(r"^\s*INSERT\s", sql, re.IGNORECASE) and "ON CONFLICT" not in sql.upper():
-        sql = re.sub(r"(\)\s*VALUES\s*\([^;]*?\))\s*;?\s*$",
-                     lambda m: m.group(0).rstrip(";") + " ON CONFLICT DO NOTHING",
-                     sql, flags=re.IGNORECASE | re.DOTALL)
+    ignore_insert = bool(re.match(r"^\s*INSERT\s+OR\s+IGNORE\s", sql, re.IGNORECASE))
+    if ignore_insert:
+        sql = re.sub(r"INSERT\s+OR\s+IGNORE\s+", "INSERT ", sql, count=1, flags=re.IGNORECASE)
+        sql = sql.rstrip().rstrip(";") + " ON CONFLICT DO NOTHING"
     sql = sql.replace("datetime('now','-10 days')", "(CURRENT_TIMESTAMP - INTERVAL '10 days')")
     sql = sql.replace("date('now','-3 days')", "(CURRENT_DATE - INTERVAL '3 days')")
     sql = sql.replace("datetime('now')", "CURRENT_TIMESTAMP")
@@ -30,7 +28,6 @@ def _translate_sql(sql):
     sql = sql.replace("date('now',?)", "(CURRENT_DATE + (%s || ' days')::interval)")
     sql = sql.replace("?", "%s")
     return sql
-
 
 def _postgres_schema(sql):
     """Convertit le schéma historique SQLite en DDL PostgreSQL."""
