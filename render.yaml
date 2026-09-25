@@ -17,5 +17,7 @@ services:
         value: "1"
       - key: INPP_SEED_DEMO
         value: "0"
+      - key: INPP_RESTORE_DEMO
+        value: "1"
       - key: SESSION_COOKIE_SECURE
         value: "1"
