@@ -3,7 +3,17 @@ import os
 import re
 
 import psycopg
-from psycopg.rows import dict_row
+class _CompatRow(dict):
+    """Ligne PostgreSQL compatible avec sqlite3.Row : accès par nom ou par index."""
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return tuple(self.values())[key]
+        return super().__getitem__(key)
+
+
+def _row_factory(cursor, row):
+    return _CompatRow({desc.name: value for desc, value in zip(cursor.description, row)})
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("SUPABASE_DB_URL")
@@ -392,7 +402,7 @@ def connect():
     url = DATABASE_URL
     if "sslmode=" not in url:
         url += ("&" if "?" in url else "?") + "sslmode=require"
-    raw = psycopg.connect(url, row_factory=dict_row, prepare_threshold=None, connect_timeout=10)
+    raw = psycopg.connect(url, row_factory=_row_factory, prepare_threshold=None, connect_timeout=10)
     return _PGConnection(raw)
 
 
