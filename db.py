@@ -30,12 +30,12 @@ def _translate_sql(sql):
     if ignore_insert:
         sql = re.sub(r"INSERT\s+OR\s+IGNORE\s+", "INSERT ", sql, count=1, flags=re.IGNORECASE)
         sql = sql.rstrip().rstrip(";") + " ON CONFLICT DO NOTHING"
-    sql = sql.replace("datetime('now','-10 days')", "(CURRENT_TIMESTAMP - INTERVAL '10 days')")
-    sql = sql.replace("date('now','-3 days')", "(CURRENT_DATE - INTERVAL '3 days')")
-    sql = sql.replace("datetime('now')", "CURRENT_TIMESTAMP")
-    sql = sql.replace("date('now')", "CURRENT_DATE")
-    sql = sql.replace("datetime('now',?)", "(CURRENT_TIMESTAMP + (%s || ' days')::interval)")
-    sql = sql.replace("date('now',?)", "(CURRENT_DATE + (%s || ' days')::interval)")
+    sql = sql.replace("datetime('now','-10 days')", "to_char(CURRENT_TIMESTAMP - INTERVAL '10 days', 'YYYY-MM-DD HH24:MI:SS')")
+    sql = sql.replace("date('now','-3 days')", "to_char(CURRENT_DATE - INTERVAL '3 days', 'YYYY-MM-DD')")
+    sql = sql.replace("datetime('now')", "to_char(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS')")
+    sql = sql.replace("date('now')", "to_char(CURRENT_DATE, 'YYYY-MM-DD')")
+    sql = sql.replace("datetime('now',?)", "to_char(CURRENT_TIMESTAMP + (%s || ' days')::interval, 'YYYY-MM-DD HH24:MI:SS')")
+    sql = sql.replace("date('now',?)", "to_char(CURRENT_DATE + (%s || ' days')::interval, 'YYYY-MM-DD')")
     sql = sql.replace("?", "%s")
     return sql
 
