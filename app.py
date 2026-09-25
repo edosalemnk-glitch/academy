@@ -48,6 +48,8 @@ def load_secret():
     env = os.environ.get("SECRET_KEY")
     if env:
         return env
+    if os.environ.get("RENDER"):
+        raise RuntimeError("SECRET_KEY est obligatoire sur Render.")
     path = os.path.join(BASE_DIR, "secret.key")
     if not os.path.exists(path):
         with open(path, "w") as fh:
