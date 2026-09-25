@@ -122,9 +122,11 @@ class _PGConnection:
         # historiques contiennent des points-virgules, qui ne doivent pas séparer une requête.
         cleaned_lines = []
         for line in script.splitlines():
-            if line.lstrip().startswith("--"):
-                continue
-            cleaned_lines.append(line)
+            # Supprime les commentaires SQL de ligne, y compris les commentaires
+            # placés après une définition de colonne. Certains contiennent des ";".
+            line = re.sub(r"\\s*--.*$", "", line)
+            if line.strip():
+                cleaned_lines.append(line)
         cleaned = "\n".join(cleaned_lines)
         for statement in cleaned.split(";"):
             statement = statement.strip()
