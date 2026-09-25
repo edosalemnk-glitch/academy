@@ -1089,8 +1089,8 @@ def remove_image(name):
     if _storage_enabled() and str(name).startswith("lessons/"):
         try:
             _storage_request(
-                "DELETE",
-                f"object/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe='')}",
+                "POST",
+                f"object/remove/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe='')}",
                 body=json.dumps({"prefixes": [name]}),
                 content_type="application/json",
             )
@@ -1125,6 +1125,9 @@ def lesson_image_url(name):
     except (RuntimeError, ValueError, json.JSONDecodeError):
         app.logger.exception("Impossible de générer l'URL signée pour %s", name)
         return ""
+
+
+app.jinja_env.globals["lesson_image_url"] = lesson_image_url
 
 
 @app.route("/formateur/cours/<int:course_id>/lecons/nouvelle", methods=["GET", "POST"])
