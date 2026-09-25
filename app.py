@@ -109,9 +109,13 @@ def ensure_ready():
     if empty and os.environ.get("INPP_SEED_DEMO", "0") == "1":
         import seed
         seed.seed(conn)
-    elif os.environ.get("INPP_RESTORE_DEMO", "0") == "1":
-        import seed
-        seed.restore_demo(conn)
+    elif os.environ.get("INPP_RESTORE_DEMO", "1") == "1":
+        restored = conn.execute("SELECT 1 FROM settings WHERE key='demo_restore_done'").fetchone()
+        if not restored:
+            import seed
+            seed.restore_demo(conn)
+            conn.execute("INSERT INTO settings (key,value) VALUES (?,?)", ("demo_restore_done", "1"))
+            conn.commit()
     conn.close()
 
 
