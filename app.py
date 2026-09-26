@@ -659,11 +659,11 @@ def catalogue():
     status = request.args.get("status", "a_venir").strip()
     month = request.args.get("month", "").strip()
     service_id = request.args.get("service_id", type=int)
-    sql = ("SELECT c.*, u.full_name AS trainer_name, s.name AS service_name, "
+    sql = ("SELECT c.*, u.full_name AS trainer_name, s.name AS service_name, f.duration_months, f.material_fee, "
            "(SELECT COUNT(*) FROM lessons l WHERE l.course_id=c.id) AS nb_lessons, "
            "(SELECT COUNT(*) FROM enrollments e WHERE e.course_id=c.id "
            "AND e.status IN ('pending','approved')) AS nb_reserved "
-           "FROM courses c JOIN users u ON u.id=c.trainer_id LEFT JOIN services s ON s.id=c.service_id WHERE c.published=1")
+           "FROM courses c JOIN users u ON u.id=c.trainer_id LEFT JOIN services s ON s.id=c.service_id LEFT JOIN filieres f ON f.name=c.title AND f.service_id=c.service_id WHERE c.published=1")
     params = []
     if q:
         sql += " AND (c.title ILIKE ? OR c.category ILIKE ? OR c.description ILIKE ? OR c.location ILIKE ?)"
