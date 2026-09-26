@@ -1,34 +1,18 @@
-{% extends "base.html" %}{% block title %}{{ course.title }} | Formation INPP Académie{% endblock %}
-{% block meta_description %}Découvrez le programme, le niveau, les leçons et les modalités d’inscription de la formation {{ course.title }} à l’INPP Académie.{% endblock %}
+{% extends "base.html" %}
+{% block title %}{{ course.title }} | INPP Académie{% endblock %}
 {% block content %}
 <div class="crumbs"><a href="{{ url_for('catalogue') }}">Catalogue</a> / {{ course.category }}</div>
-<div class="row between" style="align-items:flex-start">
-  <div style="flex:1;min-width:280px">
-    <h1>{{ course.title }}</h1>
-    <p class="meta">{{ course.level }} · Formateur : {{ course.trainer_name }} · Réussite d'un quiz à {{ course.pass_mark }} % · {% if course.fee_amount %}{{ '%g'|format(course.fee_amount) }} {{ course.currency }}{% else %}Gratuit{% endif %}</p>
-    <p style="max-width:65ch">{{ course.description }}</p>
+<section class="course-hero">
+  <div><span class="eyebrow">{{ course.category }} · {{ course.level }}</span><h1>{{ course.title }}</h1><p>{{ course.description }}</p>
+    <div class="course-facts"><span>◷ {{ lessons|length }} leçons</span><span>✓ Quiz de validation</span><span>★ Examen final</span></div>
   </div>
-  <div class="card" style="min-width:270px">
-    {% if not g.user %}
-      <p>Connectez-vous pour demander votre inscription.</p>
-      <a class="btn" href="{{ url_for('login', next=request.path) }}">Se connecter</a> <a class="btn alt" href="{{ url_for('register') }}">Créer un compte</a>
-    {% elif g.user.role == 'formateur' %}
-      {% if g.user.id == course.trainer_id %}<a class="btn" href="{{ url_for('course_manage', course_id=course.id) }}">Gérer ce cours</a>{% else %}<p class="meta">Cours d'un autre formateur.</p>{% endif %}
-    {% elif not enrollment %}
-      <p>Votre demande sera envoyée au formateur, qui la valide avant l'ouverture du cours.</p>
-      <form method="post" action="{{ url_for('subscribe', course_id=course.id) }}">{{ csrf_field() }}<button class="btn sun">S'abonner à cette formation</button></form>
-    {% else %}
-      <p><span class="tag {{ STATUS[enrollment.status][1] }}">{{ STATUS[enrollment.status][0] }}</span></p>
-      {% if enrollment.status == 'approved' %}
-        {% if ENFORCE_FEES and course.fee_amount and enrollment.fee_status == 'unpaid' %}<p class="meta">Frais à régler : {{ FEE[enrollment.fee_status] }}. Contactez le formateur.</p>
-        {% else %}<a class="btn" href="{{ url_for('learn', course_id=course.id) }}">Accéder au cours</a>{% endif %}
-      {% elif enrollment.status == 'pending' %}<p class="meta">Le formateur va examiner votre demande.</p>
-      {% else %}<form method="post" action="{{ url_for('subscribe', course_id=course.id) }}">{{ csrf_field() }}<button class="btn alt">Refaire une demande</button></form>{% endif %}
-    {% endif %}
-  </div>
-</div>
-<h2>Programme ({{ lessons|length }} leçons)</h2>
-<ol class="path">
-{% for l in lessons %}<li><span class="n">{{ loop.index }}</span><span class="grow">{{ l.title }}</span></li>{% endfor %}
-</ol>
+  <aside class="enroll-card">
+    {% if not g.user %}<h3>Commencer ce parcours</h3><p>Créez votre compte pour demander votre inscription.</p><a class="btn sun" href="{{ url_for('register') }}">Créer mon compte</a><a class="btn alt" href="{{ url_for('login', next=request.path) }}">Se connecter</a>
+    {% elif g.user.role == 'formateur' %}{% if g.user.id == course.trainer_id %}<a class="btn" href="{{ url_for('course_manage', course_id=course.id) }}">Gérer ce cours</a>{% else %}<p class="meta">Cours d'un autre formateur.</p>{% endif %}
+    {% elif not enrollment %}<h3>Rejoindre la formation</h3><p>Votre demande sera examinée par le formateur.</p><form method="post" action="{{ url_for('subscribe', course_id=course.id) }}">{{ csrf_field() }}<button class="btn sun">S'inscrire au parcours</button></form>
+    {% else %}<span class="tag {{ STATUS[enrollment.status][1] }}">{{ STATUS[enrollment.status][0] }}</span>{% if enrollment.status == 'approved' %}{% if ENFORCE_FEES and course.fee_amount and enrollment.fee_status == 'unpaid' %}<p class="meta">Les frais doivent être réglés avant l'accès.</p>{% else %}<a class="btn sun" href="{{ url_for('learn', course_id=course.id) }}">Continuer la formation →</a>{% endif %}{% elif enrollment.status == 'pending' %}<p class="meta">Votre demande est en attente de validation.</p>{% else %}<form method="post" action="{{ url_for('subscribe', course_id=course.id) }}">{{ csrf_field() }}<button class="btn alt">Refaire une demande</button></form>{% endif %}{% endif %}
+  </aside>
+</section>
+<section class="program-section"><div class="section-heading"><div><span class="eyebrow">PROGRAMME</span><h2>Votre parcours</h2></div><span class="meta">{{ lessons|length }} étapes</span></div>
+<ol class="path academy-path">{% for l in lessons %}<li><span class="n">{{ '%02d'|format(loop.index) }}</span><span class="grow"><strong>{{ l.title }}</strong><small>Leçon · quiz de validation</small></span><span class="path-arrow">›</span></li>{% endfor %}</ol></section>
 {% endblock %}
