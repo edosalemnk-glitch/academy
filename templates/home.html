@@ -1,46 +1,26 @@
-{% extends "base.html" %}
-{% block title %}INPP Académie — Apprendre, pratiquer, certifier{% endblock %}
-{% block meta_description %}INPP Académie : une plateforme numérique pour découvrir les parcours, suivre des cours, pratiquer avec des quiz et obtenir une certification.{% endblock %}
+{% extends "base.html" %}{% block title %}Formation professionnelle en RDC | INPP Académie{% endblock %}
+{% block meta_description %}INPP Académie : le site de l'Institut National de Préparation Professionnelle. Informez-vous sur les filières, inscrivez-vous au centre et, une fois stagiaire, entraînez-vous en ligne entre les séances.{% endblock %}
 {% block content %}
-<section class="academy-hero">
-  <div class="academy-hero-copy">
-    <span class="eyebrow">INPP ACADÉMIE · PLATEFORME D'APPRENTISSAGE</span>
-    <h1>Apprenez un métier.<br><em>Construisez votre avenir.</em></h1>
-    <p>Choisissez un parcours, avancez leçon par leçon, entraînez-vous avec des quiz et validez vos compétences avec un examen final.</p>
-    <div class="row">
-      <a class="btn sun" href="{{ url_for('catalogue') }}">Explorer les formations</a>
-      {% if g.user %}<a class="btn ghost" href="{{ url_for('my_courses') }}">Mon espace</a>
-      {% else %}<a class="btn ghost" href="{{ url_for('register') }}">Créer mon compte</a>{% endif %}
-    </div>
-  </div>
-  <div class="academy-hero-panel">
-    <div class="hero-panel-top"><span>MON PARCOURS</span><strong>INPP</strong></div>
-    <div class="mini-course"><span class="mini-icon">01</span><div><b>Leçons guidées</b><small>Apprendre étape par étape</small></div></div>
-    <div class="mini-course"><span class="mini-icon">02</span><div><b>Quiz de validation</b><small>Mesurer ses acquis</small></div></div>
-    <div class="mini-course"><span class="mini-icon">03</span><div><b>Examen final</b><small>Obtenir son certificat</small></div></div>
-    <div class="mini-progress"><span>Progression</span><b>100%</b><div class="bar"><b style="width:100%"></b></div></div>
+<section class="hero">
+  <h1>Formation professionnelle à l'INPP en République démocratique du Congo</h1>
+  <p>Retrouvez ici les filières de l'Institut National de Préparation Professionnelle, la procédure et les frais d'inscription, et — une fois inscrit au centre — des cours en ligne pour vous entraîner entre les séances en salle.</p>
+  <div class="row">
+    <a class="btn sun" href="{{ url_for('procedure') }}">S'inscrire au centre</a>
+    <a class="btn alt" href="{{ url_for('catalogue') }}" style="background:#fff">Voir les cours en ligne</a>
   </div>
 </section>
-
-<div class="stats academy-stats">
-  <div class="stat"><b>{{ stats.filieres }}</b><span class="meta">filières</span></div>
-  <div class="stat"><b>{{ stats.cours }}</b><span class="meta">cours publiés</span></div>
-  <div class="stat"><b>{{ stats.stagiaires }}</b><span class="meta">stagiaires</span></div>
-  <div class="stat"><b>{{ stats.certificats }}</b><span class="meta">certificats</span></div>
+<div class="stats">
+  <div class="stat"><b>{{ stats.filieres }}</b><span class="meta">filières ouvertes</span></div>
+  <div class="stat"><b>{{ stats.cours }}</b><span class="meta">cours en ligne publiés</span></div>
+  <div class="stat"><b>{{ stats.stagiaires }}</b><span class="meta">stagiaires inscrits au centre</span></div>
+  <div class="stat"><b>{{ stats.certificats }}</b><span class="meta">certificats délivrés</span></div>
 </div>
-
-<section class="section-heading">
-  <div><span class="eyebrow">PARCOURS D'APPRENTISSAGE</span><h2>Une vraie expérience d'académie</h2></div>
-  <a href="{{ url_for('catalogue') }}">Voir tout le catalogue →</a>
-</section>
-<div class="academy-steps">
-  <article class="step-card"><span>01</span><h3>Choisir</h3><p>Explorez les formations disponibles et consultez le programme avant de vous inscrire.</p></article>
-  <article class="step-card"><span>02</span><h3>Apprendre</h3><p>Suivez les leçons dans l'ordre et pratiquez avec les activités et les quiz.</p></article>
-  <article class="step-card"><span>03</span><h3>Valider</h3><p>Terminez le parcours, passez l'examen final et consultez votre certificat.</p></article>
+<h2>Comment ça marche</h2>
+<div class="grid" style="margin-bottom:26px">
+  <div class="card"><h3>1. Vous vous informez ici</h3><p>Sans créer de compte, consultez les filières, les frais et la procédure d'inscription au centre. C'est ouvert à tous, où que vous soyez.</p></div>
+  <div class="card"><h3>2. La formation se donne au centre</h3><p>L'explication en direct — travaux pratiques, matériel, salles de l'INPP — se fait en présentiel avec un formateur, comme dans les académies partenaires de programmes tels que Cisco NetAcad.</p></div>
+  <div class="card"><h3>3. Le site sert à s'entraîner et à passer l'examen</h3><p>Une fois inscrit et validé par votre formateur, vous accédez à des leçons, des quiz et un examen final en ligne, pour vous exercer entre les séances et prouver ce que vous savez.</p></div>
 </div>
-
-<section class="academy-cta">
-  <div><span class="eyebrow">PRÊT À COMMENCER ?</span><h2>Votre prochain cours est ici.</h2><p>Créez votre compte et construisez progressivement votre parcours de compétences.</p></div>
-  <a class="btn sun" href="{{ url_for('catalogue') }}">Commencer maintenant</a>
-</section>
+<div class="card" style="margin-bottom:26px"><h3>Vous êtes déjà stagiaire ou formateur ?</h3><p class="meta">Connectez-vous pour accéder à votre espace. Un stagiaire non encore inscrit au centre peut créer un compte pour parcourir le catalogue et demander une inscription en ligne.</p><div class="row"><a class="btn" href="{{ url_for('login') }}">Se connecter</a><a class="btn alt" href="{{ url_for('register') }}">Créer un compte</a></div></div>
+<p class="meta">Besoin de comprendre en détail le fonctionnement du site ? Consultez la <a href="{{ url_for('apropos') }}">page À propos</a> ou la <a href="{{ url_for('faq') }}">FAQ</a>.</p>
 {% endblock %}
