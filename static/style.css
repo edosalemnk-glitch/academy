@@ -220,3 +220,8 @@
   .catalogue-hero-brand{display:block}
   .catalogue-logo{display:block;margin:0 auto 16px;width:96px;height:96px}
 }
+
+
+.fiche-emblem-image{width:76px;height:76px;object-fit:cover;border-radius:50%;display:block;border:2px solid #d4a62a;background:#fff;padding:3px;box-sizing:border-box;box-shadow:0 3px 10px rgba(0,0,0,.12)}
+@media(max-width:650px){.fiche-emblem-image{width:62px;height:62px;padding:2px}}
+@media print{.fiche-emblem-image{width:72px;height:72px}}
