@@ -354,6 +354,7 @@ def valid_email(email):
 def register():
     if g.user:
         return redirect(url_for("index"))
+    requested_course_id = request.args.get("course_id", type=int)
     if request.method == "POST":
         name = request.form.get("full_name", "").strip()
         email = request.form.get("email", "").strip().lower()
@@ -372,9 +373,23 @@ def register():
             cur = get_db().execute(
                 "INSERT INTO users (full_name,email,password_hash,role) VALUES (?,?,?,'stagiaire')",
                 (name, email, generate_password_hash(pwd)))
-            get_db().commit()
+            conn = get_db()
+            course = None
+            if requested_course_id:
+                course = conn.execute(
+                    "SELECT * FROM courses WHERE id=? AND published=1", (requested_course_id,)
+                ).fetchone()
+            if course and course["registration_open"]:
+                conn.execute(
+                    "INSERT INTO enrollments (user_id, course_id) VALUES (?,?)",
+                    (cur.lastrowid, requested_course_id),
+                )
+            conn.commit()
             session.clear()
             session["uid"] = cur.lastrowid
+            if course:
+                flash("Compte créé. Votre demande d'inscription à cette formation a été envoyée au formateur.", "ok")
+                return redirect(url_for("course_public", course_id=course["id"]))
             flash("Compte créé. Choisissez une formation et demandez votre inscription.", "ok")
             return redirect(url_for("catalogue"))
     return render_template("register.html")
@@ -472,12 +487,57 @@ def public_catalogue():
     return rows, groups
 
 
+def course_schedule_state(course):
+    """État public d'une formation programmée."""
+    today = datetime.now().date()
+    start = None
+    end = None
+    if course["start_date"]:
+        try:
+            start = datetime.strptime(str(course["start_date"])[:10], "%Y-%m-%d").date()
+        except ValueError:
+            pass
+    if course["end_date"]:
+        try:
+            end = datetime.strptime(str(course["end_date"])[:10], "%Y-%m-%d").date()
+        except ValueError:
+            pass
+    if start and today < start:
+        return "a_venir"
+    if start and (not end or today <= end):
+        return "en_cours"
+    if end and today > end:
+        return "terminee"
+    return "non_programmee"
+
+
+def course_schedule_label(course):
+    labels = {
+        "a_venir": "Prochainement",
+        "en_cours": "En cours",
+        "terminee": "Terminée",
+        "non_programmee": "Date à confirmer",
+    }
+    return labels[course_schedule_state(course)]
+
+
+def course_registration_capacity(course):
+    if not course["registration_open"]:
+        return False
+    if course_schedule_state(course) not in ("a_venir", "en_cours"):
+        return False
+    if course["seats"] and get_db().execute(
+        "SELECT COUNT(*) FROM enrollments WHERE course_id=? AND status IN ('pending','approved')",
+        (course["id"],)
+    ).fetchone()[0] >= course["seats"]:
+        return False
+    return True
+
+
 @app.route("/filieres")
 def filieres_public():
     rows, groups = public_catalogue()
     return render_template("filieres_public.html", filieres=rows, groups=groups)
-
-
 
 
 @app.route("/faq")
@@ -514,19 +574,146 @@ url_for("procedure"), url_for("faq"), url_for("contact"), url_for("login"), url_
 @app.route("/catalogue")
 def catalogue():
     q = request.args.get("q", "").strip()
+    category = request.args.get("category", "").strip()
+    level = request.args.get("level", "").strip()
+    status = request.args.get("status", "a_venir").strip()
+    month = request.args.get("month", "").strip()
     sql = ("SELECT c.*, u.full_name AS trainer_name, "
-           "(SELECT COUNT(*) FROM lessons l WHERE l.course_id=c.id) AS nb_lessons "
+           "(SELECT COUNT(*) FROM lessons l WHERE l.course_id=c.id) AS nb_lessons, "
+           "(SELECT COUNT(*) FROM enrollments e WHERE e.course_id=c.id "
+           "AND e.status IN ('pending','approved')) AS nb_reserved "
            "FROM courses c JOIN users u ON u.id=c.trainer_id WHERE c.published=1")
     params = []
     if q:
-        sql += " AND (c.title LIKE ? OR c.category LIKE ? OR c.description LIKE ?)"
-        params = [f"%{q}%"] * 3
-    courses = get_db().execute(sql + " ORDER BY c.category, c.id", params).fetchall()
+        sql += " AND (c.title ILIKE ? OR c.category ILIKE ? OR c.description ILIKE ? OR c.location ILIKE ?)"
+        params = [f"%{q}%"] * 4
+    if category:
+        sql += " AND c.category=?"
+        params.append(category)
+    if level:
+        sql += " AND c.level=?"
+        params.append(level)
+    courses = list(get_db().execute(sql + " ORDER BY c.start_date NULLS LAST, c.category, c.id", params).fetchall())
+    for course in courses:
+        course["schedule_state"] = course_schedule_state(course)
+        course["schedule_label"] = course_schedule_label(course)
+        course["registration_available"] = course_registration_capacity(course)
+    if status != "toutes":
+        courses = [c for c in courses if c["schedule_state"] == status]
+    if month:
+        courses = [c for c in courses if c["start_date"] and str(c["start_date"]).startswith(month)]
+    categories = [r[0] for r in get_db().execute(
+        "SELECT DISTINCT category FROM courses WHERE published=1 ORDER BY category"
+    ).fetchall()]
+    levels = [r[0] for r in get_db().execute(
+        "SELECT DISTINCT level FROM courses WHERE published=1 ORDER BY level"
+    ).fetchall()]
+    months = sorted({
+        str(c["start_date"])[:7] for c in get_db().execute(
+            "SELECT start_date FROM courses WHERE published=1 AND start_date IS NOT NULL ORDER BY start_date"
+        ).fetchall()
+    })
     enrollments = {}
     if g.user:
         enrollments = {r["course_id"]: r for r in get_db().execute(
             "SELECT * FROM enrollments WHERE user_id=?", (g.user["id"],))}
-    return render_template("catalogue.html", courses=courses, enrollments=enrollments, q=q)
+    return render_template(
+        "catalogue.html", courses=courses, enrollments=enrollments, q=q,
+        category=category, level=level, status=status, month=month,
+        categories=categories, levels=levels, months=months,
+    )
+
+
+@app.route("/catalogue.pdf")
+def catalogue_pdf():
+    q = request.args.get("q", "").strip()
+    category = request.args.get("category", "").strip()
+    level = request.args.get("level", "").strip()
+    status = request.args.get("status", "a_venir").strip()
+    month = request.args.get("month", "").strip()
+    sql = ("SELECT c.*, u.full_name AS trainer_name, "
+           "(SELECT COUNT(*) FROM lessons l WHERE l.course_id=c.id) AS nb_lessons, "
+           "(SELECT COUNT(*) FROM enrollments e WHERE e.course_id=c.id "
+           "AND e.status IN ('pending','approved')) AS nb_reserved "
+           "FROM courses c JOIN users u ON u.id=c.trainer_id WHERE c.published=1")
+    params = []
+    if q:
+        sql += " AND (c.title ILIKE ? OR c.category ILIKE ? OR c.description ILIKE ? OR c.location ILIKE ?)"
+        params = [f"%{q}%"] * 4
+    if category:
+        sql += " AND c.category=?"
+        params.append(category)
+    if level:
+        sql += " AND c.level=?"
+        params.append(level)
+    courses = list(get_db().execute(sql + " ORDER BY c.start_date NULLS LAST, c.category, c.id", params).fetchall())
+    for course in courses:
+        course["schedule_state"] = course_schedule_state(course)
+        course["schedule_label"] = course_schedule_label(course)
+    if status != "toutes":
+        courses = [c for c in courses if c["schedule_state"] == status]
+    if month:
+        courses = [c for c in courses if c["start_date"] and str(c["start_date"]).startswith(month)]
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=landscape(A4),
+        rightMargin=10*mm, leftMargin=10*mm, topMargin=35*mm, bottomMargin=12*mm,
+        title="Programmation des formations INPP Académie", author="INPP Académie",
+    )
+    styles = getSampleStyleSheet()
+    cell = ParagraphStyle("ScheduleCell", parent=styles["BodyText"], fontName="Helvetica",
+                          fontSize=7.2, leading=8.5)
+    head = ParagraphStyle("ScheduleHead", parent=cell, fontName="Helvetica-Bold",
+                          fontSize=7.5, leading=9, alignment=TA_CENTER, textColor=colors.white)
+    title = ParagraphStyle("ScheduleTitle", parent=styles["Title"], fontName="Helvetica-Bold",
+                           fontSize=16, leading=19, alignment=TA_CENTER,
+                           textColor=colors.HexColor("#2e6da4"), spaceAfter=3*mm)
+    story = [
+        Paragraph("PROGRAMMATION DES FORMATIONS", title),
+        Paragraph("Formations publiées · dates, lieux, horaires et inscriptions",
+                  ParagraphStyle("ScheduleSub", parent=cell, alignment=TA_CENTER, fontSize=8.5)),
+        Spacer(1, 3*mm),
+    ]
+    rows = [[Paragraph(x, head) for x in
+             ["Formation", "Catégorie", "Niveau", "Dates", "Lieu", "Horaire", "Places", "Frais"]]]
+    for c in courses:
+        dates = "Date à confirmer"
+        if c["start_date"]:
+            dates = str(c["start_date"])[:10]
+            if c["end_date"]:
+                dates += " → " + str(c["end_date"])[:10]
+        seats = "—"
+        if c["seats"]:
+            seats = f"{c['nb_reserved']}/{c['seats']}"
+        fee = f"{c['fee_amount']:g} {c['currency']}" if c["fee_amount"] else "Gratuit"
+        rows.append([
+            Paragraph(c["title"], cell), Paragraph(c["category"], cell), Paragraph(c["level"], cell),
+            Paragraph(dates, cell), Paragraph(c["location"] or "—", cell),
+            Paragraph(c["schedule"] or "—", cell), Paragraph(seats, cell), Paragraph(fee, cell)
+        ])
+    if len(rows) == 1:
+        rows.append([Paragraph("Aucune formation ne correspond aux filtres.", cell)] + [""] * 7)
+    table = Table(rows, repeatRows=1, colWidths=[47*mm, 30*mm, 25*mm, 34*mm, 42*mm, 34*mm, 18*mm, 22*mm])
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#2e6da4")),
+        ("GRID", (0,0), (-1,-1), 0.35, colors.HexColor("#cfd7df")),
+        ("VALIGN", (0,0), (-1,-1), "TOP"),
+        ("ROWBACKGROUNDS", (0,1), (-1,-1), [colors.white, colors.HexColor("#f4f7fa")]),
+        ("LEFTPADDING", (0,0), (-1,-1), 5), ("RIGHTPADDING", (0,0), (-1,-1), 5),
+        ("TOPPADDING", (0,0), (-1,-1), 4), ("BOTTOMPADDING", (0,0), (-1,-1), 4),
+    ]))
+    story.append(table)
+    story.append(Spacer(1, 4*mm))
+    story.append(Paragraph(
+        "Pour vous inscrire : ouvrez la fiche de la formation, créez votre compte si nécessaire, "
+        "puis envoyez votre demande d'inscription. La validation est effectuée par le formateur.",
+        ParagraphStyle("ScheduleNote", parent=cell, fontSize=8, leading=10)
+    ))
+    doc.build(story, onFirstPage=_pdf_logo, onLaterPages=_pdf_logo)
+    buffer.seek(0)
+    return Response(buffer.getvalue(), mimetype="application/pdf",
+                    headers={"Content-Disposition": "inline; filename=programmation-formations-INPP.pdf"})
 
 
 @app.route("/cours/<int:course_id>")
@@ -546,6 +733,9 @@ def subscribe(course_id):
     if g.user["role"] != "stagiaire":
         abort(403)
     conn = get_db()
+    if not course_registration_capacity(course):
+        flash("Les inscriptions à cette session ne sont pas ouvertes ou la capacité est atteinte.", "warn")
+        return redirect(url_for("course_public", course_id=course_id))
     enr = get_enrollment(g.user["id"], course_id)
     if enr is None:
         conn.execute("INSERT INTO enrollments (user_id, course_id) VALUES (?,?)", (g.user["id"], course_id))
@@ -878,8 +1068,17 @@ def read_course_form():
     try:
         fee = max(0.0, float(f.get("fee_amount", "0").replace(",", ".") or 0))
         mark = min(100, max(1, int(f.get("pass_mark", "70") or 70)))
+        seats = max(0, int(f.get("seats", "0") or 0))
+        start_date = f.get("start_date", "").strip() or None
+        end_date = f.get("end_date", "").strip() or None
+        if start_date:
+            datetime.strptime(start_date, "%Y-%m-%d")
+        if end_date:
+            datetime.strptime(end_date, "%Y-%m-%d")
+        if start_date and end_date and end_date < start_date:
+            return None, "La date de fin doit être postérieure ou égale à la date de début."
     except ValueError:
-        return None, "Les frais et la note de réussite doivent être des nombres."
+        return None, "Les frais, les places ou les dates sont invalides."
     if len(title) < 3:
         return None, "Donnez un titre au cours."
     level = f.get("level") if f.get("level") in LEVELS else LEVELS[0]
@@ -887,6 +1086,11 @@ def read_course_form():
             "description": f.get("description", "").strip(),
             "case_study": f.get("case_study", "").strip(),
             "fee_amount": fee, "pass_mark": mark,
+            "start_date": start_date, "end_date": end_date,
+            "schedule": f.get("schedule", "").strip(),
+            "location": f.get("location", "").strip(),
+            "seats": seats,
+            "registration_open": 1 if f.get("registration_open") else 0,
             "published": 1 if f.get("published") else 0}, None
 
 
