@@ -3,13 +3,16 @@
 {% block meta_description %}Catalogue des formations professionnelles de l'INPP Matadi : métiers, services, durées, frais et sessions programmées.{% endblock %}
 {% block content %}
 <section class="hero catalogue-hero">
-  <div>
-    <span class="tag ok">INPP MATADI · FORMATION EN PRÉSENTIEL</span>
-    <h1>Catalogue des formations</h1>
-    <p>Choisissez un service, découvrez les métiers proposés et consultez les sessions programmées à l'INPP Matadi.</p>
-    <div class="row">
-      <a class="btn sun" href="{{ url_for('catalogue_pdf', q=q, category=category, level=level, status=status, month=month, service_id=service_id) }}">Télécharger le programme PDF</a>
-      <button class="btn alt catalogue-menu-btn" type="button" onclick="document.body.classList.toggle('catalogue-drawer-open')">☰ Parcourir par service</button>
+  <div class="catalogue-hero-brand">
+    <img class="catalogue-logo" src="https://qyxzdmruhxmltrrmmvyj.supabase.co/storage/v1/object/public/inpp-uploads/branding/inpp-catalogue.jpg" alt="Emblème de l'Institut National de Préparation Professionnelle">
+    <div class="catalogue-hero-copy">
+      <span class="tag ok">INPP MATADI · FORMATION EN PRÉSENTIEL</span>
+      <h1>Catalogue des formations</h1>
+      <p>Choisissez un service, découvrez les métiers proposés et consultez les sessions programmées à l'INPP Matadi.</p>
+      <div class="row">
+        <a class="btn sun" href="{{ url_for('catalogue_pdf', q=q, category=category, level=level, status=status, month=month, service_id=service_id) }}">Télécharger le programme PDF</a>
+        <button class="btn alt catalogue-menu-btn" type="button" onclick="document.body.classList.toggle('catalogue-drawer-open')">☰ Parcourir par service</button>
+      </div>
     </div>
   </div>
 </section>
