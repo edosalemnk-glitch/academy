@@ -191,6 +191,26 @@ CREATE TABLE IF NOT EXISTS lessons (
     image TEXT
 );
 
+CREATE TABLE IF NOT EXISTS resources (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    lesson_id INTEGER REFERENCES lessons(id) ON DELETE SET NULL,
+    title TEXT NOT NULL,
+    kind TEXT NOT NULL DEFAULT 'support'
+        CHECK (kind IN ('support','exercice','document','lien')),
+    description TEXT NOT NULL DEFAULT '',
+    content TEXT NOT NULL DEFAULT '',
+    url TEXT NOT NULL DEFAULT '',
+    file_path TEXT,
+    file_name TEXT,
+    published INTEGER NOT NULL DEFAULT 1,
+    created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_resources_course ON resources(course_id, published);
+CREATE INDEX IF NOT EXISTS idx_resources_lesson ON resources(lesson_id);
+
 CREATE TABLE IF NOT EXISTS questions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     lesson_id INTEGER NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
@@ -512,6 +532,47 @@ def _migrate_course_case_study(conn):
     )
 
 
+def _migrate_reference_resources(conn):
+    """Ajoute quelques ressources de révision de démonstration aux cours existants."""
+    matches = conn.execute(
+        "SELECT id, title FROM courses WHERE lower(title) LIKE ? OR lower(title) LIKE ? OR lower(title) LIKE ?",
+        ("%sql%niveau 1%", "%sql%niveau 2%", "%bureautique%")
+    ).fetchall()
+    if not matches:
+        return
+    for course in matches:
+        title = str(course["title"])
+        if "niveau 1" in title.lower():
+            demos = [
+                ("Fiche de révision SQL — requêtes de base", "support",
+                 "Rappel : SELECT permet de choisir les colonnes, WHERE filtre les lignes et ORDER BY trie les résultats."),
+                ("Exercices pratiques SQL — SELECT / WHERE / ORDER BY", "exercice",
+                 "Exercice : affichez les stagiaires d'une filière donnée, puis triez le résultat par nom. "
+                 "Ajoutez ensuite une condition pour ne garder que les stagiaires actifs."),
+            ]
+        elif "niveau 2" in title.lower():
+            demos = [
+                ("Fiche de révision SQL — jointures et analyses", "support",
+                 "Rappel : utilisez JOIN pour relier des tables par une clé commune. "
+                 "Avant de produire un indicateur, vérifiez les relations et le périmètre des données."),
+            ]
+        else:
+            demos = [
+                ("Fiche de révision — organiser ses fichiers et dossiers", "support",
+                 "Conseil pratique : utilisez des dossiers par service, année et type de document. "
+                 "Adoptez des noms de fichiers réguliers et évitez les doublons."),
+            ]
+        for rtitle, kind, content in demos:
+            exists = conn.execute(
+                "SELECT 1 FROM resources WHERE course_id=? AND title=?", (course["id"], rtitle)
+            ).fetchone()
+            if not exists:
+                conn.execute(
+                    "INSERT INTO resources (course_id,title,kind,description,content,published) "
+                    "VALUES (?,?,?,?,?,1)",
+                    (course["id"], rtitle, kind, "Ressource de révision proposée avec la formation.", content)
+                )
+
 def _migrate_course_schedule(conn):
     """Ajoute les informations de programmation des formations visibles par le public."""
     conn.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS start_date TEXT")
@@ -597,6 +658,7 @@ def init_db():
     _migrate_registration_section(conn)
     _migrate_course_case_study(conn)
     _migrate_course_schedule(conn)
+    _migrate_reference_resources(conn)
     _migrate_bank_settings(conn)
     conn.executemany("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", DEFAULT_SETTINGS.items())
     _migrate_reference_catalogue(conn)
