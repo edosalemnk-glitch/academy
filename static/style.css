@@ -17,16 +17,19 @@
   .fiche-table table{min-width:820px}
 }
 @media print{
-  @page{size:A4 landscape;margin:10mm}
-  body{background:#fff!important}
+  @page{size:A4 portrait;margin:9mm}
+  body{background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .topbar,footer,.noprint{display:none!important}
   main,.wrap{width:100%!important;max-width:none!important;padding:0!important;margin:0!important}
-  .card{box-shadow:none!important;border:1px solid #999!important}
-  .fiche-head{break-inside:avoid}
+  .card{box-shadow:none!important}
+  .fiche-head{break-inside:avoid;border:1.5px solid var(--blue)!important;background:#eef7fc!important}
+  .fiche-head hr{border-top-color:var(--blue)}
   .fiche-table{overflow:visible!important}
-  .fiche-table table{font-size:9px}
+  .fiche-table table{font-size:8px}
+  .fiche-table th{background:var(--blue)!important;color:#fff!important}
   .fiche-table th,.fiche-table td{padding:4px 5px}
-  .fiche-note{margin-top:8px}
+  .fiche-table .service-cell{background:#eaf6fc!important;color:var(--navy)!important}
+  .fiche-note{margin-top:8px;background:#eef7fc!important;border-color:var(--blue)!important}
 }
 
 
