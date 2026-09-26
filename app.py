@@ -1150,7 +1150,10 @@ def lesson_image_proxy(name):
         if not signed:
             raise RuntimeError("URL signée absente de la réponse Supabase.")
         if not signed.startswith("http"):
-            signed = f"{SUPABASE_URL}/storage/v1{signed if signed.startswith('/') else '/' + signed}"
+            if signed.startswith("/storage/v1/"):
+                signed = f"{SUPABASE_URL}{signed}"
+            else:
+                signed = f"{SUPABASE_URL}/storage/v1/{signed.lstrip('/')}"
         req = urllib.request.Request(
             signed,
             headers={"Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}"},
