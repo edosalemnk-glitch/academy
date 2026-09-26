@@ -5,25 +5,27 @@
 <p class="meta">Ajoutez des supports que les stagiaires pourront consulter entre les séances. La formation reste en présentiel à l'INPP Matadi.</p>
 <form method="post" enctype="multipart/form-data" class="card form wide">{{ csrf_field() }}
   <div class="row" style="align-items:flex-start"><div style="flex:1"><label>Titre</label><input name="title" required placeholder="Fiche de révision SQL"></div>
-  <div style="flex:0 1 240px"><label>Type</label><select name="kind">{% for key,label in resource_kinds.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></div></div>
+  <div style="flex:0 1 190px"><label>Module</label><select name="module"><option value="general">Général</option><option value="word">Word</option><option value="excel">Excel</option></select></div><div style="flex:0 1 240px"><label>Type</label><select name="kind">{% for key,label in resource_kinds.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></div></div>
   <label>Description courte</label><input name="description" placeholder="À quoi sert cette ressource ?">
   <label>Contenu de la ressource (facultatif)</label><textarea name="content" style="min-height:180px" placeholder="Fiche, rappel, consigne d'exercice..."></textarea>
   <label>Lien externe (facultatif)</label><input name="url" type="url" placeholder="https://...">
+  <label><input type="checkbox" name="exam_selected" value="1"> Sélectionner cet exercice pour l'examen final</label>
   <label>Fichier (facultatif, 8 Mo maximum)</label><input name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.txt,.zip">
   <p class="hint">Une ressource peut être un texte, un lien, un document ou une combinaison de ces éléments. Elle est publiée (visible des stagiaires) dès sa création ; vous pouvez la masquer ensuite sans la supprimer.</p>
   <button class="btn sun">Publier la ressource</button>
 </form>
 <h2 style="margin-top:28px">Ressources publiées</h2>
-<div class="scroll"><table><thead><tr><th>Type</th><th>Titre</th><th>Contenu</th><th>Visible aux stagiaires</th><th></th></tr></thead><tbody>
+<div class="scroll"><table><thead><tr><th>Type</th><th>Titre</th><th>Contenu</th><th>Module</th><th>Examen</th><th>Visible aux stagiaires</th><th></th></tr></thead><tbody>
 {% for r in resources %}<tr>
   <td><span class="tag">{{ resource_kinds.get(r.kind, 'Ressource') }}</span></td>
   <td><a href="{{ url_for('resource_view', resource_id=r.id) }}">{{ r.title }}</a></td>
   <td>{% if r.file_name %}{{ r.file_name }}{% elif r.url %}Lien externe{% elif r.content %}Texte{% endif %}</td>
+  <td>{% if r.kind == 'exercice' %}<span class="tag {{ 'ok' if r.exam_selected else '' }}">{{ 'Dans l’examen' if r.exam_selected else 'Non sélectionné' }}</span><form method="post" action="{{ url_for('resource_toggle_exam', resource_id=r.id) }}">{{ csrf_field() }}<button class="btn alt small">{{ 'Retirer' if r.exam_selected else 'Ajouter à l’examen' }}</button></form>{% else %}—{% endif %}</td>
   <td><span class="tag {{ 'ok' if r.published else 'warn' }}">{{ 'Publiée' if r.published else 'Masquée' }}</span></td>
   <td><div class="row" style="gap:6px">
     <form method="post" action="{{ url_for('resource_toggle_publish', resource_id=r.id) }}">{{ csrf_field() }}<button class="btn alt small">{{ 'Masquer' if r.published else 'Publier' }}</button></form>
     <form method="post" action="{{ url_for('resource_delete', resource_id=r.id) }}" onsubmit="return confirm('Supprimer cette ressource ?')">{{ csrf_field() }}<button class="btn bad small">Supprimer</button></form>
   </div></td>
-</tr>{% else %}<tr><td colspan="5">Aucune ressource.</td></tr>{% endfor %}
+</tr>{% else %}<tr><td colspan="7">Aucune ressource.</td></tr>{% endfor %}
 </tbody></table></div>
 {% endblock %}
