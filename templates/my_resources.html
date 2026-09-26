@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block title %}Mes ressources de révision{% endblock %}
+{% block content %}
+<div class="row between" style="align-items:flex-end"><div><span class="tag ok">ESPACE STAGIAIRE</span><h1 style="margin:8px 0 4px">Mes ressources de révision</h1><p class="meta">Retrouvez les supports et exercices publiés par vos formateurs pour travailler entre les séances à l'INPP Matadi.</p></div><a class="btn alt" href="{{ url_for('my_courses') }}">Mes formations</a></div>
+{% if not resources %}<div class="card">Aucune ressource disponible pour vos formations validées.</div>{% endif %}
+<div class="grid">{% for r in resources %}<article class="card resource-card"><span class="tag">{{ resource_kinds.get(r.kind, 'Ressource') }}</span><h2 style="margin:8px 0 4px">{{ r.title }}</h2><p class="meta">{{ r.course_title }}</p>{% if r.description %}<p>{{ r.description }}</p>{% endif %}<a class="btn small" href="{{ url_for('resource_view', resource_id=r.id) }}">Ouvrir</a></article>{% endfor %}</div>
+{% endblock %}
