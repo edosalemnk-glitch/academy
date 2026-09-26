@@ -1128,7 +1128,8 @@ def course_new():
             get_db().commit()
             flash("Cours créé. Ajoutez maintenant des leçons.", "ok")
             return redirect(url_for("course_manage", course_id=cur.lastrowid))
-    return render_template("formateur/course_form.html", course=None, levels=LEVELS)
+    services = get_db().execute("SELECT id, name FROM services WHERE active=1 ORDER BY name").fetchall()
+    return render_template("formateur/course_form.html", course=None, levels=LEVELS, services=services)
 
 
 @app.route("/formateur/cours/<int:course_id>/modifier", methods=["GET", "POST"])
@@ -1143,14 +1144,15 @@ def course_edit(course_id):
             get_db().execute(
                 "UPDATE courses SET title=?, category=?, level=?, description=?, case_study=?, "
                 "fee_amount=?, pass_mark=?, published=?, start_date=?, end_date=?, schedule=?, "
-                "location=?, seats=?, registration_open=? WHERE id=?",
+                "location=?, seats=?, registration_open=?, service_id=? WHERE id=?",
                 (data["title"], data["category"], data["level"], data["description"], data["case_study"],
                  data["fee_amount"], data["pass_mark"], data["published"], data["start_date"], data["end_date"],
-                 data["schedule"], data["location"], data["seats"], data["registration_open"], course_id))
+                 data["schedule"], data["location"], data["seats"], data["registration_open"], data["service_id"], course_id))
             get_db().commit()
             flash("Cours mis à jour.", "ok")
             return redirect(url_for("course_manage", course_id=course_id))
-    return render_template("formateur/course_form.html", course=course, levels=LEVELS)
+    services = get_db().execute("SELECT id, name FROM services WHERE active=1 ORDER BY name").fetchall()
+    return render_template("formateur/course_form.html", course=course, levels=LEVELS, services=services)
 
 
 @app.route("/formateur/cours/<int:course_id>/supprimer", methods=["POST"])
