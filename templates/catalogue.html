@@ -112,7 +112,7 @@
           <div><small>DURÉE</small><strong>{{ (c.fee_amount / 60000)|int }} mois</strong></div>
           <div><small>FRAIS PÉDAGOGIQUES</small><strong>{{ '%g'|format(c.fee_amount) }} {{ c.currency }}</strong></div>
           <div><small>SESSION</small><strong>{% if c.start_date %}{{ c.start_date[:10] }}{% else %}À confirmer{% endif %}</strong></div>
-          <div><small>LIEU</small><strong>{{ c.location or 'INPP Matadi' }}</strong></div>
+          <div><small>MATÉRIEL</small><strong>{{ '%g'|format(c.material_fee) if c.material_fee is not none else '—' }} USD</strong></div>
         </div>
         <div class="meta">Horaire : {{ c.schedule or 'À confirmer' }} · {{ c.seats or '—' }} places</div>
         <div class="row catalogue-course-actions">
