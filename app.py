@@ -1048,8 +1048,13 @@ def exam_start(course_id):
         flash("Vous avez déjà utilisé toutes vos tentatives pour cet examen.", "warn")
         return redirect(url_for("exam_intro", course_id=course_id))
     nb_q = conn.execute("SELECT COUNT(*) FROM exam_questions WHERE exam_id=?", (exam["id"],)).fetchone()[0]
-    if not nb_q:
-        flash("L'examen n'a pas encore de questions ; revenez plus tard.", "info")
+    nb_practical = conn.execute(
+        "SELECT COUNT(*) FROM resources r JOIN exams e ON e.course_id=r.course_id "
+        "WHERE e.id=? AND r.kind='exercice' AND r.published=1 AND r.exam_selected=1",
+        (exam["id"],)
+    ).fetchone()[0]
+    if not nb_q and not nb_practical:
+        flash("L'examen n'a encore aucun contenu sélectionné par le formateur.", "info")
         return redirect(url_for("exam_intro", course_id=course_id))
     attempt_id = conn.execute("INSERT INTO exam_attempts (exam_id, user_id) VALUES (?,?)",
                               (exam["id"], g.user["id"])).lastrowid
