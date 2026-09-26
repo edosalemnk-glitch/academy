@@ -352,7 +352,7 @@ FICHIERS = {
     "category": "Bureautique", "level": "Débutant", "fee": 0,
     "description": "Les bases de l'organisation d'un ordinateur Windows : créer, renommer, copier et déplacer dossiers et fichiers.",
     "start_date": "2026-10-12", "end_date": "2026-11-06",
-    "schedule": "Lundi–Vendredi · 08h30–12h30", "location": "INPP Kinshasa-Limete",
+    "schedule": "Lundi–Vendredi · 08h30–12h30", "location": "INPP Matadi",
     "seats": 30,
     "lessons": [
         ("Créer un dossier", """Un **dossier** range vos fichiers, comme un classeur.
