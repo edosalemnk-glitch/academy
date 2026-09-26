@@ -42,12 +42,12 @@
   <div class="stat"><b>{{ stats.stagiaires }}</b><span class="meta">stagiaires inscrits au centre</span></div>
   <div class="stat"><b>{{ stats.certificats }}</b><span class="meta">attestations de réussite délivrées</span></div>
 </div>
-<h2>Comment ça marche</h2>
-<div class="grid" style="margin-bottom:26px">
-  <div class="card"><h3>1. Vous vous informez ici</h3><p>Sans créer de compte, consultez les filières, les frais et la procédure d'inscription au centre. C'est ouvert à tous, où que vous soyez.</p></div>
-  <div class="card"><h3>2. La formation se donne au centre</h3><p>L'explication en direct — travaux pratiques, matériel, salles de l'INPP — se fait en présentiel avec un formateur, comme dans les académies partenaires de programmes tels que Cisco NetAcad.</p></div>
-  <div class="card"><h3>3. Le site sert à réviser et à suivre ses résultats</h3><p>Une fois inscrit et validé par votre formateur, vous accédez à des supports de révision, des exercices, des quiz et, lorsqu'il est prévu par le formateur, un examen final. Ces outils accompagnent les séances en présentiel.</p></div>
-</div>
-<div class="card" style="margin-bottom:26px"><h3>Vous êtes déjà stagiaire ou formateur ?</h3><p class="meta">Connectez-vous pour accéder à votre espace. Un stagiaire non encore inscrit au centre peut créer un compte pour parcourir le catalogue et demander une inscription depuis le site, puis finaliser l'inscription au centre.</p><div class="row"><a class="btn" href="{{ url_for('login') }}">Se connecter</a><a class="btn alt" href="{{ url_for('register') }}">Créer un compte</a></div></div>
+<section class="role-flow" style="margin-bottom:26px">
+  <div class="card"><span class="tag ok">VISITEUR</span><h2>INFORMER</h2><p>Voir les formations, choisir une session, consulter les dates, frais, lieu et places disponibles, puis demander l'inscription.</p><a class="btn small" href="{{ url_for('catalogue') }}">Voir les formations</a></div>
+  <div class="card"><span class="tag">STAGIAIRE</span><h2>FORMATION EN PRÉSENTIEL</h2><p>Suivre la formation au centre, puis réviser entre les séances avec les ressources, réaliser les exercices, passer les quiz et les évaluations.</p><a class="btn small" href="{{ url_for('login') }}">Espace stagiaire</a></div>
+  <div class="card"><span class="tag">FORMATEUR</span><h2>ENSEIGNER &amp; SUIVRE</h2><p>Programmer les sessions, enseigner au centre, publier les supports et exercices, valider les inscriptions et suivre les stagiaires.</p><a class="btn small" href="{{ url_for('login') }}">Espace formateur</a></div>
+  <div class="card"><span class="tag">SECRÉTARIAT</span><h2>GÉRER</h2><p>Gérer les services, filières, inscriptions, frais, programmation des sessions et suivi administratif.</p><a class="btn small" href="{{ url_for('login') }}">Espace secrétariat</a></div>
+</section>
+<div class="card" style="margin-bottom:26px"><h2>Le principe du site</h2><p class="meta">Le site ne remplace pas la formation au centre. Il sert à informer le public, faciliter les demandes d'inscription et accompagner les stagiaires entre les séances.</p></div>
 <p class="meta">Besoin de comprendre en détail le fonctionnement du site ? Consultez la <a href="{{ url_for('apropos') }}">page À propos</a> ou la <a href="{{ url_for('faq') }}">FAQ</a>.</p>
 {% endblock %}
