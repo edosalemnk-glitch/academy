@@ -247,7 +247,7 @@ GROUP BY departement_id HAVING SUM(salaire) > 3000;
         ("Modifier les données : INSERT, UPDATE, DELETE", """Trois commandes modifient le contenu d'une table :
 
 ```
-INSERT INTO departements (id, nom, ville) VALUES (6, 'Juridique', 'Kinshasa');
+INSERT INTO departements (id, nom, ville) VALUES (6, 'Juridique', 'Matadi');
 UPDATE employes SET salaire = 1900 WHERE id = 1;
 DELETE FROM employes WHERE id = 9;
 ```
@@ -651,7 +651,7 @@ def restore_demo(db):
          "", None, "", 40000, 50, 50000, 25000, "INPP-CS-2026-4471B9"),
         ("Nadège Mwamba", "F", "", "Électricité du bâtiment", "non_recommande", "", "", "none",
          "", None, "", 40000, 80, 50000, 25000, None),
-        ("Patrick Ilunga", "M", "", "Coupe et couture", "recommande_total", "ISP Kinshasa", "ISP/2026/014", "approved",
+        ("Patrick Ilunga", "M", "", "Coupe et couture", "recommande_total", "ISP Matadi", "ISP/2026/014", "approved",
          "Directeur des études", "2026-09-22", "", 0, 0, 0, 0, "INPP-CS-2026-8C6905"),
         ("Solange Kabeya", "F", "", "Informatique de gestion", "recommande_partiel", "Ministère de l'Emploi",
          "MIN-EMP/2026/077", "pending", "", None, "", 0, 50, 0, 25000, None),
@@ -774,7 +774,7 @@ def seed(db):
     pay(r2, "inscription", 58000, "FC", "FN-0004", 5)
 
     # Stagiaire recommandé total (institution privée) : aucun frais, en ordre dès l'approbation de la lettre
-    r3 = register("Patrick Ilunga", "M", "Coupe et Couture", "recommande_total", institution="ISP Kinshasa",
+    r3 = register("Patrick Ilunga", "M", "Coupe et Couture", "recommande_total", institution="ISP Matadi",
                   letter_ref="ISP/2026/014", letter_status="approved")
     db.execute("UPDATE registrations SET letter_decided_by=?, letter_decided_at=date('now','-3 days') WHERE id=?",
               ("Directeur des études", r3))
