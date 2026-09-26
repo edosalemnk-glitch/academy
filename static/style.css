@@ -64,3 +64,63 @@
 .resource-hero{display:flex;justify-content:space-between;align-items:center;gap:24px;background:linear-gradient(135deg,var(--navy),#174c76);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:18px;overflow:hidden}.resource-hero h1{font-size:2.15rem;margin:7px 0}.resource-hero p{max-width:680px;color:#dbe8f3;margin:0}.resource-kicker{font-size:.76rem;font-weight:800;letter-spacing:.12em;color:var(--sun)}.resource-hero-mark{width:78px;height:78px;display:grid;place-items:center;border:2px solid rgba(255,255,255,.5);border-radius:18px;font:700 2.5rem Georgia,serif;color:var(--sun);flex:none}.resource-toolbar{margin-bottom:18px}.resource-search{max-width:520px}.resource-search label{margin-top:0}.resource-filters{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}.resource-filter{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;cursor:pointer;color:var(--navy);font:600 .86rem inherit}.resource-filter strong{margin-left:5px;color:var(--muted)}.resource-filter.active{background:var(--navy);border-color:var(--navy);color:#fff}.resource-filter.active strong{color:var(--sun)}.resource-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}.resource-tile{display:flex;flex-direction:column;min-height:245px;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:transform .15s ease,box-shadow .15s ease}.resource-tile:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(18,49,79,.10)}.resource-tile-top{display:flex;align-items:center;justify-content:space-between;padding:16px 17px 8px}.resource-icon{display:inline-grid;place-items:center;min-width:54px;height:32px;padding:0 9px;border-radius:8px;background:#e9f2fa;color:var(--river);font-size:.72rem;font-weight:900;letter-spacing:.04em}.resource-icon.exercice{background:#fff4cc;color:#7a5a00}.resource-icon.document{background:#e6f4ec;color:var(--ok)}.resource-icon.lien{background:#eee9ff;color:#5a3e9b}.resource-type{font-size:.78rem;font-weight:700;color:var(--muted)}.resource-tile-body{padding:8px 17px;flex:1}.resource-tile-body h2{font-size:1.18rem;margin:0 0 8px}.resource-tile-body p{color:var(--muted);margin:0;font-size:.92rem}.resource-course{font-weight:700;color:var(--navy)!important;margin-bottom:7px!important}.resource-tile-foot{border-top:1px solid var(--line);padding:11px 17px;display:flex;justify-content:space-between;gap:10px;align-items:center}.resource-file{font-size:.78rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.resource-open{font-weight:800;text-decoration:none;white-space:nowrap}.empty-resource{text-align:center;padding:48px 24px}.empty-icon{margin:0 auto 12px;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--infobg);color:var(--river);font-size:1.7rem}.resource-reading-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:12px}.resource-reading{max-width:900px;margin:0 auto;padding:30px}.resource-reading-title{display:flex;gap:18px;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:20px}.resource-reading-title .resource-icon{margin-top:5px}.resource-reading-title h1{margin:0 0 7px}.resource-reading-title p{margin:0;color:var(--muted)}.resource-content{max-width:760px;margin:26px auto;font-size:1.02rem}.resource-content h1,.resource-content h2,.resource-content h3{margin-top:1.5em}.resource-content pre{background:#0f2237;color:#e8f1fa;padding:16px;border-radius:10px;overflow:auto}.resource-content code{font-family:Consolas,"Courier New",monospace}.resource-actions{display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:18px}.resource-course{font-size:.86rem!important}@media(max-width:650px){.resource-hero{padding:24px 20px}.resource-hero-mark{display:none}.resource-hero h1{font-size:1.7rem}.resource-reading{padding:20px}.resource-reading-title{flex-direction:column}.resource-reading-head{align-items:flex-start;flex-direction:column}}
 
 .role-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.role-flow .card{height:100%;display:flex;flex-direction:column}.role-flow .card h2{font-size:1.15rem;margin:10px 0 7px}.role-flow .card p{flex:1;color:var(--muted)}.role-flow .btn{align-self:flex-start}@media(max-width:950px){.role-flow{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.role-flow{grid-template-columns:1fr}}
+
+/* Catalogue INPP Matadi — navigation latérale par service */
+.catalogue-hero{display:flex;align-items:center}
+.catalogue-layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:22px;align-items:start}
+.catalogue-drawer{position:sticky;top:16px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;max-height:calc(100vh - 32px);overflow:auto;box-shadow:0 8px 28px rgba(18,49,79,.08)}
+.catalogue-drawer-head{display:flex;align-items:center;justify-content:space-between;padding:4px 4px 12px;border-bottom:1px solid var(--line)}
+.catalogue-drawer-head h2{margin:3px 0 0;font-size:1.35rem}
+.catalogue-close{display:none;border:0;background:#eef2f5;border-radius:50%;width:34px;height:34px;font-size:1.4rem;cursor:pointer}
+.catalogue-all{display:flex;justify-content:space-between;gap:10px;padding:12px 10px;margin:12px 0;border-radius:9px;background:#eef5fb;color:var(--navy);text-decoration:none;font-weight:800}
+.catalogue-all.active{background:var(--navy);color:#fff}
+.catalogue-all strong,.service-menu-group summary strong{font-size:.78rem;background:rgba(0,0,0,.08);border-radius:999px;padding:2px 8px}
+.service-menu-group{border-bottom:1px solid var(--line)}
+.service-menu-group summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:8px;align-items:center;padding:12px 7px;font-weight:800;color:var(--navy)}
+.service-menu-group summary::-webkit-details-marker{display:none}
+.service-menu-group summary:before{content:"+";width:20px;height:20px;display:grid;place-items:center;border-radius:50%;background:#eef2f5;color:var(--river);font-weight:900;flex:none}
+.service-menu-group[open] summary:before{content:"−"}
+.service-menu-items{padding:0 0 9px 27px}
+.service-menu-items>a{display:flex;justify-content:space-between;gap:8px;padding:8px 7px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.86rem}
+.service-menu-items>a:hover,.service-menu-items>a.active{background:#eef5fb;color:var(--navy)}
+.service-menu-items .service-course-link span{font-weight:600}
+.service-menu-items .service-course-link small{white-space:nowrap;color:var(--river);font-weight:800}
+.catalogue-filter-box{margin-top:16px;padding:14px;border-radius:11px;background:#f6f8fa;border:1px solid var(--line)}
+.catalogue-filter-box h3{font-size:1rem;margin:0 0 10px}
+.catalogue-filter-box label{font-size:.82rem;margin-top:10px}
+.catalogue-reset{display:block;text-align:center;margin-top:10px;font-size:.86rem;color:var(--muted)}
+.catalogue-toolbar{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:16px}
+.catalogue-toolbar h2{margin:4px 0}
+.catalogue-toolbar p{margin:0;color:var(--muted);font-size:.9rem}
+.catalogue-menu-btn{display:none}
+.catalogue-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.catalogue-course{display:flex;flex-direction:column;gap:10px;border-top:5px solid var(--river);min-width:0}
+.catalogue-course-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.catalogue-service{font-size:.75rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--river)}
+.catalogue-course h2{font-size:1.25rem;margin:0}
+.catalogue-course h2 a{text-decoration:none;color:var(--navy)}
+.catalogue-course h2 a:hover{color:var(--river)}
+.catalogue-course>p{margin:0;color:var(--muted);min-height:65px}
+.catalogue-course-info{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.catalogue-course-info>div{background:#f7f9fa;border:1px solid var(--line);border-radius:8px;padding:8px 9px}
+.catalogue-course-info small{display:block;color:var(--muted);font-size:.68rem;font-weight:800;letter-spacing:.04em}
+.catalogue-course-info strong{display:block;margin-top:2px;font-size:.88rem;color:var(--navy)}
+.catalogue-course-actions{margin-top:auto;padding-top:4px}
+@media(max-width:1050px){
+  .catalogue-layout{grid-template-columns:285px minmax(0,1fr)}
+  .catalogue-cards{grid-template-columns:1fr}
+}
+@media(max-width:800px){
+  .catalogue-layout{display:block}
+  .catalogue-drawer{position:fixed;z-index:1000;left:0;top:0;bottom:0;width:min(88vw,360px);max-height:none;border-radius:0 16px 16px 0;transform:translateX(-105%);transition:transform .2s ease;box-shadow:12px 0 30px rgba(0,0,0,.18)}
+  .catalogue-drawer:after{content:"";position:fixed;left:100%;top:0;width:100vw;height:100vh;background:rgba(0,0,0,.38);pointer-events:none;opacity:0}
+  .catalogue-drawer-open .catalogue-drawer{transform:translateX(0)}
+  .catalogue-drawer-open .catalogue-drawer:after{opacity:1;pointer-events:auto}
+  .catalogue-close,.catalogue-menu-btn{display:inline-grid;place-items:center}
+  .catalogue-toolbar .catalogue-menu-btn{display:inline-flex}
+  .catalogue-course-info{grid-template-columns:1fr 1fr}
+}
+@media(max-width:520px){
+  .catalogue-course-info{grid-template-columns:1fr}
+  .catalogue-hero{padding:28px 22px}
+}
