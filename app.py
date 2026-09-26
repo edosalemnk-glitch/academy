@@ -683,7 +683,11 @@ def catalogue():
         course["schedule_label"] = course_schedule_label(course)
         course["registration_available"] = course_registration_capacity(course)
     if status != "toutes":
-        courses = [c for c in courses if c["schedule_state"] == status]
+        # Un cours publié sans date encore fixée ("non_programmee") doit rester visible
+        # dans la vue par défaut "à venir", sinon il disparaît du catalogue tant que le
+        # formateur n'a pas choisi de dates.
+        wanted = {status, "non_programmee"} if status == "a_venir" else {status}
+        courses = [c for c in courses if c["schedule_state"] in wanted]
     if month:
         courses = [c for c in courses if c["start_date"] and str(c["start_date"]).startswith(month)]
     categories = [r[0] for r in get_db().execute(
@@ -740,7 +744,11 @@ def catalogue_pdf():
         course["schedule_state"] = course_schedule_state(course)
         course["schedule_label"] = course_schedule_label(course)
     if status != "toutes":
-        courses = [c for c in courses if c["schedule_state"] == status]
+        # Un cours publié sans date encore fixée ("non_programmee") doit rester visible
+        # dans la vue par défaut "à venir", sinon il disparaît du catalogue tant que le
+        # formateur n'a pas choisi de dates.
+        wanted = {status, "non_programmee"} if status == "a_venir" else {status}
+        courses = [c for c in courses if c["schedule_state"] in wanted]
     if month:
         courses = [c for c in courses if c["start_date"] and str(c["start_date"]).startswith(month)]
 
@@ -1390,6 +1398,21 @@ def resource_delete(resource_id):
     get_db().execute("DELETE FROM resources WHERE id=?", (resource_id,))
     get_db().commit()
     flash("Ressource supprimée.", "ok")
+    return redirect(url_for("resource_manage", course_id=course["id"]))
+
+
+@app.route("/formateur/ressources/<int:resource_id>/publier", methods=["POST"])
+@trainer_required
+def resource_toggle_publish(resource_id):
+    resource = get_db().execute("SELECT * FROM resources WHERE id=?", (resource_id,)).fetchone()
+    if resource is None:
+        abort(404)
+    course = own_course(resource["course_id"])
+    new_state = 0 if resource["published"] else 1
+    get_db().execute("UPDATE resources SET published=? WHERE id=?", (new_state, resource_id))
+    get_db().commit()
+    flash("Ressource rendue visible aux stagiaires." if new_state
+          else "Ressource masquée : elle n'apparaît plus dans l'espace stagiaire (le fichier reste conservé).", "ok")
     return redirect(url_for("resource_manage", course_id=course["id"]))
 
 
