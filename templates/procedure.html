@@ -1,33 +1,60 @@
-{% extends "base.html" %}{% block title %}Frais et procédure d'inscription{% endblock %}
+{% extends "base.html" %}{% block title %}Fiche de renseignements | Frais et filières{% endblock %}
+{% block meta_description %}Fiche de renseignements INPP Académie : frais d'inscription, minerval, jury, lettre de stage et catalogue des filières, métiers, durées et frais matériels.{% endblock %}
 {% block content %}
-<h1>Inscription au centre : frais et procédure</h1>
-<p class="meta">Pour les formations suivies au centre. (Pour créer un compte sur la plateforme en ligne, utilisez « Créer un compte ».)</p>
-
-<div class="grid" style="margin:18px 0 26px">
-  <div class="card"><h3>Frais d'inscription</h3><p><strong>{{ cfg.inscription_fee|float|money('FC') }}</strong><br><span class="meta">Obligatoire</span></p></div>
-  <div class="card"><h3>Frais de formation</h3><p><strong>{{ cfg.formation_fee|float|money('FC') }}</strong> par mois</p></div>
-  <div class="card"><h3>Frais de jury</h3><p><strong>{{ cfg.jury_fee|float|money('FC') }}</strong><br><span class="meta">Obligatoire avant de passer le jury</span></p></div>
-  <div class="card"><h3>Lettre de stage</h3><p><strong>{{ cfg.lettre_stage_fee|float|money('FC') }}</strong><br><span class="meta">Payable après la formation</span></p></div>
-  <div class="card"><h3>Frais matériel</h3><p>Selon la filière, payables une seule fois :</p>
-    {% if filieres %}<ul style="margin:0;padding-left:18px">{% for f in filieres %}<li>{{ f.name }} : <strong>{{ f.material_fee|money('USD') }}</strong></li>{% endfor %}</ul>
-    {% else %}<p class="meta">Les filières seront publiées prochainement.</p>{% endif %}</div>
+<div class="row between noprint" style="align-items:flex-start">
+  <div><h1>FICHE DE RENSEIGNEMENTS</h1><p class="meta">Catalogue officiel affiché à partir des données enregistrées par le secrétariat.</p></div>
+  <button class="btn alt" onclick="window.print()">Imprimer la fiche</button>
 </div>
 
-<h2>Types de stagiaires</h2>
-<div class="scroll" style="margin-bottom:26px"><table><thead><tr><th>Type</th><th>Provenance</th><th>Frais à payer</th></tr></thead><tbody>
-<tr><td><strong>Non recommandé</strong></td><td>Inscription à titre personnel</td><td>Tous les frais</td></tr>
-<tr><td><strong>Recommandé total</strong></td><td>Institution privée</td><td>Aucun (pris en charge par l'institution)</td></tr>
-<tr><td><strong>Recommandé partiel</strong></td><td>Institution étatique</td><td>Frais matériel et frais de jury (selon la filière)</td></tr>
-</tbody></table></div>
+<div class="card fiche-head">
+  <div class="row between" style="align-items:flex-start;gap:24px">
+    <div><strong>INPP · Institut National de Préparation Professionnelle</strong><br>Formation professionnelle</div>
+    <div style="text-align:right">
+      <strong>Pour le paiement</strong><br>
+      {{ cfg.bank_name or 'Banque à renseigner' }}{% if cfg.bank_account_usd %}<br>N° CPT en Dollars : {{ cfg.bank_account_usd }}{% endif %}{% if cfg.bank_account_fc %}<br>N° CPT en Francs : {{ cfg.bank_account_fc }}{% endif %}
+    </div>
+  </div>
+  <hr>
+  <div class="fiche-fees">
+    <div><strong>1. Inscription :</strong> {{ cfg.inscription_fee|float|money('FC') }}</div>
+    <div><strong>2. Lettre de stage :</strong> {{ cfg.lettre_stage_fee|float|money('FC') }} (payable après la formation)</div>
+    <div><strong>3. Frais de jury :</strong> {{ cfg.jury_fee|float|money('FC') }}</div>
+  </div>
+  <p><strong>Les frais de participation (minerval) s'élèvent à {{ cfg.formation_fee|float|money('FC') }} / mois pour toutes les filières.</strong><br>
+  Frais matériels à payer une fois pendant la durée de la formation.</p>
+</div>
 
-<h2>Procédure d'inscription</h2>
-<ol class="steps">
-  <li><strong>Renseignements.</strong> Présentez-vous à la réception pour vous informer, puis choisissez une filière selon votre goût.</li>
-  <li><strong>Paiement.</strong> Payez les frais d'inscription au compte de la <strong>{{ cfg.bank_name or 'banque' }}</strong>{% if cfg.bank_account_usd %} — Dollars : <strong>{{ cfg.bank_account_usd }}</strong>{% endif %}{% if cfg.bank_account_fc %}, Francs congolais : <strong>{{ cfg.bank_account_fc }}</strong>{% endif %}.</li>
-  <li><strong>Enregistrement.</strong> Ramenez votre preuve de paiement à un agent de la réception : vous êtes enregistré dans le registre des stagiaires en ordre avec les frais.</li>
-  <li><strong>Stagiaire recommandé ?</strong> Remettez votre lettre de recommandation au secrétaire. Elle est approuvée par la hiérarchie, puis vous êtes inséré dans le registre des apprenants provenant des autres institutions.</li>
-  <li><strong>Carte de stagiaire.</strong> Les stagiaires en ordre avec les frais reçoivent leur carte de stagiaire.</li>
-  <li><strong>Lettre de stage.</strong> Délivrée après la formation, moyennant {{ cfg.lettre_stage_fee|float|money('FC') }}.</li>
+<div class="scroll fiche-table">
+<table>
+  <thead><tr><th>Service</th><th>Filière</th><th>Métier</th><th>Durée</th><th>Frais matériels</th></tr></thead>
+  <tbody>
+  {% for group in groups %}
+    {% for f in group.rows %}
+      <tr>
+        {% if loop.first %}<td rowspan="{{ group.rows|length }}" class="service-cell"><strong>{{ group.name|replace('Service ', '') }}</strong></td>{% endif %}
+        <td>{{ f.name }}</td>
+        <td>{{ f.metier or '—' }}</td>
+        <td>{{ f.duration_months }} mois</td>
+        <td>{{ f.material_fee|money('USD') }}</td>
+      </tr>
+    {% endfor %}
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<div class="card fiche-note">
+  <strong>NB :</strong> Les frais payés ne sont pas remboursables.
+  <span class="meta">Les montants affichés sont ceux actuellement enregistrés dans le catalogue. Le secrétariat peut les modifier pour les prochaines inscriptions.</span>
+</div>
+
+<h2 class="noprint">Procédure d'inscription</h2>
+<ol class="steps noprint">
+  <li><strong>Renseignements.</strong> Présentez-vous à la réception et choisissez une filière.</li>
+  <li><strong>Paiement.</strong> Payez les frais au compte indiqué ci-dessus.</li>
+  <li><strong>Enregistrement.</strong> Remettez la preuve de paiement à la réception pour être enregistré.</li>
+  <li><strong>Stagiaire recommandé.</strong> Remettez votre lettre de recommandation au secrétariat pour approbation.</li>
+  <li><strong>Carte de stagiaire.</strong> Les stagiaires en ordre avec les frais reçoivent leur carte.</li>
+  <li><strong>Lettre de stage.</strong> Elle est délivrée après la formation moyennant le tarif affiché.</li>
 </ol>
-<p class="meta"><strong>NB :</strong> les frais payés ne sont pas remboursables.</p>
 {% endblock %}
