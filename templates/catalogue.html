@@ -5,7 +5,7 @@
   <h1>Formations programmées de l'INPP</h1>
   <p>Découvrez les prochaines sessions, filtrez par domaine ou niveau, consultez les dates et demandez votre inscription en ligne.</p>
   <div class="row">
-    <a class="btn sun" href="{{ url_for('catalogue_pdf', q=q, category=category, level=level, status=status, month=month) }}">Télécharger le programme PDF</a>
+    <a class="btn sun" href="{{ url_for('catalogue_pdf', q=q, category=category, level=level, status=status, month=month, service_id=service_id) }}">Télécharger le programme PDF</a>
     {% if not g.user %}<a class="btn alt" href="{{ url_for('register') }}" style="background:#fff">Créer un compte</a>{% endif %}
   </div>
 </section>
@@ -16,6 +16,7 @@
   <form method="get" class="filter-grid">
     <div><label for="q">Recherche</label><input id="q" type="search" name="q" value="{{ q }}" placeholder="Ex. électricité, SQL, soudage"></div>
     <div><label for="category">Domaine</label><select id="category" name="category"><option value="">Tous les domaines</option>{% for x in categories %}<option value="{{ x }}" {{ 'selected' if category == x }}>{{ x }}</option>{% endfor %}</select></div>
+    <div><label for="service_id">Service</label><select id="service_id" name="service_id"><option value="">Tous les services</option>{% for sv in services %}<option value="{{ sv.id }}" {{ 'selected' if service_id == sv.id }}>{{ sv.name }}</option>{% endfor %}</select></div>
     <div><label for="level">Niveau</label><select id="level" name="level"><option value="">Tous les niveaux</option>{% for x in levels %}<option value="{{ x }}" {{ 'selected' if level == x }}>{{ x }}</option>{% endfor %}</select></div>
     <div><label for="status">Période</label><select id="status" name="status"><option value="a_venir" {{ 'selected' if status == 'a_venir' }}>À venir</option><option value="en_cours" {{ 'selected' if status == 'en_cours' }}>En cours</option><option value="terminee" {{ 'selected' if status == 'terminee' }}>Terminées</option><option value="non_programmee" {{ 'selected' if status == 'non_programmee' }}>Date à confirmer</option><option value="toutes" {{ 'selected' if status == 'toutes' }}>Toutes</option></select></div>
     <div><label for="month">Mois de début</label><select id="month" name="month"><option value="">Tous les mois</option>{% for x in months %}<option value="{{ x }}" {{ 'selected' if month == x }}>{{ x }}</option>{% endfor %}</select></div>
@@ -30,7 +31,7 @@
 {% if not courses %}<div class="card">Aucune formation ne correspond à vos filtres. Revenez sur « Toutes » pour voir les formations publiées dont la date reste à confirmer.</div>{% endif %}
 <div class="grid">{% for c in courses %}{% set e = enrollments.get(c.id) %}
 <article class="card course-card {{ 'sql' if 'données' in c.category else '' }}">
-  <div class="row between"><span class="tag">{{ c.category }}</span><span class="tag {{ 'ok' if c.schedule_state == 'a_venir' else ('warn' if c.schedule_state == 'en_cours' else '') }}">{{ c.schedule_label }}</span></div>
+  <div class="row between"><span class="tag">{{ c.service_name or 'Service à préciser' }}</span><span class="tag">{{ c.category }}</span><span class="tag {{ 'ok' if c.schedule_state == 'a_venir' else ('warn' if c.schedule_state == 'en_cours' else '') }}">{{ c.schedule_label }}</span></div>
   <h2 style="margin:4px 0"><a href="{{ url_for('course_public', course_id=c.id) }}" style="text-decoration:none;color:inherit">{{ c.title }}</a></h2>
   <p>{{ c.description[:150] }}{% if c.description|length > 150 %}…{% endif %}</p>
   <div class="schedule-meta">
