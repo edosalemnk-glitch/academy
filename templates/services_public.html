@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% block title %}Services | INPP Matadi{% endblock %}
+{% block meta_description %}Découvrez les services de l'INPP Matadi, leurs filières, leurs formateurs et leurs formations programmées.{% endblock %}
+{% block content %}
+<div class="hero">
+  <span class="tag ok">INPP · MATADI</span>
+  <h1>Nos services de formation</h1>
+  <p>Explorez les services de l'INPP Matadi, les filières rattachées et les formateurs qui encadrent les formations.</p>
+</div>
+<div class="grid">
+{% for sv in services %}
+<article class="card service-card">
+  <div class="row between"><span class="tag">{{ sv.nb_filieres }} filière(s)</span><span class="tag">{{ sv.nb_formateurs }} formateur(s)</span></div>
+  <h2>{{ sv.name }}</h2>
+  {% if sv.chef_name %}<p class="meta">Chef de service : <strong>{{ sv.chef_name }}</strong></p>{% endif %}
+  <p class="meta">{{ sv.nb_cours }} formation(s) publiée(s)</p>
+  <a class="btn" href="{{ url_for('service_public', service_id=sv.id) }}">Voir le service</a>
+</article>
+{% else %}<div class="card">Les services seront bientôt publiés.</div>{% endfor %}
+</div>
+{% endblock %}
