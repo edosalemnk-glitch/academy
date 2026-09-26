@@ -1,22 +1,2 @@
 {% extends "base.html" %}{% block title %}{{ lesson.title }}{% endblock %}
-{% block content %}
-<div class="crumbs"><a href="{{ url_for('learn', course_id=course.id) }}">{{ course.title }}</a> / Leçon {{ index }} sur {{ prog.total }}</div>
-<h1>{{ lesson.title }}</h1>
-{% if completed and mode == 'learner' %}<p><span class="tag ok">Leçon validée</span></p>{% endif %}
-<article class="lesson-body">
-  {% if lesson.image %}<p style="margin:16px 0;text-align:center"><img src="{{ lesson_image_url(lesson.image) }}" alt="Illustration de la leçon" style="display:block;width:100%;max-width:700px;max-height:420px;object-fit:contain;margin:0 auto;border-radius:10px"></p>{% endif %}
-  {{ lesson.content|render }}
-</article>
-<hr style="margin:28px 0;border:0;border-top:1px solid var(--line)">
-<div class="row between">
-  <div>{% if prev_id %}<a class="btn alt" href="{{ url_for('lesson', lesson_id=prev_id) }}">Leçon précédente</a>{% endif %}</div>
-  <div class="row">
-    {% if nb_questions %}
-      <a class="btn sun" href="{{ url_for('quiz', lesson_id=lesson.id) }}">{{ 'Refaire le quiz' if completed else 'Passer le quiz (' ~ nb_questions ~ ' questions)' }}</a>
-    {% elif mode == 'learner' and not completed %}
-      <form method="post" action="{{ url_for('complete_lesson', lesson_id=lesson.id) }}">{{ csrf_field() }}<button class="btn sun">Marquer comme terminée</button></form>
-    {% endif %}
-    {% if (completed or mode == 'preview') and next_id %}<a class="btn" href="{{ url_for('lesson', lesson_id=next_id) }}">Leçon suivante</a>{% endif %}
-  </div>
-</div>
-{% endblock %}
+{% block content %}<div class="crumbs"><a href="{{ url_for('learn', course_id=course.id) }}">{{ course.title }}</a> / Leçon {{ index }} sur {{ prog.total }}</div><h1>{{ lesson.title }}</h1>{% if completed and mode == 'learner' %}<p><span class="tag ok">Leçon validée</span></p>{% endif %}<article class="lesson-body">{% if lesson.image %}<p><img src="{{ lesson_image_url(lesson.image) }}" alt="Illustration de la leçon"></p>{% endif %}{{ lesson.content|render }}</article><hr style="margin:28px 0;border:0;border-top:1px solid var(--line)"><div class="row between"><div>{% if prev_id %}<a class="btn alt" href="{{ url_for('lesson', lesson_id=prev_id) }}">Leçon précédente</a>{% endif %}</div><div class="row">{% if nb_questions %}<a class="btn sun" href="{{ url_for('quiz', lesson_id=lesson.id) }}">{{ 'Refaire le quiz' if completed else 'Passer le quiz (' ~ nb_questions ~ ' questions)' }}</a>{% elif mode == 'learner' and not completed %}<form method="post" action="{{ url_for('complete_lesson', lesson_id=lesson.id) }}">{{ csrf_field() }}<button class="btn sun">Marquer comme terminée</button></form>{% endif %}{% if (completed or mode == 'preview') and next_id %}<a class="btn" href="{{ url_for('lesson', lesson_id=next_id) }}">Leçon suivante</a>{% endif %}</div></div>{% endblock %}
