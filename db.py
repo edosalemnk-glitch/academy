@@ -543,8 +543,8 @@ def _migrate_course_case_study(conn):
 def _migrate_reference_resources(conn):
     """Publie des ressources pédagogiques réelles de révision."""
     matches = conn.execute(
-        "SELECT id, title FROM courses WHERE lower(title) LIKE ? OR lower(title) LIKE ? OR lower(title) LIKE ?",
-        ("%sql%niveau 1%", "%sql%niveau 2%", "%bureautique%")
+        "SELECT id, title FROM courses WHERE (lower(title) LIKE ? OR lower(title) LIKE ? OR lower(title) = ?)",
+        ("%sql%niveau 1%", "%sql%niveau 2%", "bureautique – gérer ses fichiers et dossiers")
     ).fetchall()
     if not matches:
         return
