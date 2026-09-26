@@ -60,6 +60,15 @@ Données préchargées : 3 cours (SQL Niveau 1, SQL Niveau 2, Bureautique), 13 l
 6. **Secrétariat** : dans *Tarifs*, la section *Services* permet de créer un service, lui désigner un chef
    (un formateur), et de rattacher une filière à un service.
 
+## Étape 3 ter — Vitrine des formations programmées
+
+1. Sans connexion, ouvre **Catalogue** : par défaut, les sessions **à venir** sont affichées avec date de début/fin, horaires, lieu et capacité.
+2. Utilise les filtres **Recherche, Domaine, Niveau, Période et Mois de début**.
+3. Clique **Télécharger le programme PDF** : le PDF reprend les filtres actifs et les sessions visibles.
+4. Ouvre une formation puis **Créer un compte et s'inscrire** : le visiteur crée son compte stagiaire et la demande d'inscription est envoyée automatiquement au formateur.
+5. Côté formateur : *Cours → Modifier* permet maintenant de programmer une session (dates, horaires, lieu, places et ouverture des inscriptions).
+6. Les sessions d'exemple sont préchargées pour octobre–décembre 2026 afin de tester immédiatement la vitrine.
+
 ## Étape 4 — Test en 10 minutes (à faire avant la présentation)
 
 1. **Formateur** : connecte-toi, regarde le tableau de bord (alerte « Stagiaires en difficulté »), puis *SQL Niveau 1 → Inscriptions* : **valide** les demandes de Héritier Banza et Isaac Ngoy.
