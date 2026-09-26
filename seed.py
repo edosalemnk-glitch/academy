@@ -1,5 +1,6 @@
 """Données de démonstration : 1 formateur, 10 stagiaires, 3 cours complets avec quiz."""
 from werkzeug.security import generate_password_hash
+from datetime import date
 
 import fees
 
@@ -402,6 +403,16 @@ def _default_case_study(data):
         return ("Le secrétariat reçoit chaque semaine des documents de plusieurs services. Votre mission : "
                 "organiser les fichiers, retrouver rapidement un document et éviter les erreurs de classement.")
     return data.get("case_study", "")
+
+
+def _end_date(start_date, months):
+    d = date.fromisoformat(start_date)
+    total = d.year * 12 + (d.month - 1) + int(months)
+    year, month0 = divmod(total, 12)
+    month = month0 + 1
+    # Le dernier jour de la veille du mois d'échéance.
+    first_next = date(year, month, 1)
+    return (first_next - __import__("datetime").timedelta(days=1)).isoformat()
 
 
 def _add_course(db, trainer_id, data):
@@ -816,10 +827,7 @@ def seed(db):
         filiere = db.execute("SELECT * FROM filieres WHERE id=?", (filiere_id,)).fetchone()
         if not filiere:
             continue
-        end_date = db.execute(
-            "SELECT (CAST(? AS DATE) + (? || ' months')::interval - interval '1 day')::date",
-            (start_date, filiere["duration_months"]),
-        ).fetchone()[0]
+        end_date = _end_date(start_date, filiere["duration_months"])
         existing = db.execute(
             "SELECT id FROM courses WHERE title=? AND service_id=?",
             (filiere["name"], filiere["service_id"]),
