@@ -453,6 +453,13 @@ def restore_demo(db):
                 "INSERT INTO services (name,chef_id) VALUES (?,?)", (service_name, chef)
             ).lastrowid
 
+    # Le formateur de démonstration est membre du service Informatique.
+    if "Service Informatique" in svc_ids:
+        db.execute(
+            "INSERT INTO service_formateurs (service_id,user_id) VALUES (?,?) ON CONFLICT DO NOTHING",
+            (svc_ids["Service Informatique"], fid)
+        )
+
     # Trois filières présentes dans la sauvegarde formation.db, hors catalogue actuel.
     legacy_services = {
         "Service Informatique de gestion": fid,
