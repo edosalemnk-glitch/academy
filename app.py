@@ -1916,30 +1916,42 @@ def procedure_pdf():
     data = [[Paragraph("SERVICE", head), Paragraph("FILIÈRE", head),
              Paragraph("MÉTIER", head), Paragraph("DURÉE", head),
              Paragraph("FRAIS MATÉRIELS", head)]]
+    spans = []
+    body_row = 1
     for group in groups:
-        first = True
+        start = body_row
         for f in group["rows"]:
             data.append([
-                Paragraph(group["name"].replace("Service ", "", 1) if first else "", cell),
+                Paragraph(group["name"].replace("Service ", "", 1), cell) if body_row == start else "",
                 Paragraph(str(f["name"] or "—"), cell),
                 Paragraph(str(f["metier"] or "—"), cell),
                 Paragraph(f"{f['duration_months']} mois", cell),
                 Paragraph(f"{float(f['material_fee']):g} USD", cell),
             ])
-            first = False
+            body_row += 1
+        if body_row - start > 1:
+            spans.append((start, body_row - 1))
 
     table = Table(data, repeatRows=1,
                   colWidths=[40*mm, 70*mm, 88*mm, 30*mm, 35*mm])
-    table.setStyle(TableStyle([
+    table_style = [
         ("BACKGROUND",(0,0),(-1,0),colors.HexColor("#2e6da4")),
         ("TEXTCOLOR",(0,0),(-1,0),colors.white),
         ("BOX",(0,0),(-1,-1),0.8,colors.HexColor("#2e6da4")),
         ("INNERGRID",(0,0),(-1,-1),0.35,colors.HexColor("#9fb5c7")),
         ("VALIGN",(0,0),(-1,-1),"MIDDLE"),
         ("ALIGN",(3,1),(-1,-1),"CENTER"),
+        ("ALIGN",(0,1),(0,-1),"CENTER"),
+        ("FONTNAME",(0,1),(0,-1),"Helvetica-Bold"),
         ("LEFTPADDING",(0,0),(-1,-1),4), ("RIGHTPADDING",(0,0),(-1,-1),4),
         ("TOPPADDING",(0,0),(-1,-1),3), ("BOTTOMPADDING",(0,0),(-1,-1),3),
-    ]))
+    ]
+    for start, end in spans:
+        table_style.append(("SPAN",(0,start),(0,end)))
+    for row in range(1, len(data)):
+        if row % 2 == 0:
+            table_style.append(("BACKGROUND",(1,row),(-1,row),colors.HexColor("#f7fafc")))
+    table.setStyle(TableStyle(table_style))
     story += [
         table, Spacer(1, 3*mm),
         Paragraph("<b>NB :</b> Les frais payés ne sont pas remboursables. "
