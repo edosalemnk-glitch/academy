@@ -9,6 +9,13 @@
     <a class="btn alt" href="{{ url_for('catalogue') }}" style="background:#fff">Voir les cours en ligne</a>
   </div>
 </section>
+<section class="card public-callout" style="margin-bottom:26px">
+  <div class="row between" style="align-items:flex-end">
+    <div><span class="tag ok">NOUVEAU</span><h2 style="margin:8px 0 4px">Consultez les formations programmées</h2>
+    <p class="meta" style="max-width:65ch">Les visiteurs peuvent maintenant voir les prochaines sessions, leurs dates, horaires, lieux et places disponibles, filtrer le programme et télécharger le PDF.</p></div>
+    <div class="row"><a class="btn" href="{{ url_for('catalogue') }}">Voir les sessions</a><a class="btn alt" href="{{ url_for('catalogue_pdf') }}">PDF</a></div>
+  </div>
+</section>
 <div class="stats">
   <div class="stat"><b>{{ stats.filieres }}</b><span class="meta">filières ouvertes</span></div>
   <div class="stat"><b>{{ stats.cours }}</b><span class="meta">cours en ligne publiés</span></div>
