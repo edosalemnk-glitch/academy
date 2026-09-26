@@ -860,7 +860,9 @@ def read_course_form():
         return None, "Donnez un titre au cours."
     level = f.get("level") if f.get("level") in LEVELS else LEVELS[0]
     return {"title": title, "category": f.get("category", "").strip() or "Général", "level": level,
-            "description": f.get("description", "").strip(), "fee_amount": fee, "pass_mark": mark,
+            "description": f.get("description", "").strip(),
+            "case_study": f.get("case_study", "").strip(),
+            "fee_amount": fee, "pass_mark": mark,
             "published": 1 if f.get("published") else 0}, None
 
 
@@ -873,9 +875,10 @@ def course_new():
             flash(err, "bad")
         else:
             cur = get_db().execute(
-                "INSERT INTO courses (title, category, level, description, fee_amount, pass_mark, published, trainer_id) "
-                "VALUES (:title,:category,:level,:description,:fee_amount,:pass_mark,:published,:t)",
-                {**data, "t": g.user["id"]})
+                "INSERT INTO courses (title, category, level, description, case_study, fee_amount, pass_mark, published, trainer_id) "
+                "VALUES (?,?,?,?,?,?,?,?,?)",
+                (data["title"], data["category"], data["level"], data["description"], data["case_study"],
+                 data["fee_amount"], data["pass_mark"], data["published"], g.user["id"]))
             get_db().commit()
             flash("Cours créé. Ajoutez maintenant des leçons.", "ok")
             return redirect(url_for("course_manage", course_id=cur.lastrowid))
@@ -892,9 +895,10 @@ def course_edit(course_id):
             flash(err, "bad")
         else:
             get_db().execute(
-                "UPDATE courses SET title=:title, category=:category, level=:level, description=:description, "
-                "fee_amount=:fee_amount, pass_mark=:pass_mark, published=:published WHERE id=:id",
-                {**data, "id": course_id})
+                "UPDATE courses SET title=?, category=?, level=?, description=?, case_study=?, "
+                "fee_amount=?, pass_mark=?, published=? WHERE id=?",
+                (data["title"], data["category"], data["level"], data["description"], data["case_study"],
+                 data["fee_amount"], data["pass_mark"], data["published"], course_id))
             get_db().commit()
             flash("Cours mis à jour.", "ok")
             return redirect(url_for("course_manage", course_id=course_id))
