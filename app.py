@@ -1141,7 +1141,7 @@ def lesson_image_proxy(name):
     try:
         raw = _storage_request(
             "POST",
-            f"object/sign/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe='')}/{urllib.parse.quote(name, safe='')}",
+            f"object/sign/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe='')}/{urllib.parse.quote(name, safe='/')}",
             body=json.dumps({"expiresIn": SUPABASE_STORAGE_SIGNED_TTL}),
             content_type="application/json",
         )
