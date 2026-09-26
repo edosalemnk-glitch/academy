@@ -32,7 +32,7 @@ Données préchargées : 3 cours (SQL Niveau 1, SQL Niveau 2, Bureautique), 13 l
 
 1. Dans une fenêtre privée (sans connexion), ouvre **http://127.0.0.1:5000** : c'est la nouvelle page d'accueil publique. Parcours *Filières*, *À propos*, *FAQ*, *Contact* dans le pied de page.
 2. Connecte-toi avec `formateur@inpp.cd` → *SQL Niveau 2 → Gérer le cours* : la section **Examen final** en bas de page montre l'examen déjà configuré (4 questions, publié). Clique *Modifier* pour voir les réglages (durée, seuil, tentatives, créneau), ou *Résultats* pour la liste des tentatives.
-3. Connecte-toi avec `stagiaire01@inpp.cd` (déjà validée sur SQL Niveau 2, mais leçons pas toutes terminées dans le seed) → termine les 4 leçons de SQL Niveau 2 → un bouton **Passer l'examen final** apparaît sur la page du cours. Lance-le : chrono visible, soumission automatique à zéro. En réussissant, le certificat est délivré automatiquement (visible depuis la page de résultat).
+3. Connecte-toi avec `stagiaire01@inpp.cd` (déjà validée sur SQL Niveau 2, mais leçons pas toutes terminées dans le seed) → termine les 4 leçons de SQL Niveau 2 → un bouton **Passer l'examen final** apparaît sur la page du cours. Lance-le : chrono visible, soumission automatique à zéro. En réussissant, une attestation provisoire de réussite est délivrée automatiquement (visible depuis la page de résultat).
 
 ## Étape 3 bis — Tester le secrétariat (inscription au centre)
 
