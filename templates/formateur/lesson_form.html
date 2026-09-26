@@ -8,7 +8,36 @@
   <label for="c">Contenu</label><textarea id="c" name="content" class="code" style="min-height:320px">{{ v.get('content', '') }}</textarea>
   <p class="hint">Mise en forme : <code>## Titre</code>, <code>- élément de liste</code>, <code>&gt; remarque importante</code>, <code>**gras**</code>, <code>`code`</code>. Pour un bloc de code, entourez-le de lignes contenant ```.</p>
   <label for="i">Image ou GIF (facultatif)</label><input id="i" type="file" name="image" accept="image/*">
+  <div id="image-preview" style="margin:12px 0;">
+    {% if lesson and lesson.image %}
+      <p class="hint">Aperçu actuel :</p>
+      <img id="preview-img" src="{{ lesson_image_url(lesson.image) }}" alt="Aperçu de l'image de la leçon" style="display:block;max-width:100%;max-height:320px;border-radius:10px;border:1px solid var(--line);object-fit:contain;">
+    {% else %}
+      <img id="preview-img" alt="Aperçu de l'image" style="display:none;max-width:100%;max-height:320px;border-radius:10px;border:1px solid var(--line);object-fit:contain;">
+    {% endif %}
+  </div>
   {% if lesson and lesson.image %}<p class="hint">Image actuelle : {{ lesson.image }}</p><label class="opt"><input type="checkbox" name="remove_image" value="1"><span>Retirer l'image actuelle</span></label>{% endif %}
+  <script>
+    (function () {
+      const input = document.getElementById("i");
+      const preview = document.getElementById("preview-img");
+      if (!input || !preview) return;
+      input.addEventListener("change", function () {
+        const file = this.files && this.files[0];
+        if (!file) return;
+        if (!file.type.startsWith("image/")) {
+          this.value = "";
+          preview.removeAttribute("src");
+          preview.style.display = "none";
+          return;
+        }
+        const url = URL.createObjectURL(file);
+        preview.src = url;
+        preview.style.display = "block";
+        preview.onload = function () { URL.revokeObjectURL(url); };
+      });
+    })();
+  </script>
   <p class="row"><button class="btn">Enregistrer</button><a class="btn alt" href="{{ url_for('course_manage', course_id=course.id) }}">Annuler</a></p>
 </form>
 {% endblock %}
