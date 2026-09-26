@@ -1018,8 +1018,13 @@ def exam_intro(course_id):
     lessons_done = bool(prog["total"]) and prog["count"] == prog["total"]
     attempts = exam_attempts_of(exam["id"], g.user["id"])
     ongoing = next((a for a in attempts if a["submitted_at"] is None), None)
+    practical_count = get_db().execute(
+        "SELECT COUNT(*) FROM resources WHERE course_id=? AND kind='exercice' AND published=1 AND exam_selected=1",
+        (course_id,)
+    ).fetchone()[0]
     return render_template("exam_intro.html", course=course, exam=exam, lessons_done=lessons_done,
-                           attempts=attempts, state=exam_window_state(exam), ongoing=ongoing)
+                           attempts=attempts, state=exam_window_state(exam), ongoing=ongoing,
+                           practical_count=practical_count)
 
 
 @app.route("/cours/<int:course_id>/examen/commencer", methods=["POST"])
