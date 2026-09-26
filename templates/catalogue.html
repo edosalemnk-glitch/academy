@@ -19,12 +19,6 @@
     <div class="row between"><span class="tag">{{ c.category }}</span><span class="tag">{{ c.level }}</span></div>
     <h2 style="margin:4px 0"><a href="{{ url_for('course_public', course_id=c.id) }}" style="text-decoration:none;color:inherit">{{ c.title }}</a></h2>
     <p>{{ c.description[:150] }}{% if c.description|length > 150 %}…{% endif %}</p>
-    {% if c.case_study %}
-      <div class="case-study" style="margin:12px 0;padding:12px;border-left:4px solid var(--sun);background:var(--soft);border-radius:8px">
-        <strong>🎯 Cas réel</strong>
-        <p style="margin:6px 0 0">{{ c.case_study }}</p>
-      </div>
-    {% endif %}
     <div class="meta">{{ c.nb_lessons }} leçon(s) · {{ c.trainer_name }} · {% if c.fee_amount %}{{ '%g'|format(c.fee_amount) }} {{ c.currency }}{% else %}Gratuit{% endif %}</div>
     <div class="row">
       {% if e %}<span class="tag {{ STATUS[e.status][1] }}">{{ STATUS[e.status][0] }}</span>
