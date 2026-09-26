@@ -9,7 +9,7 @@
     <p class="meta">{{ course.level }} · Formateur : {{ course.trainer_name }} · {% if course.fee_amount %}{{ '%g'|format(course.fee_amount) }} {{ course.currency }}{% else %}Gratuit{% endif %}</p>
     <p style="max-width:65ch">{{ course.description }}</p>
     <div class="schedule-panel">
-      <div><strong>Dates</strong><span>{% if course.start_date %}{{ course.start_date.strftime('%d/%m/%Y') if course.start_date.strftime is defined else course.start_date[:10] }}{% if course.end_date %} → {{ course.end_date.strftime('%d/%m/%Y') if course.end_date.strftime is defined else course.end_date[:10] }}{% endif %}{% else %}À confirmer{% endif %}</span></div>
+      <div><strong>Dates</strong><span>{% if course.start_date %}{{ course.start_date[:10] }}{% if course.end_date %} → {{ course.end_date[:10] }}{% endif %}{% else %}À confirmer{% endif %}</span></div>
       <div><strong>Horaire</strong><span>{{ course.schedule or 'À confirmer' }}</span></div>
       <div><strong>Lieu</strong><span>{{ course.location or 'À confirmer' }}</span></div>
       <div><strong>Places</strong><span>{% if course.seats %}{{ course.seats }} places · {{ 'inscriptions ouvertes' if registration_available else 'inscriptions fermées' }}{% else %}Capacité non limitée{% endif %}</span></div>
