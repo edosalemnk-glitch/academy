@@ -722,8 +722,12 @@ def course_public(course_id):
     if not course["published"] and not (g.user and g.user["id"] == course["trainer_id"]):
         abort(404)
     enrollment = get_enrollment(g.user["id"], course_id) if g.user else None
-    return render_template("course_public.html", course=course, lessons=lessons_of(course_id),
-                           enrollment=enrollment)
+    return render_template(
+        "course_public.html", course=course, lessons=lessons_of(course_id),
+        enrollment=enrollment, schedule_state=course_schedule_state(course),
+        schedule_label=course_schedule_label(course),
+        registration_available=course_registration_capacity(course),
+    )
 
 
 @app.route("/cours/<int:course_id>/abonner", methods=["POST"])
