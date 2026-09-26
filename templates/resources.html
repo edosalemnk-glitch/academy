@@ -6,6 +6,7 @@
     <span class="resource-kicker">RESSOURCES PÉDAGOGIQUES · INPP MATADI</span>
     <h1>Ressources de {{ course.title }}</h1>
     <p>Supports de cours, travaux pratiques et fiches de révision à utiliser entre les séances en présentiel.</p>
+    <a class="btn sun" href="{{ url_for('course_resources_pdf', course_id=course.id) }}">Télécharger toutes les ressources en PDF</a>
   </div>
   <div class="resource-hero-mark">R</div>
 </div>
