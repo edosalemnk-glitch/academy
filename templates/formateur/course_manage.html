@@ -4,7 +4,7 @@
 <div class="row between"><h1>{{ course.title }}</h1>
   <div class="row"><a class="btn alt" href="{{ url_for('enrollments', course_id=course.id) }}">Inscriptions{% if pending %}<span class="badge">{{ pending }}</span>{% endif %}</a><a class="btn alt" href="{{ url_for('tracking', course_id=course.id) }}">Suivi des stagiaires</a><a class="btn alt" href="{{ url_for('learn', course_id=course.id) }}">Aperçu</a><a class="btn alt" href="{{ url_for('course_edit', course_id=course.id) }}">Modifier</a></div></div>
 <p class="meta">{{ course.category }} · {{ course.level }} · quiz réussi à {{ course.pass_mark }} % · {% if course.fee_amount %}{{ '%g'|format(course.fee_amount) }} {{ course.currency }}{% else %}gratuit{% endif %}{% if not course.published %} · <span class="tag warn">Brouillon</span>{% endif %}</p>
-<div class="row between"><h2>Leçons</h2><a class="btn sun" href="{{ url_for('lesson_new', course_id=course.id) }}">Ajouter une leçon</a></div>
+<div class="row between"><h2>Leçons</h2><div class="row"><a class="btn alt" href="{{ url_for('resource_manage', course_id=course.id) }}">Ressources ({{ resource_count }})</a><a class="btn sun" href="{{ url_for('lesson_new', course_id=course.id) }}">Ajouter une leçon</a></div></div>
 <div class="scroll"><table><thead><tr><th>#</th><th>Titre</th><th>Quiz</th><th></th></tr></thead><tbody>
 {% for l in lessons %}<tr>
   <td>{{ loop.index }}</td><td>{{ l.title }}</td>
