@@ -641,7 +641,7 @@ def catalogue():
            "(SELECT COUNT(*) FROM lessons l WHERE l.course_id=c.id) AS nb_lessons, "
            "(SELECT COUNT(*) FROM enrollments e WHERE e.course_id=c.id "
            "AND e.status IN ('pending','approved')) AS nb_reserved "
-           "FROM courses c JOIN users u ON u.id=c.trainer_id WHERE c.published=1")
+           "FROM courses c JOIN users u ON u.id=c.trainer_id LEFT JOIN services s ON s.id=c.service_id WHERE c.published=1")
     params = []
     if q:
         sql += " AND (c.title ILIKE ? OR c.category ILIKE ? OR c.description ILIKE ? OR c.location ILIKE ?)"
