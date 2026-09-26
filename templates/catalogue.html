@@ -1,29 +1,25 @@
-{% extends "base.html" %}{% block title %}Catalogue des formations professionnelles | INPP Académie{% endblock %}
-{% block meta_description %}Consultez le catalogue des formations professionnelles de l’INPP Académie : cours, niveaux, programmes et modalités d’inscription.{% endblock %}
+{% extends "base.html" %}
+{% block title %}Catalogue | INPP Académie{% endblock %}
+{% block meta_description %}Découvrez les formations et parcours disponibles sur INPP Académie.{% endblock %}
 {% block content %}
-{% if not g.user %}
-<section class="hero">
-  <h1>Apprenez, prouvez, certifiez.</h1>
-  <p>Des formations en ligne de l'INPP : chaque leçon se termine par un quiz, et chaque inscription est validée par un formateur. Créez votre compte, choisissez une formation et demandez votre inscription.</p>
-  <a class="btn sun" href="{{ url_for('register') }}">Créer un compte</a>
+<section class="catalogue-head">
+  <div><span class="eyebrow">ACADEMY CATALOG</span><h1>Trouver votre parcours</h1><p>Explorez les formations publiées par nos formateurs et choisissez votre prochaine compétence.</p></div>
+  <form method="get" class="catalogue-search"><input type="search" name="q" value="{{ q }}" placeholder="Rechercher un cours, une filière..." aria-label="Rechercher une formation"><button class="btn">Rechercher</button></form>
 </section>
-{% endif %}
-<div class="row between"><h1>Catalogue des formations</h1>
-  <form method="get" class="row" style="gap:6px"><input type="search" name="q" value="{{ q }}" placeholder="Rechercher une formation" aria-label="Rechercher" style="width:240px"><button class="btn alt small">Rechercher</button></form>
-</div>
 {% if not courses %}<div class="card">Aucune formation ne correspond à votre recherche.</div>{% endif %}
-<div class="grid">
+<div class="course-grid">
 {% for c in courses %}
   {% set e = enrollments.get(c.id) %}
-  <article class="card course-card {{ 'sql' if 'données' in c.category else '' }}">
-    <div class="row between"><span class="tag">{{ c.category }}</span><span class="tag">{{ c.level }}</span></div>
-    <h2 style="margin:4px 0"><a href="{{ url_for('course_public', course_id=c.id) }}" style="text-decoration:none;color:inherit">{{ c.title }}</a></h2>
-    <p>{{ c.description[:150] }}{% if c.description|length > 150 %}…{% endif %}</p>
-    <div class="meta">{{ c.nb_lessons }} leçon(s) · {{ c.trainer_name }} · {% if c.fee_amount %}{{ '%g'|format(c.fee_amount) }} {{ c.currency }}{% else %}Gratuit{% endif %}</div>
-    <div class="row">
-      {% if e %}<span class="tag {{ STATUS[e.status][1] }}">{{ STATUS[e.status][0] }}</span>
-        {% if e.status == 'approved' %}<a class="btn small" href="{{ url_for('learn', course_id=c.id) }}">Continuer</a>{% endif %}
-      {% else %}<a class="btn alt small" href="{{ url_for('course_public', course_id=c.id) }}">Voir le programme</a>{% endif %}
+  <article class="academy-course-card">
+    <div class="course-cover {{ 'cover-tech' if 'données' in c.category else 'cover-career' }}"><span>{{ '%02d'|format(loop.index) }}</span><b>{{ c.category }}</b></div>
+    <div class="course-card-body">
+      <div class="row between"><span class="tag">{{ c.level }}</span><span class="meta">{{ c.nb_lessons }} leçons</span></div>
+      <h2><a href="{{ url_for('course_public', course_id=c.id) }}">{{ c.title }}</a></h2>
+      <p>{{ c.description[:180] }}{% if c.description|length > 180 %}…{% endif %}</p>
+      <div class="course-footer"><span class="meta">Formateur · {{ c.trainer_name }}</span>
+      {% if e and e.status == 'approved' %}<a class="btn small" href="{{ url_for('learn', course_id=c.id) }}">Continuer →</a>
+      {% elif e %}<span class="tag {{ STATUS[e.status][1] }}">{{ STATUS[e.status][0] }}</span>
+      {% else %}<a class="btn alt small" href="{{ url_for('course_public', course_id=c.id) }}">Voir le parcours →</a>{% endif %}</div>
     </div>
   </article>
 {% endfor %}
