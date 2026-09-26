@@ -1,6 +1,21 @@
-{% extends "base.html" %}{% block title %}Mes ressources de révision{% endblock %}
+{% extends "base.html" %}
+{% block title %}Mes ressources · INPP Matadi{% endblock %}
 {% block content %}
-<div class="row between" style="align-items:flex-end"><div><span class="tag ok">ESPACE STAGIAIRE</span><h1 style="margin:8px 0 4px">Mes ressources de révision</h1><p class="meta">Retrouvez les supports et exercices publiés par vos formateurs pour travailler entre les séances à l'INPP Matadi.</p></div><a class="btn alt" href="{{ url_for('my_courses') }}">Mes formations</a></div>
-{% if not resources %}<div class="card">Aucune ressource disponible pour vos formations validées.</div>{% endif %}
-<div class="grid">{% for r in resources %}<article class="card resource-card"><span class="tag">{{ resource_kinds.get(r.kind, 'Ressource') }}</span><h2 style="margin:8px 0 4px">{{ r.title }}</h2><p class="meta">{{ r.course_title }}</p>{% if r.description %}<p>{{ r.description }}</p>{% endif %}<a class="btn small" href="{{ url_for('resource_view', resource_id=r.id) }}">Ouvrir</a></article>{% endfor %}</div>
+<div class="resource-hero">
+  <div><span class="resource-kicker">ESPACE STAGIAIRE</span><h1>Mes ressources</h1><p>Retrouvez les supports et travaux pratiques de vos formations validées.</p></div>
+  <div class="resource-hero-mark">R</div>
+</div>
+{% if not resources %}
+<div class="empty-resource card"><div class="empty-icon">+</div><h2>Aucune ressource disponible</h2><p>Les formateurs publieront ici les supports utiles entre les séances.</p></div>
+{% else %}
+<div class="resource-grid">
+{% for r in resources %}
+<article class="resource-tile">
+  <div class="resource-tile-top"><span class="resource-icon {{ r.kind }}">{{ 'TP' if r.kind == 'exercice' else 'PDF' if r.kind == 'document' else 'WEB' if r.kind == 'lien' else 'COURS' }}</span><span class="resource-type">{{ resource_kinds.get(r.kind,'Ressource') }}</span></div>
+  <div class="resource-tile-body"><h2>{{ r.title }}</h2><p class="resource-course">{{ r.course_title }}</p>{% if r.description %}<p>{{ r.description }}</p>{% endif %}</div>
+  <div class="resource-tile-foot"><span class="resource-file">À réviser</span><a class="resource-open" href="{{ url_for('resource_view', resource_id=r.id) }}">Consulter →</a></div>
+</article>
+{% endfor %}
+</div>
+{% endif %}
 {% endblock %}
