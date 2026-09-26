@@ -456,6 +456,41 @@ def filieres_public():
     return render_template("filieres_public.html", filieres=rows)
 
 
+@app.route("/offre-formations")
+def offre_formations():
+    """Affiche la fiche publique des formations à partir du document source du projet."""
+    path = os.path.join(BASE_DIR, "content", "inpp_fiche.md")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            source = fh.read()
+    except OSError:
+        abort(404)
+
+    domaines = []
+    current = None
+    lines = source.replace("\r\n", "\n").split("\n")
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        match = re.match(r"^##\s+\d+\.\s+(.+)$", line)
+        if match:
+            current = {"name": match.group(1), "rows": []}
+            domaines.append(current)
+            i += 1
+            continue
+        if current and line.startswith("|") and i + 1 < len(lines) and lines[i + 1].strip().startswith("|---"):
+            i += 2
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                cells = [x.strip() for x in lines[i].strip().strip("|").split("|")]
+                if len(cells) >= 4:
+                    current["rows"].append(cells[:4])
+                i += 1
+            continue
+        i += 1
+
+    return render_template("offre_formations.html", domaines=domaines)
+
+
 @app.route("/faq")
 def faq():
     return render_template("faq.html")
@@ -477,7 +512,7 @@ def robots_txt():
 def sitemap_xml():
     conn = get_db()
     urls = [url_for("index"), url_for("catalogue"), url_for("apropos"), url_for("filieres_public"),
-            url_for("procedure"), url_for("faq"), url_for("contact"), url_for("login"), url_for("register")]
+            url_for("offre_formations"), url_for("procedure"), url_for("faq"), url_for("contact"), url_for("login"), url_for("register")]
     for c in conn.execute("SELECT id FROM courses WHERE published=1"):
         urls.append(url_for("course_public", course_id=c["id"]))
     body = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
