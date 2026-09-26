@@ -741,7 +741,7 @@ def catalogue_pdf():
         Spacer(1, 3*mm),
     ]
     rows = [[Paragraph(x, head) for x in
-             ["Formation", "Catégorie", "Niveau", "Dates", "Lieu", "Horaire", "Places", "Frais"]]]
+             ["Formation", "Service", "Catégorie", "Niveau", "Dates", "Lieu", "Horaire", "Places", "Frais"]]]
     for c in courses:
         dates = "Date à confirmer"
         if c["start_date"]:
@@ -753,12 +753,12 @@ def catalogue_pdf():
             seats = f"{c['nb_reserved']}/{c['seats']}"
         fee = f"{c['fee_amount']:g} {c['currency']}" if c["fee_amount"] else "Gratuit"
         rows.append([
-            Paragraph(c["title"], cell), Paragraph(c["category"], cell), Paragraph(c["level"], cell),
+            Paragraph(c["title"], cell), Paragraph(c["service_name"] or "—", cell), Paragraph(c["category"], cell), Paragraph(c["level"], cell),
             Paragraph(dates, cell), Paragraph(c["location"] or "—", cell),
             Paragraph(c["schedule"] or "—", cell), Paragraph(seats, cell), Paragraph(fee, cell)
         ])
     if len(rows) == 1:
-        rows.append([Paragraph("Aucune formation ne correspond aux filtres.", cell)] + [""] * 7)
+        rows.append([Paragraph("Aucune formation ne correspond aux filtres.", cell)] + [""] * 8)
     table = Table(rows, repeatRows=1, colWidths=[47*mm, 30*mm, 25*mm, 34*mm, 42*mm, 34*mm, 18*mm, 22*mm])
     table.setStyle(TableStyle([
         ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#2e6da4")),
