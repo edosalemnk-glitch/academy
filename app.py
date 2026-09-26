@@ -1154,15 +1154,10 @@ def lesson_image_proxy(name):
                 signed = f"{SUPABASE_URL}{signed}"
             else:
                 signed = f"{SUPABASE_URL}/storage/v1/{signed.lstrip('/')}"
-        req = urllib.request.Request(
-            signed,
-            headers={"Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}"},
-            method="GET",
-        )
-        with urllib.request.urlopen(req, timeout=20) as response:
-            body = response.read()
-            mime = response.headers.get_content_type() or mimetypes.guess_type(name)[0] or "application/octet-stream"
-        return Response(body, mimetype=mime)
+        # L’URL signée contient déjà le jeton d’accès temporaire.
+        # On redirige directement le navigateur vers Supabase afin d’éviter
+        # les problèmes de diffusion binaire à travers Flask/Render.
+        return redirect(signed)
     except (RuntimeError, ValueError, json.JSONDecodeError, urllib.error.URLError):
         app.logger.exception("Impossible de récupérer l’image Supabase %s", name)
         abort(404)
