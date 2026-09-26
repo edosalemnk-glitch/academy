@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block title %}{{ resource.title }} · Ressources INPP Matadi{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('course_resources', course_id=course.id) }}">Ressources de révision</a> / {{ resource.title }}</div>
+<div class="card resource-view">
+  <div class="row"><span class="tag ok">{{ resource_kind }}</span>{% if resource.file_name %}<span class="tag">{{ resource.file_name }}</span>{% endif %}</div>
+  <h1>{{ resource.title }}</h1>
+  {% if resource.description %}<p class="meta">{{ resource.description }}</p>{% endif %}
+  {% if resource.content %}<article class="lesson-body">{{ resource.content|render }}</article>{% endif %}
+  <div class="row" style="margin-top:20px">
+    {% if file_url %}<a class="btn sun" href="{{ file_url }}" target="_blank" rel="noopener">Ouvrir le fichier</a>{% endif %}
+    {% if resource.url %}<a class="btn alt" href="{{ resource.url }}" target="_blank" rel="noopener">Ouvrir le lien</a>{% endif %}
+    <a class="btn alt" href="{{ url_for('course_resources', course_id=course.id) }}">Retour aux ressources</a>
+  </div>
+</div>
+{% endblock %}
