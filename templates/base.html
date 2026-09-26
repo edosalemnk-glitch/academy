@@ -8,7 +8,7 @@
 <body><header class="topbar noprint"><div class="wrap">
 <a class="brand" href="{{ url_for('index') }}"><i></i>INPP Matadi</a><nav>
 {% if g.user and g.user.role == 'formateur' %}<a href="{{ url_for('trainer_dashboard') }}">Tableau de bord{% if pending_total %}<span class="badge">{{ pending_total }}</span>{% endif %}</a><a href="{{ url_for('sections_list') }}">Présences</a><a href="{{ url_for('learners') }}">Stagiaires</a><a href="{{ url_for('catalogue') }}">Catalogue</a>
-{% elif g.user and g.user.role == 'secretaire' %}<a href="{{ url_for('sec_dashboard') }}">Secrétariat</a><a href="{{ url_for('sec_new') }}">Nouvelle inscription</a><a href="{{ url_for('sec_registry') }}">Registre</a><a href="{{ url_for('sec_jury') }}">Jury</a><a href="{{ url_for('sec_tariffs') }}">Tarifs</a>
+{% elif g.user and g.user.role == 'secretaire' %}<a href="{{ url_for('sec_dashboard') }}">Secrétariat</a><a href="{{ url_for('sec_programming') }}">Programmation</a><a href="{{ url_for('sec_new') }}">Inscription</a><a href="{{ url_for('sec_registry') }}">Registre</a><a href="{{ url_for('sec_jury') }}">Jury</a><a href="{{ url_for('sec_tariffs') }}">Frais &amp; filières</a>
 {% elif g.user %}<a href="{{ url_for('my_courses') }}">Mes formations</a><a href="{{ url_for('catalogue') }}">Formations</a><a href="{{ url_for('my_resources') }}">Ressources</a>
 {% else %}<a href="{{ url_for('catalogue') }}">Formations programmées</a><a href="{{ url_for('filieres_public') }}">Filières</a><a href="{{ url_for('apropos') }}">À propos</a>{% endif %}
 {% if not g.user or g.user.role != 'secretaire' %}<a href="{{ url_for('procedure') }}">Frais &amp; inscription au centre</a>{% endif %}{% if g.user and g.user.role != 'secretaire' %}<a href="{{ url_for('sql_lab') }}">Terrain SQL</a>{% endif %}</nav>
