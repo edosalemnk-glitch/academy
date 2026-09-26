@@ -53,7 +53,7 @@ Une formation peut avoir, en plus des quiz de chaque leçon, un **examen final**
 - **Configuration** : titre, durée (minutes), seuil de réussite, nombre de tentatives autorisées, créneau d'ouverture/fermeture optionnel (pour le faire coïncider avec une séance en salle), publication.
 - **Questions** : à choix multiple, comme les quiz de leçon ; ordre et réponses mélangés à chaque tentative.
 - **Passage** : accessible au stagiaire uniquement après avoir terminé toutes les leçons du cours et pendant le créneau ouvert. Chronomètre côté navigateur avec **soumission automatique** à l'échéance ; toute tentative rouverte après le délai est corrigée automatiquement (hors délai = non validé), pour éviter qu'une tentative reste ouverte indéfiniment.
-- **Certificat** : si un examen publié existe pour le cours, le certificat n'est délivré qu'après réussite des leçons **et** de l'examen (sinon, comme avant, la réussite des leçons suffit).
+- **Attestation provisoire de réussite** : si un examen publié existe pour le cours, l'attestation est délivrée après réussite des leçons **et** de l'examen (sinon, comme avant, la réussite des leçons suffit).
 - **Résultats** : liste des tentatives par stagiaire, consultable par le formateur.
 
 ## Module Présences (carte QR, pointage, absences)
