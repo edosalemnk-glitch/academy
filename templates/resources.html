@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}Ressources de révision · {{ course.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('learn', course_id=course.id) }}">{{ course.title }}</a> / Ressources</div>
+<div class="row between" style="align-items:flex-end"><div><span class="tag ok">ACCOMPAGNEMENT PÉDAGOGIQUE</span><h1 style="margin:8px 0 4px">Ressources de révision</h1><p class="meta">Supports, exercices et documents à consulter entre les séances de formation en présentiel à l'INPP Matadi.</p></div>{% if mode == 'preview' %}<a class="btn" href="{{ url_for('resource_manage', course_id=course.id) }}">Gérer les ressources</a>{% endif %}</div>
+{% if not resources %}<div class="card"><p>Aucune ressource n'est encore publiée pour cette formation.</p></div>{% endif %}
+<div class="grid">{% for r in resources %}<article class="card resource-card">
+  <div class="row between"><span class="tag">{{ resource_kinds.get(r.kind, 'Ressource') }}</span>{% if r.file_name %}<span class="meta">{{ r.file_name }}</span>{% endif %}</div>
+  <h2 style="margin:8px 0 4px"><a href="{{ url_for('resource_view', resource_id=r.id) }}">{{ r.title }}</a></h2>
+  {% if r.description %}<p>{{ r.description }}</p>{% endif %}
+  <a class="btn small" href="{{ url_for('resource_view', resource_id=r.id) }}">Ouvrir la ressource</a>
+</article>{% endfor %}</div>
+{% endblock %}
