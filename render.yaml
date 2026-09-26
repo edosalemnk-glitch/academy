@@ -21,3 +21,11 @@ services:
         value: "1"
       - key: SESSION_COOKIE_SECURE
         value: "1"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: "inpp-uploads"
+      - key: SUPABASE_STORAGE_SIGNED_TTL
+        value: "3600"
