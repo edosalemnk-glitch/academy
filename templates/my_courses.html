@@ -1,26 +1,5 @@
-{% extends "base.html" %}
-{% block title %}Mon espace d'apprentissage | INPP Académie{% endblock %}
-{% block content %}
-<section class="learning-head">
-  <div><span class="eyebrow">STAGIAIRE</span><h1>Mon espace d'apprentissage</h1><p class="meta">Retrouvez vos parcours, votre progression et vos certificats.</p></div>
-  <a class="btn" href="{{ url_for('catalogue') }}">+ Explorer le catalogue</a>
-</section>
-{% if not items %}<div class="card"><h2>Votre académie commence ici.</h2><p class="meta">Vous n'avez encore demandé aucune formation. Explorez le catalogue et choisissez votre premier parcours.</p><a class="btn sun" href="{{ url_for('catalogue') }}">Voir les formations →</a></div>{% endif %}
-<div class="course-grid">
-{% for it in items %}{% set e=it.e %}
-  <article class="academy-course-card">
-    <div class="course-cover cover-tech"><span>{{ '%02d'|format(loop.index) }}</span><b>{{ e.category }}</b></div>
-    <div class="course-card-body">
-      <div class="row between"><span class="tag {{ STATUS[e.status][1] }}">{{ STATUS[e.status][0] }}</span>{% if it.prog %}<span class="meta">{{ it.prog.pct }}%</span>{% endif %}</div>
-      <h2>{{ e.title }}</h2>
-      {% if it.prog %}
-        <div class="bar"><b style="width:{{ it.prog.pct }}%"></b></div>
-        <div class="meta">{{ it.prog.count }} / {{ it.prog.total }} leçons validées</div>
-        <div class="course-footer"><a class="btn small" href="{{ url_for('learn', course_id=e.course_id) }}">{{ 'Revoir le parcours' if it.prog.pct == 100 else 'Continuer →' }}</a>{% if it.cert %}<a class="btn sun small" href="{{ url_for('certificate', code=it.cert.code) }}">Certificat</a>{% endif %}</div>
-      {% elif e.status == 'pending' %}<p>Votre demande est en attente de validation par le formateur.</p>
-      {% else %}<p>Vous pouvez refaire une demande depuis la page de la formation.</p><a class="btn alt small" href="{{ url_for('course_public', course_id=e.course_id) }}">Voir le parcours</a>{% endif %}
-    </div>
-  </article>
-{% endfor %}
-</div>
-{% endblock %}
+{% extends "base.html" %}{% block title %}Mes formations{% endblock %}
+{% block content %}<h1>Mes formations</h1>{% if not items %}<div class="card"><p>Vous n'avez encore demandé aucune formation.</p><a class="btn" href="{{ url_for('catalogue') }}">Parcourir le catalogue</a></div>{% endif %}
+<div class="grid">{% for it in items %}{% set e = it.e %}<article class="card course-card"><div class="row between"><span class="tag">{{ e.category }}</span><span class="tag {{ STATUS[e.status][1] }}">{{ STATUS[e.status][0] }}</span></div><h2 style="margin:4px 0">{{ e.title }}</h2>
+{% if it.prog %}<div class="bar" aria-label="Progression"><b style="width:{{ it.prog.pct }}%"></b></div><div class="meta">{{ it.prog.count }} / {{ it.prog.total }} leçons validées ({{ it.prog.pct }} %)</div><div class="row"><a class="btn small" href="{{ url_for('learn', course_id=e.course_id) }}">{{ 'Revoir' if it.prog.pct == 100 else 'Continuer' }}</a>{% if it.cert %}<a class="btn sun small" href="{{ url_for('certificate', code=it.cert.code) }}">Mon certificat</a>{% endif %}</div>
+{% elif e.status == 'pending' %}<p class="meta">En attente de validation par le formateur.</p>{% else %}<p class="meta">Vous pouvez refaire une demande depuis la page du cours.</p><a class="btn alt small" href="{{ url_for('course_public', course_id=e.course_id) }}">Voir le cours</a>{% endif %}</article>{% endfor %}</div>{% endblock %}
