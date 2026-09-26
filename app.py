@@ -463,7 +463,15 @@ def index():
             "SELECT COUNT(*) FROM registrations WHERE card_code IS NOT NULL").fetchone()[0],
         "certificats": conn.execute("SELECT COUNT(*) FROM certificates").fetchone()[0],
     }
-    return render_template("home.html", stats=stats)
+    upcoming = conn.execute(
+        "SELECT c.*, u.full_name AS trainer_name, "
+        "(SELECT COUNT(*) FROM enrollments e WHERE e.course_id=c.id AND e.status IN ('pending','approved')) AS nb_reserved "
+        "FROM courses c JOIN users u ON u.id=c.trainer_id "
+        "WHERE c.published=1 AND c.start_date IS NOT NULL "
+        "AND c.start_date >= to_char(CURRENT_DATE, 'YYYY-MM-DD') "
+        "ORDER BY c.start_date, c.id LIMIT 3"
+    ).fetchall()
+    return render_template("home.html", stats=stats, upcoming=upcoming)
 
 
 @app.route("/a-propos")
