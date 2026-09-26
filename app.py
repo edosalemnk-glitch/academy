@@ -230,7 +230,7 @@ def too_many_failures(key):
 # ------------------------------------------------------------------ accès aux données
 def get_course(course_id):
     row = get_db().execute(
-        "SELECT c.*, u.full_name AS trainer_name FROM courses c JOIN users u ON u.id=c.trainer_id "
+        "SELECT c.*, u.full_name AS trainer_name, s.name AS service_name FROM courses c JOIN users u ON u.id=c.trainer_id LEFT JOIN services s ON s.id=c.service_id "
         "WHERE c.id=?", (course_id,)).fetchone()
     if row is None:
         abort(404)
