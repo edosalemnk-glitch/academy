@@ -448,16 +448,16 @@ def _migrate_course_case_study(conn):
     conn.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS case_study TEXT NOT NULL DEFAULT ''")
     conn.execute(
         "UPDATE courses SET case_study=? WHERE COALESCE(TRIM(case_study),'')='' "
-        "AND category='Bases de données' AND lower(title) LIKE '%niveau 1%'",
-        ("Vous êtes agent informatique dans un centre de formation. La direction vous demande de retrouver "
+        "AND category='Bases de données' AND lower(title) LIKE ?",
+        ("%niveau 1%", "Vous êtes agent informatique dans un centre de formation. La direction vous demande de retrouver "
          "rapidement les stagiaires, leurs résultats et les informations utiles dans une base de données. "
          "Votre mission : interroger les tables, filtrer les données et produire les bons résultats sans modifier "
          "les informations d'origine.",)
     )
     conn.execute(
         "UPDATE courses SET case_study=? WHERE COALESCE(TRIM(case_study),'')='' "
-        "AND category='Bases de données' AND lower(title) LIKE '%niveau 2%'",
-        ("Le responsable administratif doit consolider plusieurs informations pour préparer un rapport mensuel. "
+        "AND category='Bases de données' AND lower(title) LIKE ?",
+        ("%niveau 2%", "Le responsable administratif doit consolider plusieurs informations pour préparer un rapport mensuel. "
          "Votre mission : construire des requêtes SQL plus avancées, relier les tables et extraire des indicateurs "
          "fiables à partir des données de l'organisation.",)
     )
