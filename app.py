@@ -1,4 +1,4 @@
-"""INPP Académie : plateforme de formation avec abonnement, validation par le formateur et quiz."""
+"""INPP Matadi : vitrine publique, formations en présentiel et ressources de révision."""
 import csv
 import io
 import mimetypes
@@ -123,6 +123,11 @@ def ensure_ready():
             seed.restore_demo(conn)
             conn.execute("INSERT INTO settings (key,value) VALUES (?,?)", ("demo_restore_done", "1"))
             conn.commit()
+    # Après un seed/restauration, les ressources de démonstration peuvent être créées
+    # sur la même connexion, sans attendre un redémarrage supplémentaire.
+    if hasattr(database, "_migrate_reference_resources"):
+        database._migrate_reference_resources(conn)
+        conn.commit()
     conn.close()
 
 
@@ -743,7 +748,7 @@ def catalogue_pdf():
     doc = SimpleDocTemplate(
         buffer, pagesize=landscape(A4),
         rightMargin=10*mm, leftMargin=10*mm, topMargin=35*mm, bottomMargin=12*mm,
-        title="Programmation des formations INPP Académie", author="INPP Académie",
+        title="Programmation des formations INPP Matadi", author="INPP Matadi",
     )
     styles = getSampleStyleSheet()
     cell = ParagraphStyle("ScheduleCell", parent=styles["BodyText"], fontName="Helvetica",
@@ -2342,7 +2347,7 @@ def procedure_pdf():
     doc = SimpleDocTemplate(
         buffer, pagesize=landscape(A4),
         rightMargin=12*mm, leftMargin=12*mm, topMargin=37*mm, bottomMargin=13*mm,
-        title="Fiche de renseignements INPP", author="INPP Académie",
+        title="Fiche de renseignements INPP", author="INPP Matadi",
     )
     styles = getSampleStyleSheet()
     cell = ParagraphStyle(
