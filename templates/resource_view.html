@@ -12,6 +12,7 @@
   </div>
   {% if resource.content %}<div class="resource-content">{{ resource.content|render }}</div>{% endif %}
   <div class="resource-actions">
+    <a class="btn sun" href="{{ url_for('resource_pdf', resource_id=resource.id) }}">Télécharger en PDF</a>
     {% if file_url %}<a class="btn sun" href="{{ file_url }}" target="_blank" rel="noopener">Ouvrir le document</a>{% endif %}
     {% if resource.url %}<a class="btn" href="{{ resource.url }}" target="_blank" rel="noopener">Ouvrir le lien</a>{% endif %}
     <a class="btn alt" href="{{ url_for('course_resources', course_id=course.id) }}">Retour aux ressources</a>
