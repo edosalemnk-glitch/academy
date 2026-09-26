@@ -345,7 +345,7 @@ def exam_attempts_of(exam_id, user_id):
 
 
 def maybe_issue_certificate(user_id, course_id):
-    """Émet le certificat une fois toutes les leçons validées, et l'examen final réussi s'il existe."""
+    """Émet une attestation provisoire de réussite ; le certificat officiel reste distinct."""
     conn = get_db()
     prog = progress_of(user_id, course_id)
     if not prog["total"] or prog["count"] != prog["total"]:
@@ -925,7 +925,7 @@ def complete_lesson(lesson_id):
     conn.execute("INSERT OR IGNORE INTO progress (user_id, lesson_id, best_score) VALUES (?,?,100)",
                  (g.user["id"], lesson_id))
     if maybe_issue_certificate(g.user["id"], course["id"]):
-        flash("Formation terminée : votre certificat est disponible.", "ok")
+        flash("Formation réussie : votre attestation provisoire de réussite est disponible. Le certificat officiel sera délivré séparément.", "ok")
     conn.commit()
     return redirect(url_for("learn", course_id=course["id"]))
 
@@ -979,6 +979,7 @@ def quiz(lesson_id):
                            next_id=ids[idx + 1] if idx + 1 < len(ids) else None)
 
 
+@app.route("/attestation/<code>")
 @app.route("/certificat/<code>")
 def certificate(code):
     row = get_db().execute(
