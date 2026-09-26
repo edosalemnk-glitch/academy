@@ -714,18 +714,6 @@ Vérifiez que les formules couvrent toutes les lignes et que le tri conserve les
         ]
     }
 
-    # Retire les quatre anciennes ressources génériques de la première version.
-    # Les ressources créées par un formateur (created_by non NULL) ne sont jamais touchées.
-    conn.execute(
-        "DELETE FROM resources WHERE created_by IS NULL AND title IN (?,?,?,?)",
-        (
-            "Fiche de révision SQL — requêtes de base",
-            "Exercices pratiques SQL — SELECT / WHERE / ORDER BY",
-            "Fiche de révision SQL — jointures et analyses",
-            "Fiche de révision — organiser ses fichiers et dossiers",
-        ),
-    )
-
     for course in matches:
         title = str(course["title"])
         key = "sql1" if "niveau 1" in title.lower() else "sql2" if "niveau 2" in title.lower() else "bureautique"
@@ -744,6 +732,17 @@ Vérifiez que les formules couvrent toutes les lignes et que le tri conserve les
                     (course["id"], rtitle, kind, description, content)
                 )
 
+    # Retire les quatre anciennes ressources génériques de la première version.
+    # Les ressources créées par un formateur (created_by non NULL) ne sont jamais touchées.
+    conn.execute(
+        "DELETE FROM resources WHERE created_by IS NULL AND title IN (?,?,?,?)",
+        (
+            "Fiche de révision SQL — requêtes de base",
+            "Exercices pratiques SQL — SELECT / WHERE / ORDER BY",
+            "Fiche de révision SQL — jointures et analyses",
+            "Fiche de révision — organiser ses fichiers et dossiers",
+        ),
+    )
 def _migrate_course_schedule(conn):
     """Ajoute les informations de programmation des formations visibles par le public."""
     conn.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS start_date TEXT")
