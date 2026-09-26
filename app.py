@@ -2510,6 +2510,23 @@ def _pdf_logo(canvas, doc):
     canvas.setLineWidth(2)
     canvas.line(14*mm, height - 34*mm, width - 14*mm, height - 34*mm)
 
+    # Filigrane INPP visible sur les PDF imprimables.
+    try:
+        canvas.saveState()
+        canvas.setFillAlpha(0.08)
+        canvas.drawImage(
+            logo,
+            (width - 115*mm) / 2,
+            (height - 115*mm) / 2,
+            width=115*mm,
+            height=115*mm,
+            preserveAspectRatio=True,
+            mask="auto",
+        )
+        canvas.restoreState()
+    except Exception:
+        pass
+
     canvas.setFillColor(colors.HexColor("#666666"))
     canvas.setFont("Helvetica", 7)
     canvas.drawString(14*mm, 8*mm, "INPP Matadi · Fiche de renseignements")
