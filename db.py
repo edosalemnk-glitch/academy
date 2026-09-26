@@ -484,6 +484,24 @@ def _migrate_course_schedule(conn):
     conn.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS seats INTEGER NOT NULL DEFAULT 0")
     conn.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS registration_open INTEGER NOT NULL DEFAULT 1")
 
+    # Données de démonstration visibles immédiatement après migration.
+    # On ne remplit que les cours encore non programmés : une date saisie par le formateur
+    # reste la source de vérité.
+    demo_schedule = [
+        ("SQL – Niveau 1 : Fondamentaux", "2026-10-05", "2026-12-04",
+         "Lundi–Vendredi · 08h30–12h30", "INPP Kinshasa-Limete", 25),
+        ("SQL – Niveau 2 : Jointures et analyses", "2026-11-02", "2026-12-18",
+         "Lundi–Vendredi · 13h30–17h30", "INPP Kinshasa-Limete", 20),
+        ("Bureautique – Gérer ses fichiers et dossiers", "2026-10-12", "2026-11-06",
+         "Lundi–Vendredi · 08h30–12h30", "INPP Kinshasa-Limete", 30),
+    ]
+    for title, start, end, schedule, location, seats in demo_schedule:
+        conn.execute(
+            "UPDATE courses SET start_date=?, end_date=?, schedule=?, location=?, seats=?, registration_open=1 "
+            "WHERE title=? AND start_date IS NULL",
+            (start, end, schedule, location, seats, title),
+        )
+
 
 def _migrate_bank_settings(conn):
     """Conservée pour compatibilité avec les anciennes versions du schéma."""
