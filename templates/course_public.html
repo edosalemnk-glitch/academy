@@ -4,7 +4,7 @@
 <div class="crumbs"><a href="{{ url_for('catalogue') }}">Formations programmées</a> / {{ course.category }}</div>
 <div class="row between" style="align-items:flex-start">
   <div style="flex:1;min-width:280px">
-    <div class="row"><span class="tag">{{ course.category }}</span><span class="tag {{ 'ok' if schedule_state == 'a_venir' else ('warn' if schedule_state == 'en_cours' else '') }}">{{ schedule_label }}</span></div>
+    <div class="row"><span class="tag">{{ course.service_name or 'Service à préciser' }}</span><span class="tag">{{ course.category }}</span><span class="tag {{ 'ok' if schedule_state == 'a_venir' else ('warn' if schedule_state == 'en_cours' else '') }}">{{ schedule_label }}</span></div>
     <h1 style="margin-top:8px">{{ course.title }}</h1>
     <p class="meta">{{ course.level }} · Formateur : {{ course.trainer_name }} · {% if course.fee_amount %}{{ '%g'|format(course.fee_amount) }} {{ course.currency }}{% else %}Gratuit{% endif %}</p>
     <p style="max-width:65ch">{{ course.description }}</p>
