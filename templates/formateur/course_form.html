@@ -9,6 +9,9 @@
     <div style="flex:1;min-width:200px"><label for="lv">Niveau</label><select id="lv" name="level">{% for l in levels %}<option {{ 'selected' if v.get('level') == l }}>{{ l }}</option>{% endfor %}</select></div>
   </div>
   <label for="d">Description</label><textarea id="d" name="description">{{ v.get('description', '') }}</textarea>
+  <label for="case">Cas réel / mission professionnelle</label>
+  <textarea id="case" name="case_study" placeholder="Ex. Vous travaillez au service informatique... Votre mission est de...">{{ v.get('case_study', '') }}</textarea>
+  <p class="hint">Décrivez une situation professionnelle concrète, la mission du stagiaire et le résultat attendu.</p>
   <div class="row" style="align-items:flex-start">
     <div style="flex:1;min-width:200px"><label for="f">Frais d'inscription (USD, 0 = gratuit)</label><input id="f" type="number" name="fee_amount" min="0" step="0.5" value="{{ '%g'|format(v.get('fee_amount', 0)|float) }}"></div>
     <div style="flex:1;min-width:200px"><label for="m">Note minimale pour réussir un quiz (%)</label><input id="m" type="number" name="pass_mark" min="1" max="100" value="{{ v.get('pass_mark', 70) }}"></div>
