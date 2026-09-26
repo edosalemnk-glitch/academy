@@ -533,44 +533,203 @@ def _migrate_course_case_study(conn):
 
 
 def _migrate_reference_resources(conn):
-    """Ajoute quelques ressources de révision de démonstration aux cours existants."""
+    """Publie des ressources pédagogiques réelles de révision."""
     matches = conn.execute(
         "SELECT id, title FROM courses WHERE lower(title) LIKE ? OR lower(title) LIKE ? OR lower(title) LIKE ?",
         ("%sql%niveau 1%", "%sql%niveau 2%", "%bureautique%")
     ).fetchall()
     if not matches:
         return
+
+    resources = {
+        "sql1": [
+            ("Cours — SQL Niveau 1 : SELECT, WHERE et ORDER BY", "support",
+             "Fiche de révision sur les requêtes SQL de base.",
+             """# Objectifs
+À la fin de cette révision, vous devez pouvoir sélectionner des colonnes, filtrer des lignes, combiner des conditions et trier un résultat.
+
+# SELECT
+SELECT nom, prenom
+FROM stagiaires;
+
+SELECT * FROM stagiaires;
+
+# WHERE
+SELECT nom, prenom
+FROM stagiaires
+WHERE statut = 'actif';
+
+Conditions utiles : age >= 18, filiere = 'Informatique', nom LIKE 'M%'.
+
+# AND / OR
+SELECT nom, prenom
+FROM stagiaires
+WHERE statut = 'actif' AND filiere = 'Informatique';
+
+# ORDER BY
+SELECT nom, prenom
+FROM stagiaires
+ORDER BY nom ASC;
+
+ASC = croissant ; DESC = décroissant.
+
+# LIMIT
+SELECT nom, prenom
+FROM stagiaires
+ORDER BY nom
+LIMIT 10;
+
+# Méthode
+Lire la consigne → choisir les colonnes → choisir la table → filtrer → trier → vérifier le résultat."""),
+            ("Travaux pratiques — SQL Niveau 1", "exercice",
+             "Exercices progressifs avec corrigé.",
+             """# Jeu de données
+Table stagiaires : id, nom, prenom, filiere, statut, age.
+
+# Exercices
+1. Afficher nom, prénom et filière de tous les stagiaires.
+2. Afficher uniquement les stagiaires actifs.
+3. Afficher les stagiaires d'Informatique.
+4. Afficher les stagiaires actifs de plus de 18 ans.
+5. Afficher les stagiaires actifs triés par nom.
+6. Afficher les 5 premiers stagiaires actifs triés par nom.
+
+# Corrigé
+1) SELECT nom, prenom, filiere FROM stagiaires;
+2) SELECT nom, prenom FROM stagiaires WHERE statut = 'actif';
+3) SELECT nom, prenom FROM stagiaires WHERE filiere = 'Informatique';
+4) SELECT nom, prenom FROM stagiaires WHERE statut = 'actif' AND age > 18;
+5) SELECT nom, prenom FROM stagiaires WHERE statut = 'actif' ORDER BY nom ASC;
+6) SELECT nom, prenom FROM stagiaires WHERE statut = 'actif' ORDER BY nom ASC LIMIT 5;"""),
+            ("Travail personnel — 10 requêtes SQL", "exercice",
+             "Série d'entraînement à réaliser avant la prochaine séance.",
+             """Produisez une requête pour :
+1. afficher tous les stagiaires ;
+2. afficher nom et prénom ;
+3. afficher les stagiaires d'Électricité ;
+4. afficher les stagiaires non actifs ;
+5. afficher les stagiaires âgés d'au moins 18 ans ;
+6. afficher les stagiaires d'Informatique âgés d'au moins 18 ans ;
+7. trier par prénom ;
+8. trier par âge décroissant ;
+9. afficher les 10 premiers ;
+10. afficher les 10 premiers actifs triés par nom.
+
+Écrivez, exécutez et vérifiez chaque requête.""")
+        ],
+        "sql2": [
+            ("Cours — SQL Niveau 2 : JOIN, GROUP BY et agrégations", "support",
+             "Fiche de révision sur les jointures et l'analyse.",
+             """# JOIN
+SELECT s.nom, s.prenom, f.nom AS filiere
+FROM stagiaires s
+JOIN filieres f ON f.id = s.filiere_id;
+
+# LEFT JOIN
+SELECT s.nom, f.nom AS filiere
+FROM stagiaires s
+LEFT JOIN filieres f ON f.id = s.filiere_id;
+
+# COUNT
+SELECT COUNT(*) AS total FROM stagiaires;
+
+# GROUP BY
+SELECT f.nom, COUNT(*) AS total
+FROM stagiaires s
+JOIN filieres f ON f.id = s.filiere_id
+GROUP BY f.nom
+ORDER BY total DESC;
+
+# HAVING
+SELECT f.nom, COUNT(*) AS total
+FROM stagiaires s
+JOIN filieres f ON f.id = s.filiere_id
+GROUP BY f.nom
+HAVING COUNT(*) >= 5;
+
+WHERE filtre les lignes avant l'agrégation ; HAVING filtre les groupes après l'agrégation."""),
+            ("Travaux pratiques — SQL Niveau 2", "exercice",
+             "Exercices de jointures et d'analyse avec corrigé indicatif.",
+             """# Exercices
+1. Afficher chaque stagiaire avec le nom de sa filière.
+2. Compter les stagiaires par filière.
+3. Afficher les filières ayant au moins 5 stagiaires.
+4. Afficher les stagiaires actifs avec leur filière.
+5. Classer les filières par nombre de stagiaires décroissant.
+
+# Corrigé
+1) SELECT s.nom, s.prenom, f.nom AS filiere FROM stagiaires s JOIN filieres f ON f.id=s.filiere_id;
+2) SELECT f.nom, COUNT(*) AS total FROM stagiaires s JOIN filieres f ON f.id=s.filiere_id GROUP BY f.nom;
+3) SELECT f.nom, COUNT(*) AS total FROM stagiaires s JOIN filieres f ON f.id=s.filiere_id GROUP BY f.nom HAVING COUNT(*) >= 5;
+4) SELECT s.nom, s.prenom, f.nom AS filiere FROM stagiaires s JOIN filieres f ON f.id=s.filiere_id WHERE s.statut='actif';
+5) SELECT f.nom, COUNT(*) AS total FROM stagiaires s JOIN filieres f ON f.id=s.filiere_id GROUP BY f.nom ORDER BY total DESC;""")
+        ],
+        "bureautique": [
+            ("Cours — Bureautique : organiser ses fichiers et dossiers", "support",
+             "Fiche pratique d'organisation documentaire.",
+             """# Organisation
+INPP/
+  2026/
+    Inscriptions/
+    Formations/
+    Rapports/
+    Archives/
+
+# Nommage
+Préférer : Rapport_Formation_SQL_2026-10-05.docx
+Éviter : Document final nouveau 2.docx
+
+# Bonnes pratiques
+1. Un dossier = un objectif clair.
+2. Un fichier = un nom explicite.
+3. Utiliser AAAA-MM-JJ pour les dates.
+4. Archiver les anciennes versions.
+5. Éviter final, final2, final_OK.
+
+# Travail
+Créez une arborescence pour un service qui gère trois formations et des rapports mensuels."""),
+            ("Travaux pratiques — Word : document professionnel", "exercice",
+             "Production d'un compte rendu de formation.",
+             """Créer un document Compte rendu de formation avec : titre, formation, date, formateur, introduction, trois points traités, conclusion et tableau récapitulatif.
+
+Mise en forme : titres cohérents, texte lisible, tableau avec en-têtes, pied de page avec la date.
+
+Nom du fichier : Compte_rendu_formation_AAAA-MM-JJ.docx.
+
+Contrôle final : orthographe, marges, titres et nom du fichier."""),
+            ("Travaux pratiques — Excel : tableau et calculs", "exercice",
+             "Exercice de saisie, calcul et tri d'un tableau de stagiaires.",
+             """Créer un tableau avec Nom, Prénom, Filière, Note 1, Note 2, Moyenne, Statut.
+
+Travail :
+1. saisir au moins 10 lignes ;
+2. calculer la moyenne de chaque stagiaire ;
+3. identifier les moyennes >= 50 ;
+4. trier par moyenne décroissante ;
+5. calculer la moyenne générale.
+
+Formule exemple : =MOYENNE(D2:E2).
+
+Vérifiez que les formules couvrent toutes les lignes et que le tri conserve les informations de chaque stagiaire.""")
+        ]
+    }
+
     for course in matches:
         title = str(course["title"])
-        if "niveau 1" in title.lower():
-            demos = [
-                ("Fiche de révision SQL — requêtes de base", "support",
-                 "Rappel : SELECT permet de choisir les colonnes, WHERE filtre les lignes et ORDER BY trie les résultats."),
-                ("Exercices pratiques SQL — SELECT / WHERE / ORDER BY", "exercice",
-                 "Exercice : affichez les stagiaires d'une filière donnée, puis triez le résultat par nom. "
-                 "Ajoutez ensuite une condition pour ne garder que les stagiaires actifs."),
-            ]
-        elif "niveau 2" in title.lower():
-            demos = [
-                ("Fiche de révision SQL — jointures et analyses", "support",
-                 "Rappel : utilisez JOIN pour relier des tables par une clé commune. "
-                 "Avant de produire un indicateur, vérifiez les relations et le périmètre des données."),
-            ]
-        else:
-            demos = [
-                ("Fiche de révision — organiser ses fichiers et dossiers", "support",
-                 "Conseil pratique : utilisez des dossiers par service, année et type de document. "
-                 "Adoptez des noms de fichiers réguliers et évitez les doublons."),
-            ]
-        for rtitle, kind, content in demos:
+        key = "sql1" if "niveau 1" in title.lower() else "sql2" if "niveau 2" in title.lower() else "bureautique"
+        for rtitle, kind, description, content in resources[key]:
             exists = conn.execute(
-                "SELECT 1 FROM resources WHERE course_id=? AND title=?", (course["id"], rtitle)
+                "SELECT id FROM resources WHERE course_id=? AND title=?", (course["id"], rtitle)
             ).fetchone()
-            if not exists:
+            if exists:
                 conn.execute(
-                    "INSERT INTO resources (course_id,title,kind,description,content,published) "
-                    "VALUES (?,?,?,?,?,1)",
-                    (course["id"], rtitle, kind, "Ressource de révision proposée avec la formation.", content)
+                    "UPDATE resources SET kind=?, description=?, content=?, published=1 WHERE id=?",
+                    (kind, description, content, exists["id"])
+                )
+            else:
+                conn.execute(
+                    "INSERT INTO resources (course_id,title,kind,description,content,published) VALUES (?,?,?,?,?,1)",
+                    (course["id"], rtitle, kind, description, content)
                 )
 
 def _migrate_course_schedule(conn):
