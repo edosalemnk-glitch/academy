@@ -1,6 +1,6 @@
-# INPP Académie (v3)
+# INPP Matadi — plateforme numérique de l'INPP
 
-Plateforme de formation en ligne : **vitrine publique** (filières, procédure, FAQ, référencement), catalogue, abonnement, validation par le formateur, parcours verrouillé par quiz, **examen final chronométré**, certificat vérifiable, terrain d'entraînement SQL — et module Secrétariat / Réception pour l'inscription physique au centre (frais, types de stagiaires, lettres de recommandation, carte de stagiaire avec **scanner caméra**).
+Plateforme numérique de l'INPP Matadi : **vitrine publique** (filières, services, programmation, procédure, FAQ, référencement), demande d'inscription, suivi pédagogique, ressources de révision, quiz et évaluations — avec un module Secrétariat / Réception pour l'inscription physique au centre (frais, types de stagiaires, lettres de recommandation, carte de stagiaire avec **scanner caméra**). La formation professionnelle elle-même se déroule **en présentiel à l'INPP Matadi**.
 
 Démarrage : voir **ACTIONS.md** (double-clic sur `lancer.bat` sous Windows).
 
@@ -12,22 +12,22 @@ Démarrage : voir **ACTIONS.md** (double-clic sur `lancer.bat` sous Windows).
 
 ## Module Secrétariat / Réception (inscription au centre)
 
-Un troisième rôle, **secrétaire**, gère l'inscription physique décrite dans le cahier des charges (`projet.md`), séparément du catalogue de formations en ligne :
+Un troisième rôle, **secrétaire**, gère l'inscription physique décrite dans le cahier des charges (`projet.md`), séparément des ressources pédagogiques et de la vitrine publique :
 
-- **Frais** : inscription (40 000 Fc, obligatoire), matériel (40 $ / 50 $ / 80 $ selon la filière), formation (50 000 Fc/mois), jury (25 000 Fc, obligatoire avant de passer le jury). Modifiables par le secrétariat dans *Tarifs* ; une modification ne s'applique qu'aux futures inscriptions.
+- **Frais** : inscription (58 000 Fc, obligatoire), matériel (variable selon la filière), formation (60 000 Fc/mois), jury (25 000 Fc, obligatoire avant de passer le jury). Modifiables par le secrétariat dans *Tarifs* ; une modification ne s'applique qu'aux futures inscriptions.
 - **Types de stagiaires** : Non recommandé (paie tout), Recommandé total — institution privée (ne paie rien), Recommandé partiel — institution étatique (paie matériel + jury). Un stagiaire recommandé doit avoir sa lettre approuvée par la hiérarchie (nom et fonction de la personne, horodaté) avant de pouvoir payer et avant d'être considéré « en ordre ».
 - **Registre** : liste filtrable (registre principal des stagiaires directs / registre des apprenants d'autres institutions), export CSV, situation financière calculée automatiquement à partir des paiements.
 - **Carte de stagiaire** : délivrée automatiquement dès que le stagiaire est en ordre avec les frais ; vérifiable publiquement à `/carte/<code>`.
 - **Jury** : liste des stagiaires autorisés (frais de jury réglés et lettre approuvée le cas échéant) et de ceux qui ne le sont pas encore, avec le motif.
 - Chaque paiement enregistre la référence de la preuve de paiement (bordereau **FN BANK**) et peut être annulé (conservé dans l'historique, jamais supprimé).
 
-Ce module est indépendant du catalogue de cours en ligne : un compte secrétaire n'a pas accès à l'espace formateur, et réciproquement.
+Ce module est indépendant de l'espace pédagogique : un compte secrétaire n'a pas accès à l'espace formateur, et réciproquement.
 
 ## Vitrine publique (visibilité sur Internet)
 
 Séparée de l'espace connecté, une vitrine accessible sans compte donne à l'INPP une présence sur le web :
 
-- **Accueil** (`/`) : présentation du fonctionnement hybride — présentiel obligatoire pour la formation, site pour s'informer, s'entraîner et passer l'examen.
+- **Accueil** (`/`) : présentation du fonctionnement — formation en présentiel à l'INPP Matadi, site pour s'informer, demander une inscription et réviser entre les séances.
 - **Filières** (`/filieres`), **À propos** (`/a-propos`), **FAQ** (`/faq`), **Contact** (`/contact`) : contenu public, à compléter (adresse, téléphone) avant mise en ligne réelle.
 - **Catalogue** (déjà existant) et **procédure d'inscription** restent accessibles depuis la vitrine.
 - **Référencement** : `robots.txt` et `sitemap.xml` générés automatiquement ; chaque page publique a sa propre balise `<meta name="description">`.
@@ -42,9 +42,13 @@ Le catalogue public fonctionne aussi comme un **planning de publicité des sessi
 - un visiteur peut ouvrir une session, créer son compte stagiaire et envoyer sa demande d'inscription directement au formateur ;
 - le formateur programme chaque session depuis *Modifier le cours* (dates, horaires, lieu, capacité et ouverture des inscriptions).
 
+## Ressources de révision
+
+Chaque formation peut proposer des **supports de révision, exercices pratiques, documents et liens utiles**. Le formateur les publie depuis *Gérer la formation → Ressources*. Un stagiaire validé les retrouve dans son espace *Ressources* et peut les consulter entre les séances en présentiel. Les fichiers sont stockés dans Supabase Storage lorsqu'il est configuré.
+
 ## Examen final (distinct des quiz de leçon)
 
-Un cours en ligne peut avoir, en plus des quiz de chaque leçon, un **examen final** unique, géré par le formateur depuis *Gérer le cours* :
+Une formation peut avoir, en plus des quiz de chaque leçon, un **examen final** unique, géré par le formateur depuis *Gérer le cours* :
 
 - **Configuration** : titre, durée (minutes), seuil de réussite, nombre de tentatives autorisées, créneau d'ouverture/fermeture optionnel (pour le faire coïncider avec une séance en salle), publication.
 - **Questions** : à choix multiple, comme les quiz de leçon ; ordre et réponses mélangés à chaque tentative.
@@ -78,4 +82,4 @@ Le serveur lancé par `python app.py` (ou `lancer.bat`) est un serveur de **dév
 
 ## Limites connues
 
-Pas de récupération de mot de passe par e-mail · pas de rôle administrateur (les formateurs supplémentaires se créent avec `manage.py`) · pas de paiement en ligne (suivi manuel des frais) · pas de vidéo hébergée · les fichiers téléversés localement nécessitent encore un stockage persistant (Supabase Storage recommandé) · le scanner caméra du pointage demande un navigateur récent avec accès à la caméra (Chrome, Firefox, Safari mobiles récents) — la saisie manuelle ou un lecteur QR physique restent disponibles en secours.
+Pas de récupération de mot de passe par e-mail · pas de rôle administrateur (les formateurs supplémentaires se créent avec `manage.py`) · pas de paiement en ligne (suivi manuel des frais) · pas de vidéo hébergée · les fichiers de ressources et images utilisent Supabase Storage lorsqu'il est configuré · le scanner caméra du pointage demande un navigateur récent avec accès à la caméra (Chrome, Firefox, Safari mobiles récents) — la saisie manuelle ou un lecteur QR physique restent disponibles en secours.
