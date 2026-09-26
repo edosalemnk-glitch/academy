@@ -483,7 +483,7 @@ def index():
         "cours": conn.execute("SELECT COUNT(*) FROM courses WHERE published=1").fetchone()[0],
         "stagiaires": conn.execute(
             "SELECT COUNT(*) FROM registrations WHERE card_code IS NOT NULL").fetchone()[0],
-        "certificats": conn.execute("SELECT COUNT(*) FROM certificates").fetchone()[0],
+        "attestations": conn.execute("SELECT COUNT(*) FROM certificates").fetchone()[0],
     }
     upcoming = conn.execute(
         "SELECT c.*, u.full_name AS trainer_name, "
@@ -1918,7 +1918,7 @@ def tracking_csv(course_id):
     buf = io.StringIO()
     w = csv.writer(buf, delimiter=";")
     w.writerow(["Stagiaire", "E-mail", "Frais", "Leçons validées", "Total leçons", "Progression %",
-                "Moyenne quiz %", "Dernière activité", "Certificat"])
+                "Moyenne quiz %", "Dernière activité", "Attestation de réussite"])
     for r in rows:
         w.writerow([r["u"]["full_name"], r["u"]["email"], FEE[r["u"]["fee_status"]], r["done"], r["total"],
                     r["pct"], r["avg"] if r["avg"] is not None else "", r["last"] or "",
