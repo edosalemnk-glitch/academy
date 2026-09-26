@@ -464,6 +464,14 @@ def _migrate_presence(conn):
 
 
 
+def _migrate_resource_modules_exam(conn):
+    """Ajoute les modules Word/Excel et la sélection d'exercices pour l'examen final."""
+    conn.execute("ALTER TABLE resources ADD COLUMN IF NOT EXISTS module TEXT NOT NULL DEFAULT 'general'")
+    conn.execute("ALTER TABLE resources ADD COLUMN IF NOT EXISTS exam_selected INTEGER NOT NULL DEFAULT 0")
+    conn.execute("ALTER TABLE resources ADD COLUMN IF NOT EXISTS exam_points INTEGER NOT NULL DEFAULT 10")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_resources_module_exam ON resources(course_id, module, exam_selected)")
+
+
 def _migrate_registration_section(conn):
     """Ajoute le rattachement des inscriptions aux sections introduit après le schéma initial."""
     conn.execute(
@@ -821,6 +829,7 @@ def init_db():
     _migrate_filiere_details(conn)
     _migrate_services_formateurs(conn)
     _migrate_registration_section(conn)
+    _migrate_resource_modules_exam(conn)
     _migrate_course_case_study(conn)
     _migrate_course_schedule(conn)
     _migrate_reference_resources(conn)
