@@ -7,7 +7,7 @@ FORMATEUR = ("Prof. Daniel Mbayo", "formateur@inpp.cd", "Formateur2026!")
 SECRETAIRE = ("Bibiche Kanyinda", "secretariat@inpp.cd", "Secretariat2026!")
 PWD_STAGIAIRE = "Stagiaire2026!"
 
-# Catalogue officiel des filières de l'INPP (Direction Provinciale de Kinshasa), par service :
+# Catalogue officiel des filières de l'INPP (Direction Provinciale de Matadi), par service :
 # nom de la filière -> (métier visé, durée en mois, frais matériel en $, payables une seule fois).
 # Source : fiche de renseignements INPP. La filière « Développement des Applications » (Informatique)
 # n'a pas de durée ni de frais matériel lisibles sur la fiche d'origine : elle n'est donc pas reprise ici.
@@ -125,8 +125,7 @@ CATALOGUE = {
         ("Bureautique Word", "", 1, 60),
         ("Bureautique Excel", "", 1, 60),
         ("PowerPoint", "", 1, 60),
-        ("Académie Cisco : IT Essentials", "IT Professionnel", 3, 70),
-        ("CCNA 1 : Notion sur réseaux", "Technicien en réseaux CISCO", 2, 90),
+                ("CCNA 1 : Notion sur réseaux", "Technicien en réseaux CISCO", 2, 90),
         ("CCNA 2 : Protocole et concept de routage", "Technicien en réseaux CISCO", 2, 90),
         ("CCNA 3 : Communication de réseau LAN et réseau sans fil — Accès au réseau étendu",
          "Technicien en réseaux CISCO", 2, 90),
@@ -148,7 +147,7 @@ STAGIAIRES = [
 # (question, [option_a, option_b, option_c, option_d], lettre_correcte, explication)
 SQL1 = {
     "title": "SQL – Niveau 1 : Fondamentaux",
-    "category": "Bases de données", "level": "Débutant", "fee": 0,
+    "category": "Bases de données", "level": "Débutant", "fee": 0, "published": 0,
     "description": ("Apprenez à interroger une base de données de zéro : SELECT, WHERE, tri, regroupements "
                     "et modification des données. Chaque leçon se termine par un quiz, et un terrain SQL "
                     "vous permet de vous entraîner sur une vraie base d'exemple."),
@@ -349,7 +348,7 @@ ORDER BY moyenne DESC;
 
 FICHIERS = {
     "title": "Bureautique – Gérer ses fichiers et dossiers",
-    "category": "Bureautique", "level": "Débutant", "fee": 0,
+    "category": "Bureautique", "level": "Débutant", "fee": 0, "published": 0,
     "description": "Les bases de l'organisation d'un ordinateur Windows : créer, renommer, copier et déplacer dossiers et fichiers.",
     "start_date": "2026-10-12", "end_date": "2026-11-06",
     "schedule": "Lundi–Vendredi · 08h30–12h30", "location": "INPP Matadi",
@@ -413,11 +412,11 @@ def _add_course(db, trainer_id, data):
     service_id = service["service_id"] if service else None
     cur = db.execute(
         "INSERT INTO courses (title, category, level, description, case_study, fee_amount, pass_mark, "
-        "start_date, end_date, schedule, location, seats, registration_open, service_id, trainer_id) "
-        "VALUES (?,?,?,?,?,?,?, ?,?,?,?,?,?,?,?)",
+        "start_date, end_date, schedule, location, seats, registration_open, published, service_id, trainer_id) "
+        "VALUES (?,?,?,?,?,?,?, ?,?,?,?,?,?,?,?,?)",
         (data["title"], data["category"], data["level"], data["description"], _default_case_study(data),
          data["fee"], 70, data.get("start_date"), data.get("end_date"), data.get("schedule", ""),
-         data.get("location", ""), data.get("seats", 0), data.get("registration_open", 1), service_id, trainer_id))
+         data.get("location", ""), data.get("seats", 0), data.get("registration_open", 1), data.get("published", 1), service_id, trainer_id))
     course_id = cur.lastrowid
     lesson_ids = []
     for pos, (title, content, questions) in enumerate(data["lessons"], start=1):
