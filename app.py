@@ -681,7 +681,7 @@ def catalogue():
     return render_template(
         "catalogue.html", courses=courses, enrollments=enrollments, q=q,
         category=category, level=level, status=status, month=month,
-        categories=categories, levels=levels, months=months,
+        categories=categories, levels=levels, months=months, services=services, service_id=service_id,
     )
 
 
@@ -692,7 +692,8 @@ def catalogue_pdf():
     level = request.args.get("level", "").strip()
     status = request.args.get("status", "a_venir").strip()
     month = request.args.get("month", "").strip()
-    sql = ("SELECT c.*, u.full_name AS trainer_name, "
+    service_id = request.args.get("service_id", type=int)
+    sql = ("SELECT c.*, u.full_name AS trainer_name, s.name AS service_name, "
            "(SELECT COUNT(*) FROM lessons l WHERE l.course_id=c.id) AS nb_lessons, "
            "(SELECT COUNT(*) FROM enrollments e WHERE e.course_id=c.id "
            "AND e.status IN ('pending','approved')) AS nb_reserved "
@@ -707,6 +708,9 @@ def catalogue_pdf():
     if level:
         sql += " AND c.level=?"
         params.append(level)
+    if service_id:
+        sql += " AND c.service_id=?"
+        params.append(service_id)
     courses = list(get_db().execute(sql + " ORDER BY c.start_date NULLS LAST, c.category, c.id", params).fetchall())
     for course in courses:
         course["schedule_state"] = course_schedule_state(course)
