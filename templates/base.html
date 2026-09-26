@@ -34,6 +34,7 @@
     {% else %}
       <a href="{{ url_for('catalogue') }}">Catalogue</a>
       <a href="{{ url_for('filieres_public') }}">Filières</a>
+      <a href="{{ url_for('offre_formations') }}">Formations INPP</a>
       <a href="{{ url_for('apropos') }}">À propos</a>
     {% endif %}
     {% if not g.user or g.user.role != 'secretaire' %}<a href="{{ url_for('procedure') }}">Frais &amp; inscription au centre</a>{% endif %}
@@ -62,6 +63,7 @@
     <nav class="row" style="gap:14px">
       <a href="{{ url_for('apropos') }}">À propos</a>
       <a href="{{ url_for('filieres_public') }}">Filières</a>
+      <a href="{{ url_for('offre_formations') }}">Formations INPP</a>
       <a href="{{ url_for('faq') }}">FAQ</a>
       <a href="{{ url_for('contact') }}">Contact</a>
     </nav>
