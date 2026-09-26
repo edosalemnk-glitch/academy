@@ -2541,21 +2541,30 @@ def sec_tariffs():
         elif action in ("service_add", "service_update"):
             name = f.get("name", "").strip()
             chef_id = f.get("chef_id", type=int)
-            chef = conn.execute("SELECT id FROM users WHERE id=? AND role='formateur'", (chef_id,)).fetchone() \
-                if chef_id else None
+            chef = conn.execute("SELECT id FROM users WHERE id=? AND role='formateur'", (chef_id,)).fetchone()                 if chef_id else None
             if len(name) < 2:
                 flash("Indiquez le nom du service (ex. Service Informatique).", "bad")
             else:
                 try:
                     if action == "service_add":
-                        conn.execute("INSERT INTO services (name, chef_id) VALUES (?,?)",
-                                     (name, chef["id"] if chef else None))
-                        flash("Service ajouté.", "ok")
+                        cur = conn.execute("INSERT INTO services (name, chef_id) VALUES (?,?)",
+                                           (name, chef["id"] if chef else None))
+                        service_id = cur.lastrowid
                     else:
+                        service_id = f.get("id", type=int)
                         conn.execute("UPDATE services SET name=?, chef_id=?, active=? WHERE id=?",
-                                     (name, chef["id"] if chef else None, 1 if f.get("active") else 0,
-                                      f.get("id", type=int)))
-                        flash("Service mis à jour.", "ok")
+                                     (name, chef["id"] if chef else None, 1 if f.get("active") else 0, service_id))
+                    selected = {int(x) for x in f.getlist("formateur_ids") if x.isdigit()}
+                    if chef:
+                        selected.add(chef["id"])
+                    conn.execute("DELETE FROM service_formateurs WHERE service_id=?", (service_id,))
+                    for trainer_id in selected:
+                        ok = conn.execute("SELECT 1 FROM users WHERE id=? AND role='formateur'",
+                                          (trainer_id,)).fetchone()
+                        if ok:
+                            conn.execute("INSERT INTO service_formateurs (service_id,user_id) VALUES (?,?)",
+                                         (service_id, trainer_id))
+                    flash("Service et équipe de formateurs mis à jour.", "ok")
                 except Exception:
                     flash("Un service porte déjà ce nom.", "bad")
         conn.commit()
@@ -2568,8 +2577,15 @@ def sec_tariffs():
         "(SELECT COUNT(*) FROM filieres f WHERE f.service_id=sv.id) AS nb_filieres FROM services sv "
         "LEFT JOIN users u ON u.id=sv.chef_id ORDER BY sv.name").fetchall()
     formateurs = conn.execute("SELECT id, full_name FROM users WHERE role='formateur' ORDER BY full_name").fetchall()
+    service_formateurs = {}
+    for sv in services:
+        service_formateurs[sv["id"]] = {
+            r["user_id"] for r in conn.execute(
+                "SELECT user_id FROM service_formateurs WHERE service_id=?", (sv["id"],)
+            ).fetchall()
+        }
     return render_template("secretariat/tariffs.html", cfg=get_settings(), filieres=filieres, services=services,
-                           formateurs=formateurs)
+                           formateurs=formateurs, service_formateurs=service_formateurs)
 
 
 # ------------------------------------------------------------------ erreurs
