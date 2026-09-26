@@ -172,6 +172,12 @@ CREATE TABLE IF NOT EXISTS courses (
     currency TEXT NOT NULL DEFAULT 'USD',
     pass_mark INTEGER NOT NULL DEFAULT 70,
     published INTEGER NOT NULL DEFAULT 1,
+    start_date TEXT,
+    end_date TEXT,
+    schedule TEXT NOT NULL DEFAULT '',
+    location TEXT NOT NULL DEFAULT '',
+    seats INTEGER NOT NULL DEFAULT 0,
+    registration_open INTEGER NOT NULL DEFAULT 1,
     trainer_id INTEGER NOT NULL REFERENCES users(id),
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -469,6 +475,16 @@ def _migrate_course_case_study(conn):
     )
 
 
+def _migrate_course_schedule(conn):
+    """Ajoute les informations de programmation des formations visibles par le public."""
+    conn.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS start_date TEXT")
+    conn.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS end_date TEXT")
+    conn.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS schedule TEXT NOT NULL DEFAULT ''")
+    conn.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS location TEXT NOT NULL DEFAULT ''")
+    conn.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS seats INTEGER NOT NULL DEFAULT 0")
+    conn.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS registration_open INTEGER NOT NULL DEFAULT 1")
+
+
 def _migrate_bank_settings(conn):
     """Conservée pour compatibilité avec les anciennes versions du schéma."""
     return
@@ -524,6 +540,7 @@ def init_db():
     _migrate_filiere_details(conn)
     _migrate_registration_section(conn)
     _migrate_course_case_study(conn)
+    _migrate_course_schedule(conn)
     _migrate_bank_settings(conn)
     conn.executemany("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", DEFAULT_SETTINGS.items())
     _migrate_reference_catalogue(conn)
