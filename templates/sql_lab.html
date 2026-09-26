@@ -1,10 +1,10 @@
 {% extends "base.html" %}{% block title %}Terrain SQL{% endblock %}
 {% block content %}
-<h1>Terrain SQL</h1>
+<div class="crumbs"><a href="{{ url_for('learn', course_id=course.id) }}">{{ course.title }}</a> / Terrain SQL</div><h1>Terrain SQL · {{ course.title }}</h1>
 <p class="meta">Entraînez-vous sur une base d'exemple. Lecture seule : seules les requêtes SELECT sont acceptées, vous ne pouvez rien casser. Une requête à la fois.</p>
 <div class="lab">
   <div>
-    <form method="post">{{ csrf_field() }}
+    <form method="post" action="{{ url_for('sql_lab', course_id=course.id) }}">{{ csrf_field() }}
       <input type="hidden" name="challenge" value="{{ challenge_id or '' }}">
       {% if challenge_id %}{% for c in challenges if c.id == challenge_id %}<div class="flash info"><strong>Défi {{ c.id }} : {{ c.title }}.</strong> {{ c.text }}</div>{% endfor %}{% endif %}
       <label for="sql">Votre requête</label>
@@ -23,7 +23,7 @@
     <h2 style="margin-top:28px">Défis</h2>
     <p class="meta">Choisissez un défi : la plateforme compare votre résultat à celui attendu.</p>
     <div class="row">
-    {% for c in challenges %}<a class="btn alt small" href="{{ url_for('sql_lab', defi=c.id) }}">Défi {{ c.id }} : {{ c.title }}</a>{% endfor %}
+    {% for c in challenges %}<a class="btn alt small" href="{{ url_for('sql_lab', course_id=course.id, defi=c.id) }}">Défi {{ c.id }} : {{ c.title }}</a>{% endfor %}
     </div>
   </div>
   <aside class="card">
