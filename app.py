@@ -446,14 +446,32 @@ def apropos():
     return render_template("apropos.html")
 
 
-@app.route("/filieres")
-def filieres_public():
+def public_catalogue():
+    """Retourne les lignes de la fiche de renseignements, dans l'ordre du catalogue."""
     rows = get_db().execute(
         "SELECT f.*, s.name AS service_name, "
         "(SELECT COUNT(*) FROM registrations r WHERE r.filiere_id=f.id) AS nb_stagiaires "
-        "FROM filieres f LEFT JOIN services s ON s.id=f.service_id WHERE f.active=1 ORDER BY f.name"
+        "FROM filieres f LEFT JOIN services s ON s.id=f.service_id "
+        "WHERE f.active=1 ORDER BY f.id"
     ).fetchall()
-    return render_template("filieres_public.html", filieres=rows)
+    groups = []
+    by_service = {}
+    for row in rows:
+        service_name = row["service_name"] or "Service non précisé"
+        if service_name not in by_service:
+            group = {"name": service_name, "rows": []}
+            by_service[service_name] = group
+            groups.append(group)
+        by_service[service_name]["rows"].append(row)
+    return rows, groups
+
+
+@app.route("/filieres")
+def filieres_public():
+    rows, groups = public_catalogue()
+    return render_template("filieres_public.html", filieres=rows, groups=groups)
+
+
 
 
 @app.route("/faq")
@@ -1803,8 +1821,8 @@ def section_notice_decide(sid, nid):
 
 @app.route("/procedure-inscription")
 def procedure():
-    filieres = get_db().execute("SELECT * FROM filieres WHERE active=1 ORDER BY name").fetchall()
-    return render_template("procedure.html", cfg=get_settings(), filieres=filieres)
+    filieres, groups = public_catalogue()
+    return render_template("procedure.html", cfg=get_settings(), filieres=filieres, groups=groups)
 
 
 @app.route("/carte/<code>")
