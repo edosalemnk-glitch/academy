@@ -6,7 +6,7 @@
 <meta name="description" content="{% block meta_description %}INPP Matadi : formations de l'Institut National de Préparation Professionnelle. Filières, inscription au centre et ressources de révision pour les stagiaires.{% endblock %}">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
 <body><header class="topbar noprint"><div class="wrap">
-<a class="brand" href="{{ url_for('index') }}"><img class="brand-logo" src="https://qyxzdmruhxmltrrmmvyj.supabase.co/storage/v1/object/public/inpp-uploads/branding/inpp-catalogue.jpg" alt="INPP">INPP Matadi</a><nav>
+<a class="brand" href="{{ url_for('index') }}"><img class="brand-logo" src="https://qyxzdmruhxmltrrmmvyj.supabase.co/storage/v1/object/public/inpp-uploads/branding/inpp-catalogue.jpg?v=20260926" alt="INPP">INPP Matadi</a><nav>
 {% if g.user and g.user.role == 'formateur' %}<a href="{{ url_for('trainer_dashboard') }}">Tableau de bord{% if pending_total %}<span class="badge">{{ pending_total }}</span>{% endif %}</a><a href="{{ url_for('sections_list') }}">Présences</a><a href="{{ url_for('learners') }}">Stagiaires</a><a href="{{ url_for('catalogue') }}">Catalogue</a>
 {% elif g.user and g.user.role == 'secretaire' %}<a href="{{ url_for('sec_dashboard') }}">Secrétariat</a><a href="{{ url_for('sec_programming') }}">Programmation</a><a href="{{ url_for('sec_new') }}">Inscription</a><a href="{{ url_for('sec_registry') }}">Registre</a><a href="{{ url_for('sec_jury') }}">Jury</a><a href="{{ url_for('sec_tariffs') }}">Frais &amp; filières</a>
 {% elif g.user %}<a href="{{ url_for('my_courses') }}">Mes formations</a><a href="{{ url_for('catalogue') }}">Formations</a><a href="{{ url_for('my_resources') }}">Ressources</a>
