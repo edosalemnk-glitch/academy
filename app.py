@@ -2477,7 +2477,8 @@ def _pdf_logo(canvas, doc):
     canvas.setFillColor(light)
     canvas.rect(0, height - 34*mm, width, 34*mm, fill=1, stroke=0)
     # Emblème officiel stocké dans Supabase Storage.
-    logo_base = SUPABASE_URL or "https://qyxzdmruhxmltrrmmvyj.supabase.co"\n    logo_url = f"{logo_base}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/branding/inpp-catalogue.jpg"
+    logo_base = SUPABASE_URL or "https://qyxzdmruhxmltrrmmvyj.supabase.co"
+    logo_url = f"{logo_base}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/branding/inpp-catalogue.jpg"
     try:
         with urllib.request.urlopen(logo_url, timeout=4) as resp:
             logo_bytes = resp.read()
