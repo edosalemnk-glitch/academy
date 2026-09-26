@@ -1,5 +1,5 @@
-{% extends "base.html" %}{% block title %}{{ course.title }} | Formation INPP Académie{% endblock %}
-{% block meta_description %}Découvrez la session programmée {{ course.title }} : dates, lieu, horaires, programme et inscription à l'INPP Académie.{% endblock %}
+{% extends "base.html" %}{% block title %}{{ course.title }} | Formation INPP Matadi{% endblock %}
+{% block meta_description %}Découvrez la session programmée {{ course.title }} : dates, lieu, horaires, programme et inscription à l'INPP Matadi.{% endblock %}
 {% block content %}
 <div class="crumbs"><a href="{{ url_for('catalogue') }}">Formations programmées</a> / {{ course.category }}</div>
 <div class="row between" style="align-items:flex-start">
@@ -7,7 +7,7 @@
     <div class="row"><span class="tag">{{ course.service_name or 'Service à préciser' }}</span><span class="tag">{{ course.category }}</span><span class="tag {{ 'ok' if schedule_state == 'a_venir' else ('warn' if schedule_state == 'en_cours' else '') }}">{{ schedule_label }}</span></div>
     <h1 style="margin-top:8px">{{ course.title }}</h1>
     <p class="meta">{{ course.level }} · Formateur : {{ course.trainer_name }} · {% if course.fee_amount %}{{ '%g'|format(course.fee_amount) }} {{ course.currency }}{% else %}Gratuit{% endif %}</p>
-    <p style="max-width:65ch">{{ course.description }}</p>
+    <p style="max-width:65ch">{{ course.description }}</p><p><span class="tag ok">FORMATION EN PRÉSENTIEL À L'INPP MATADI</span></p>
     <div class="schedule-panel">
       <div><strong>Dates</strong><span>{% if course.start_date %}{{ course.start_date[:10] }}{% if course.end_date %} → {{ course.end_date[:10] }}{% endif %}{% else %}À confirmer{% endif %}</span></div>
       <div><strong>Horaire</strong><span>{{ course.schedule or 'À confirmer' }}</span></div>
@@ -41,6 +41,7 @@
   </div>
 </div>
 
+<div class="card" style="margin:20px 0"><h2>Accompagnement pédagogique</h2><p>La formation est dispensée au centre. Le site sert à consulter les informations, préparer son inscription et, pour les stagiaires validés, réviser entre les séances grâce aux supports et exercices.</p>{% if resource_count %}<a class="btn alt small" href="{{ url_for('course_resources', course_id=course.id) }}">Voir les ressources de révision</a>{% endif %}</div>
 {% if course.case_study %}
 <div class="card" style="margin:20px 0"><h2>Mission professionnelle</h2><p>{{ course.case_study }}</p></div>
 {% endif %}
