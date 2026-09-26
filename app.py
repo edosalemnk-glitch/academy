@@ -1137,7 +1137,7 @@ def lesson_image_proxy(name):
     try:
         body = _storage_request(
             "GET",
-            f"object/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe="")}/{urllib.parse.quote(name, safe="")}",
+            f"object/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe='')}/{urllib.parse.quote(name, safe='')}",
         )
     except RuntimeError:
         app.logger.exception("Impossible de récupérer l’image Supabase %s", name)
