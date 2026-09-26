@@ -407,10 +407,12 @@ def _default_case_study(data):
 
 def _add_course(db, trainer_id, data):
     cur = db.execute(
-        "INSERT INTO courses (title, category, level, description, case_study, fee_amount, pass_mark, trainer_id) "
-        "VALUES (?,?,?,?,?,70,?)",
+        "INSERT INTO courses (title, category, level, description, case_study, fee_amount, pass_mark, "
+        "start_date, end_date, schedule, location, seats, registration_open, trainer_id) "
+        "VALUES (?,?,?,?,?,?,?, ?,?,?,?,?,?,?)",
         (data["title"], data["category"], data["level"], data["description"], _default_case_study(data),
-         data["fee"], trainer_id))
+         data["fee"], 70, data.get("start_date"), data.get("end_date"), data.get("schedule", ""),
+         data.get("location", ""), data.get("seats", 0), data.get("registration_open", 1), trainer_id))
     course_id = cur.lastrowid
     lesson_ids = []
     for pos, (title, content, questions) in enumerate(data["lessons"], start=1):
@@ -421,7 +423,6 @@ def _add_course(db, trainer_id, data):
             db.execute("INSERT INTO questions (lesson_id, text, option_a, option_b, option_c, option_d, correct, explanation) "
                        "VALUES (?,?,?,?,?,?,?,?)", (lid, text, *opts, correct, expl))
     return course_id, lesson_ids
-
 
 
 def restore_demo(db):
