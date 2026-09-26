@@ -406,13 +406,18 @@ def _default_case_study(data):
 
 
 def _add_course(db, trainer_id, data):
+    service = db.execute(
+        "SELECT service_id FROM service_formateurs WHERE user_id=? ORDER BY service_id LIMIT 1",
+        (trainer_id,)
+    ).fetchone()
+    service_id = service["service_id"] if service else None
     cur = db.execute(
         "INSERT INTO courses (title, category, level, description, case_study, fee_amount, pass_mark, "
-        "start_date, end_date, schedule, location, seats, registration_open, trainer_id) "
-        "VALUES (?,?,?,?,?,?,?, ?,?,?,?,?,?,?)",
+        "start_date, end_date, schedule, location, seats, registration_open, service_id, trainer_id) "
+        "VALUES (?,?,?,?,?,?,?, ?,?,?,?,?,?,?,?)",
         (data["title"], data["category"], data["level"], data["description"], _default_case_study(data),
          data["fee"], 70, data.get("start_date"), data.get("end_date"), data.get("schedule", ""),
-         data.get("location", ""), data.get("seats", 0), data.get("registration_open", 1), trainer_id))
+         data.get("location", ""), data.get("seats", 0), data.get("registration_open", 1), service_id, trainer_id))
     course_id = cur.lastrowid
     lesson_ids = []
     for pos, (title, content, questions) in enumerate(data["lessons"], start=1):
