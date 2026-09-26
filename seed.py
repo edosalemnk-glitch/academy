@@ -147,7 +147,7 @@ STAGIAIRES = [
 # (question, [option_a, option_b, option_c, option_d], lettre_correcte, explication)
 SQL1 = {
     "title": "SQL – Niveau 1 : Fondamentaux",
-    "category": "Bases de données", "level": "Débutant", "fee": 0, "published": 0,
+    "category": "Bases de données", "level": "Débutant", "fee": 60000, "currency": "CDF", "published": 1,
     "description": ("Apprenez à interroger une base de données de zéro : SELECT, WHERE, tri, regroupements "
                     "et modification des données. Chaque leçon se termine par un quiz, et un terrain SQL "
                     "vous permet de vous entraîner sur une vraie base d'exemple."),
@@ -266,7 +266,7 @@ Le Terrain SQL de la plateforme est en lecture seule : vous ne pouvez pas casser
 
 SQL2 = {
     "title": "SQL – Niveau 2 : Jointures et analyses",
-    "category": "Bases de données", "level": "Intermédiaire", "fee": 30,
+    "category": "Bases de données", "level": "Intermédiaire", "fee": 120000, "currency": "CDF",
     "description": ("Relier plusieurs tables, gérer les valeurs absentes et écrire des requêtes d'analyse. "
                     "Ce cours suppose que vous maîtrisez SELECT, WHERE et GROUP BY (Niveau 1)."),
     "lessons": [
@@ -348,7 +348,7 @@ ORDER BY moyenne DESC;
 
 FICHIERS = {
     "title": "Bureautique – Gérer ses fichiers et dossiers",
-    "category": "Bureautique", "level": "Débutant", "fee": 0, "published": 0,
+    "category": "Bureautique", "level": "Débutant", "fee": 60000, "currency": "CDF", "published": 1,
     "description": "Les bases de l'organisation d'un ordinateur Windows : créer, renommer, copier et déplacer dossiers et fichiers.",
     "start_date": "2026-10-12", "end_date": "2026-11-06",
     "schedule": "Lundi–Vendredi · 08h30–12h30", "location": "INPP Matadi",
@@ -411,11 +411,11 @@ def _add_course(db, trainer_id, data):
     ).fetchone()
     service_id = service["service_id"] if service else None
     cur = db.execute(
-        "INSERT INTO courses (title, category, level, description, case_study, fee_amount, pass_mark, "
+        "INSERT INTO courses (title, category, level, description, case_study, fee_amount, currency, pass_mark, "
         "start_date, end_date, schedule, location, seats, registration_open, published, service_id, trainer_id) "
-        "VALUES (?,?,?,?,?,?,?, ?,?,?,?,?,?,?,?,?)",
+        "VALUES (?,?,?,?,?,?,?, ?,?,?,?,?,?,?,?,?,?)",
         (data["title"], data["category"], data["level"], data["description"], _default_case_study(data),
-         data["fee"], 70, data.get("start_date"), data.get("end_date"), data.get("schedule", ""),
+         data["fee"], data.get("currency", "USD"), 70, data.get("start_date"), data.get("end_date"), data.get("schedule", ""),
          data.get("location", ""), data.get("seats", 0), data.get("registration_open", 1), data.get("published", 1), service_id, trainer_id))
     course_id = cur.lastrowid
     lesson_ids = []
@@ -804,6 +804,39 @@ def seed(db):
     c1, l1 = _add_course(db, fid, SQL1)
     c2, l2 = _add_course(db, fid, SQL2)
     c3, l3 = _add_course(db, fid, FICHIERS)
+
+    # Catalogue public de référence : 10 formations supplémentaires réparties dans les services INPP.
+    # Les frais pédagogiques suivent la fiche : 60 000 FC par mois ; le matériel reste séparé.
+    reference_catalogue = [
+        (385, "2026-10-05"), (395, "2026-10-12"), (398, "2026-10-19"), (400, "2026-10-26"),
+        (404, "2026-11-02"), (414, "2026-11-09"), (418, "2026-11-16"), (449, "2026-11-23"),
+        (444, "2026-11-30"), (445, "2026-12-07"),
+    ]
+    for filiere_id, start_date in reference_catalogue:
+        filiere = db.execute("SELECT * FROM filieres WHERE id=?", (filiere_id,)).fetchone()
+        if not filiere:
+            continue
+        end_date = db.execute(
+            "SELECT (CAST(? AS DATE) + (? || ' months')::interval - interval '1 day')::date",
+            (start_date, filiere["duration_months"]),
+        ).fetchone()[0]
+        existing = db.execute(
+            "SELECT id FROM courses WHERE title=? AND service_id=?",
+            (filiere["name"], filiere["service_id"]),
+        ).fetchone()
+        if existing:
+            continue
+        db.execute(
+            "INSERT INTO courses (title, category, level, description, fee_amount, currency, pass_mark, published, "
+            "trainer_id, start_date, end_date, schedule, location, seats, registration_open, service_id) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (filiere["name"], "Formation professionnelle", "Débutant",
+             "Formation professionnelle en présentiel à l'INPP Matadi. "
+             "Frais pédagogiques : 60 000 FC par mois. "
+             f"Matériel : {filiere['material_fee']:g} USD, payé une fois selon la fiche de renseignements.",
+             filiere["duration_months"] * 60000, "CDF", 70, 1, fid, start_date, str(end_date),
+             "Lundi–Vendredi · 08h30–12h30", "INPP Matadi", 30, 1, filiere["service_id"]),
+        )
 
     # Examen final de démonstration sur SQL Niveau 2 : publié, sans créneau fixé (ouvert dès maintenant),
     # 2 tentatives, 20 minutes. Sur ce cours, seuls stagiaire01 et stagiaire02 sont inscrits (voir plus bas).
