@@ -30,23 +30,22 @@
     <tbody>
     {% for f in filieres %}
       <tr>
-        <form method="post">
-          {{ csrf_field() }}
-          <input type="hidden" name="action" value="filiere_update">
-          <input type="hidden" name="id" value="{{ f.id }}">
-          <td>
-            <select name="service_id" style="min-width:180px">
-              <option value="">Aucun</option>
-              {% for sv in services %}<option value="{{ sv.id }}" {{ 'selected' if f.service_id == sv.id }}>{{ sv.name }}</option>{% endfor %}
-            </select>
-          </td>
-          <td><input name="name" value="{{ f.name }}" required style="min-width:220px"></td>
-          <td><input name="metier" value="{{ f.metier }}" style="min-width:220px"></td>
-          <td><input name="duration_months" type="number" min="1" value="{{ f.duration_months or 1 }}" required style="width:90px"></td>
-          <td><input name="material_fee" type="number" min="0" step="1" value="{{ f.material_fee }}" required style="width:95px"></td>
-          <td style="text-align:center"><input type="checkbox" name="active" value="1" {{ 'checked' if f.active }} aria-label="Filière active"></td>
-          <td><button class="btn small">Enregistrer</button></td>
-        </form>
+        <td>
+          <form id="edit-filiere-{{ f.id }}" method="post"></form>
+          {{ csrf_field()|replace('<input ', '<input form="edit-filiere-' ~ f.id ~ '" ') }}
+          <input form="edit-filiere-{{ f.id }}" type="hidden" name="action" value="filiere_update">
+          <input form="edit-filiere-{{ f.id }}" type="hidden" name="id" value="{{ f.id }}">
+          <select form="edit-filiere-{{ f.id }}" name="service_id" style="min-width:180px">
+            <option value="">Aucun</option>
+            {% for sv in services %}<option value="{{ sv.id }}" {{ 'selected' if f.service_id == sv.id }}>{{ sv.name }}</option>{% endfor %}
+          </select>
+        </td>
+        <td><input form="edit-filiere-{{ f.id }}" name="name" value="{{ f.name }}" required style="min-width:220px"></td>
+        <td><input form="edit-filiere-{{ f.id }}" name="metier" value="{{ f.metier }}" style="min-width:220px"></td>
+        <td><input form="edit-filiere-{{ f.id }}" name="duration_months" type="number" min="1" value="{{ f.duration_months or 1 }}" required style="width:90px"></td>
+        <td><input form="edit-filiere-{{ f.id }}" name="material_fee" type="number" min="0" step="1" value="{{ f.material_fee }}" required style="width:95px"></td>
+        <td style="text-align:center"><input form="edit-filiere-{{ f.id }}" type="checkbox" name="active" value="1" {{ 'checked' if f.active }} aria-label="Filière active"></td>
+        <td><button form="edit-filiere-{{ f.id }}" class="btn small">Enregistrer</button></td>
       </tr>
     {% else %}<tr><td colspan="7">Aucune filière.</td></tr>{% endfor %}
     </tbody>
@@ -73,14 +72,17 @@
   <div class="scroll"><table style="min-width:720px"><thead><tr><th>Service</th><th>Chef</th><th>Filières</th><th>Actif</th><th>Enregistrer</th></tr></thead><tbody>
   {% for sv in services %}
   <tr>
-    <form method="post">
-      {{ csrf_field() }}<input type="hidden" name="action" value="service_update"><input type="hidden" name="id" value="{{ sv.id }}">
-      <td><input name="name" value="{{ sv.name }}" required style="min-width:220px"></td>
-      <td><select name="chef_id"><option value="">À désigner</option>{% for u in formateurs %}<option value="{{ u.id }}" {{ 'selected' if sv.chef_id == u.id }}>{{ u.full_name }}</option>{% endfor %}</select></td>
-      <td>{{ sv.nb_filieres }}</td>
-      <td style="text-align:center"><input type="checkbox" name="active" value="1" {{ 'checked' if sv.active }}></td>
-      <td><button class="btn small">Enregistrer</button></td>
-    </form>
+    <td>
+      <form id="edit-service-{{ sv.id }}" method="post"></form>
+      {{ csrf_field()|replace('<input ', '<input form="edit-service-' ~ sv.id ~ '" ') }}
+      <input form="edit-service-{{ sv.id }}" type="hidden" name="action" value="service_update">
+      <input form="edit-service-{{ sv.id }}" type="hidden" name="id" value="{{ sv.id }}">
+      <input form="edit-service-{{ sv.id }}" name="name" value="{{ sv.name }}" required style="min-width:220px">
+    </td>
+    <td><select form="edit-service-{{ sv.id }}" name="chef_id"><option value="">À désigner</option>{% for u in formateurs %}<option value="{{ u.id }}" {{ 'selected' if sv.chef_id == u.id }}>{{ u.full_name }}</option>{% endfor %}</select></td>
+    <td>{{ sv.nb_filieres }}</td>
+    <td style="text-align:center"><input form="edit-service-{{ sv.id }}" type="checkbox" name="active" value="1" {{ 'checked' if sv.active }}></td>
+    <td><button form="edit-service-{{ sv.id }}" class="btn small">Enregistrer</button></td>
   </tr>
   {% else %}<tr><td colspan="5">Aucun service pour le moment.</td></tr>{% endfor %}
   </tbody></table></div>
