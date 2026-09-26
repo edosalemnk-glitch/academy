@@ -1,9 +1,9 @@
 """Règles de frais et d'inscription du centre (secrétariat / réception).
 
-Frais (source : projet.md)
-  - Inscription : 40 000 Fc, obligatoire
-  - Matériel    : 40 $, 50 $ ou 80 $ selon la filière
-  - Formation   : 50 000 Fc par mois
+Frais généraux : valeurs initiales issues de la fiche de renseignements INPP ; les montants réellement appliqués sont lus depuis `settings` et les fichières depuis `filieres`.
+  - Inscription : 58 000 Fc, obligatoire
+  - Matériel    : variable selon la filière
+  - Formation   : 60 000 Fc par mois
   - Jury        : 25 000 Fc, obligatoire avant de passer le jury
 
 Types de stagiaires
