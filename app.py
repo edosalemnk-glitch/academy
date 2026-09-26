@@ -552,6 +552,50 @@ def filieres_public():
     return render_template("filieres_public.html", filieres=rows, groups=groups)
 
 
+@app.route("/services")
+def services_public():
+    conn = get_db()
+    services = conn.execute(
+        "SELECT s.*, u.full_name AS chef_name, "
+        "(SELECT COUNT(*) FROM filieres f WHERE f.service_id=s.id AND f.active=1) AS nb_filieres, "
+        "(SELECT COUNT(*) FROM service_formateurs sf WHERE sf.service_id=s.id) AS nb_formateurs, "
+        "(SELECT COUNT(*) FROM courses c WHERE c.service_id=s.id AND c.published=1) AS nb_cours "
+        "FROM services s LEFT JOIN users u ON u.id=s.chef_id "
+        "WHERE s.active=1 ORDER BY s.name"
+    ).fetchall()
+    return render_template("services_public.html", services=services)
+
+
+@app.route("/services/<int:service_id>")
+def service_public(service_id):
+    conn = get_db()
+    service = conn.execute(
+        "SELECT s.*, u.full_name AS chef_name FROM services s "
+        "LEFT JOIN users u ON u.id=s.chef_id WHERE s.id=? AND s.active=1", (service_id,)
+    ).fetchone()
+    if not service:
+        abort(404)
+    filieres = conn.execute(
+        "SELECT * FROM filieres WHERE service_id=? AND active=1 ORDER BY name", (service_id,)
+    ).fetchall()
+    formateurs = conn.execute(
+        "SELECT u.id, u.full_name FROM service_formateurs sf JOIN users u ON u.id=sf.user_id "
+        "WHERE sf.service_id=? AND u.role='formateur' ORDER BY u.full_name", (service_id,)
+    ).fetchall()
+    courses = conn.execute(
+        "SELECT c.*, u.full_name AS trainer_name, "
+        "(SELECT COUNT(*) FROM enrollments e WHERE e.course_id=c.id AND e.status IN ('pending','approved')) AS nb_reserved "
+        "FROM courses c JOIN users u ON u.id=c.trainer_id "
+        "WHERE c.service_id=? AND c.published=1 ORDER BY c.start_date NULLS LAST, c.title", (service_id,)
+    ).fetchall()
+    for course in courses:
+        course["schedule_state"] = course_schedule_state(course)
+        course["schedule_label"] = course_schedule_label(course)
+        course["registration_available"] = course_registration_capacity(course)
+    return render_template("service_public.html", service=service, filieres=filieres,
+                           formateurs=formateurs, courses=courses)
+
+
 @app.route("/faq")
 def faq():
     return render_template("faq.html")
