@@ -20,6 +20,7 @@
   <td><span class="tag">{{ resource_kinds.get(r.kind, 'Ressource') }}</span></td>
   <td><a href="{{ url_for('resource_view', resource_id=r.id) }}">{{ r.title }}</a></td>
   <td>{% if r.file_name %}{{ r.file_name }}{% elif r.url %}Lien externe{% elif r.content %}Texte{% endif %}</td>
+  <td><span class="tag">{{ r.module|upper }}</span></td>
   <td>{% if r.kind == 'exercice' %}<span class="tag {{ 'ok' if r.exam_selected else '' }}">{{ 'Dans l’examen' if r.exam_selected else 'Non sélectionné' }}</span><form method="post" action="{{ url_for('resource_toggle_exam', resource_id=r.id) }}">{{ csrf_field() }}<button class="btn alt small">{{ 'Retirer' if r.exam_selected else 'Ajouter à l’examen' }}</button></form>{% else %}—{% endif %}</td>
   <td><span class="tag {{ 'ok' if r.published else 'warn' }}">{{ 'Publiée' if r.published else 'Masquée' }}</span></td>
   <td><div class="row" style="gap:6px">
