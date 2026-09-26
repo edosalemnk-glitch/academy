@@ -1,6 +1,6 @@
-{% extends "base.html" %}{% block title %}{{ 'Modifier le cours' if course else 'Nouveau cours' }}{% endblock %}
+{% extends "base.html" %}{% block title %}{{ 'Modifier la formation' if course else 'Nouvelle formation' }}{% endblock %}
 {% block content %}
-<h1>{{ 'Modifier le cours' if course else 'Nouveau cours' }}</h1>
+<h1>{{ 'Modifier la formation' if course else 'Nouvelle formation' }}</h1>
 {% set v = request.form if request.method == 'POST' else (course|todict) %}
 <form method="post" class="card form wide">{{ csrf_field() }}
   <label for="t">Titre</label><input id="t" type="text" name="title" required value="{{ v.get('title', '') }}">
@@ -30,7 +30,7 @@
   </div>
   <div class="row" style="align-items:flex-start">
     <div style="flex:1;min-width:260px"><label for="sc">Horaire</label><input id="sc" type="text" name="schedule" value="{{ v.get('schedule', '') }}" placeholder="Lundi–Vendredi · 08h30–12h30"></div>
-    <div style="flex:1;min-width:260px"><label for="loc">Lieu</label><input id="loc" type="text" name="location" value="{{ v.get('location', '') }}" placeholder="INPP Kinshasa-Limete"></div>
+    <div style="flex:1;min-width:260px"><label for="loc">Lieu</label><input id="loc" type="text" name="location" value="{{ v.get('location', '') }}" placeholder="INPP Matadi"></div>
     <div style="flex:0 1 180px"><label for="seats">Places</label><input id="seats" type="number" name="seats" min="0" value="{{ v.get('seats', 0) }}"><p class="hint">0 = capacité non limitée</p></div>
   </div>
   <label class="opt"><input type="checkbox" name="registration_open" value="1" {{ 'checked' if (not course and request.method != 'POST') or v.get('registration_open', 1) }}><span>Inscriptions ouvertes pour cette session</span></label>
