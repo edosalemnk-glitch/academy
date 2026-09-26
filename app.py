@@ -1135,19 +1135,34 @@ def lesson_image_url(name):
 @app.route("/media/lecon/<path:name>")
 @login_required
 def lesson_image_proxy(name):
-    """Diffuse une image du bucket privé sans exposer la clé service-role."""
+    """Diffuse une image privée via une URL signée temporaire, sans exposer la clé service-role."""
     if not str(name).startswith("lessons/") or not _storage_enabled():
         abort(404)
     try:
-        body = _storage_request(
-            "GET",
-            f"object/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe='')}/{urllib.parse.quote(name, safe='')}",
+        raw = _storage_request(
+            "POST",
+            f"object/sign/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe='')}/{urllib.parse.quote(name, safe='')}",
+            body=json.dumps({"expiresIn": SUPABASE_STORAGE_SIGNED_TTL}),
+            content_type="application/json",
         )
-    except RuntimeError:
+        data = json.loads(raw.decode("utf-8"))
+        signed = data.get("signedURL") or data.get("signedUrl")
+        if not signed:
+            raise RuntimeError("URL signée absente de la réponse Supabase.")
+        if not signed.startswith("http"):
+            signed = f"{SUPABASE_URL}/storage/v1{signed if signed.startswith('/') else '/' + signed}"
+        req = urllib.request.Request(
+            signed,
+            headers={"Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}"},
+            method="GET",
+        )
+        with urllib.request.urlopen(req, timeout=20) as response:
+            body = response.read()
+            mime = response.headers.get_content_type() or mimetypes.guess_type(name)[0] or "application/octet-stream"
+        return Response(body, mimetype=mime)
+    except (RuntimeError, ValueError, json.JSONDecodeError, urllib.error.URLError):
         app.logger.exception("Impossible de récupérer l’image Supabase %s", name)
         abort(404)
-    mime = mimetypes.guess_type(name)[0] or "application/octet-stream"
-    return Response(body, mimetype=mime)
 
 app.jinja_env.globals["lesson_image_url"] = lesson_image_url
 
