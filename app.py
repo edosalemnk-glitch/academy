@@ -702,6 +702,11 @@ def catalogue():
             "SELECT start_date FROM courses WHERE published=1 AND start_date IS NOT NULL ORDER BY start_date"
         ).fetchall()
     })
+    service_groups = []
+    for service in services:
+        service_courses = [c for c in courses if c["service_id"] == service["id"]]
+        if service_courses:
+            service_groups.append({"id": service["id"], "name": service["name"], "courses": service_courses})
     enrollments = {}
     if g.user:
         enrollments = {r["course_id"]: r for r in get_db().execute(
@@ -710,6 +715,7 @@ def catalogue():
         "catalogue.html", courses=courses, enrollments=enrollments, q=q,
         category=category, level=level, status=status, month=month,
         categories=categories, levels=levels, months=months, services=services, service_id=service_id,
+        service_groups=service_groups,
     )
 
 
