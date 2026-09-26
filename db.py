@@ -310,6 +310,14 @@ CREATE TABLE IF NOT EXISTS services (
     active INTEGER NOT NULL DEFAULT 1
 );
 
+CREATE TABLE IF NOT EXISTS service_formateurs (
+    service_id INTEGER NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (service_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_service_formateurs_user ON service_formateurs(user_id);
+
 -- Une section est un groupe de stagiaires suivant une filière avec un formateur et un horaire propres
 -- (ex. « SQL Niveau 1 - groupe A », 8h30 + 15 min de tolérance, fin 12h30).
 CREATE TABLE IF NOT EXISTS sections (
@@ -442,6 +450,35 @@ def _migrate_registration_section(conn):
         "ALTER TABLE registrations ADD COLUMN IF NOT EXISTS section_id INTEGER REFERENCES sections(id)"
     )
 
+def _migrate_services_formateurs(conn):
+    """Lie plusieurs formateurs à chaque service et rattache les cours à un service."""
+    conn.execute(
+        "ALTER TABLE courses ADD COLUMN IF NOT EXISTS service_id INTEGER REFERENCES services(id)"
+    )
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS service_formateurs ("
+        "service_id INTEGER NOT NULL REFERENCES services(id) ON DELETE CASCADE,"
+        "user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,"
+        "created_at TEXT NOT NULL DEFAULT (datetime('now')),"
+        "PRIMARY KEY (service_id, user_id))"
+    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_service_formateurs_user ON service_formateurs(user_id)")
+    # Le chef historique reste automatiquement membre de son service.
+    conn.execute(
+        "INSERT INTO service_formateurs (service_id, user_id) "
+        "SELECT id, chef_id FROM services WHERE chef_id IS NOT NULL "
+        "ON CONFLICT DO NOTHING"
+    )
+    # Les cours historiques sans service sont rattachés au service du formateur lorsqu'il n'y en a qu'un.
+    conn.execute(
+        "UPDATE courses c SET service_id=("
+        "SELECT sf.service_id FROM service_formateurs sf "
+        "WHERE sf.user_id=c.trainer_id ORDER BY sf.service_id LIMIT 1"
+        ") WHERE c.service_id IS NULL AND EXISTS ("
+        "SELECT 1 FROM service_formateurs sf2 WHERE sf2.user_id=c.trainer_id)"
+    )
+
+
 def _migrate_filiere_details(conn):
     """Ajoute les colonnes des filières introduites après le schéma initial."""
     conn.execute(
@@ -556,6 +593,7 @@ def init_db():
     _migrate_users_roles(conn)
     _migrate_presence(conn)
     _migrate_filiere_details(conn)
+    _migrate_services_formateurs(conn)
     _migrate_registration_section(conn)
     _migrate_course_case_study(conn)
     _migrate_course_schedule(conn)
