@@ -759,7 +759,7 @@ def catalogue_pdf():
         ])
     if len(rows) == 1:
         rows.append([Paragraph("Aucune formation ne correspond aux filtres.", cell)] + [""] * 8)
-    table = Table(rows, repeatRows=1, colWidths=[47*mm, 30*mm, 25*mm, 34*mm, 42*mm, 34*mm, 18*mm, 22*mm])
+    table = Table(rows, repeatRows=1, colWidths=[45*mm, 28*mm, 23*mm, 23*mm, 32*mm, 40*mm, 32*mm, 17*mm, 22*mm])
     table.setStyle(TableStyle([
         ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#2e6da4")),
         ("GRID", (0,0), (-1,-1), 0.35, colors.HexColor("#cfd7df")),
