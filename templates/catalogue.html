@@ -1,9 +1,9 @@
-{% extends "base.html" %}{% block title %}Formations programmées | INPP Académie{% endblock %}
+{% extends "base.html" %}{% block title %}Formations programmées | INPP Matadi{% endblock %}
 {% block meta_description %}Consultez les formations INPP Académie programmées, leurs dates, horaires, lieux et modalités d'inscription.{% endblock %}
 {% block content %}
 <section class="hero">
   <h1>Formations programmées de l'INPP</h1>
-  <p>Découvrez les prochaines sessions, filtrez par domaine ou niveau, consultez les dates et demandez votre inscription en ligne.</p>
+  <p><span class="tag ok">FORMATION EN PRÉSENTIEL À L'INPP MATADI</span><br>Découvrez les prochaines sessions, filtrez par domaine ou niveau, consultez les dates et demandez votre inscription à la session.</p>
   <div class="row">
     <a class="btn sun" href="{{ url_for('catalogue_pdf', q=q, category=category, level=level, status=status, month=month, service_id=service_id) }}">Télécharger le programme PDF</a>
     {% if not g.user %}<a class="btn alt" href="{{ url_for('register') }}" style="background:#fff">Créer un compte</a>{% endif %}
