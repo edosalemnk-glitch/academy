@@ -16,6 +16,18 @@
     <div style="flex:1;min-width:200px"><label for="f">Frais d'inscription (USD, 0 = gratuit)</label><input id="f" type="number" name="fee_amount" min="0" step="0.5" value="{{ '%g'|format(v.get('fee_amount', 0)|float) }}"></div>
     <div style="flex:1;min-width:200px"><label for="m">Note minimale pour réussir un quiz (%)</label><input id="m" type="number" name="pass_mark" min="1" max="100" value="{{ v.get('pass_mark', 70) }}"></div>
   </div>
+  <h2 style="margin-top:22px">Programmation publique</h2>
+  <p class="hint">Ces informations alimentent la vitrine publique « Formations programmées » et le PDF. Laissez les dates vides si la session n'est pas encore planifiée.</p>
+  <div class="row" style="align-items:flex-start">
+    <div style="flex:1;min-width:200px"><label for="sd">Date de début</label><input id="sd" type="date" name="start_date" value="{{ v.get('start_date') or '' }}"></div>
+    <div style="flex:1;min-width:200px"><label for="ed">Date de fin</label><input id="ed" type="date" name="end_date" value="{{ v.get('end_date') or '' }}"></div>
+  </div>
+  <div class="row" style="align-items:flex-start">
+    <div style="flex:1;min-width:260px"><label for="sc">Horaire</label><input id="sc" type="text" name="schedule" value="{{ v.get('schedule', '') }}" placeholder="Lundi–Vendredi · 08h30–12h30"></div>
+    <div style="flex:1;min-width:260px"><label for="loc">Lieu</label><input id="loc" type="text" name="location" value="{{ v.get('location', '') }}" placeholder="INPP Kinshasa-Limete"></div>
+    <div style="flex:0 1 180px"><label for="seats">Places</label><input id="seats" type="number" name="seats" min="0" value="{{ v.get('seats', 0) }}"><p class="hint">0 = capacité non limitée</p></div>
+  </div>
+  <label class="opt"><input type="checkbox" name="registration_open" value="1" {{ 'checked' if (not course and request.method != 'POST') or v.get('registration_open', 1) }}><span>Inscriptions ouvertes pour cette session</span></label>
   <label class="opt"><input type="checkbox" name="published" value="1" {{ 'checked' if (not course and request.method != 'POST') or v.get('published') }}><span>Publié dans le catalogue</span></label>
   <p class="row"><button class="btn">Enregistrer</button><a class="btn alt" href="{{ url_for('course_manage', course_id=course.id) if course else url_for('trainer_dashboard') }}">Annuler</a></p>
 </form>
