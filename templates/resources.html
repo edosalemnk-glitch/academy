@@ -1,12 +1,82 @@
-{% extends "base.html" %}{% block title %}Ressources de révision · {{ course.title }}{% endblock %}
+{% extends "base.html" %}
+{% block title %}Ressources · {{ course.title }}{% endblock %}
 {% block content %}
-<div class="crumbs"><a href="{{ url_for('learn', course_id=course.id) }}">{{ course.title }}</a> / Ressources</div>
-<div class="row between" style="align-items:flex-end"><div><span class="tag ok">ACCOMPAGNEMENT PÉDAGOGIQUE</span><h1 style="margin:8px 0 4px">Ressources de révision</h1><p class="meta">Supports, exercices et documents à consulter entre les séances de formation en présentiel à l'INPP Matadi.</p></div>{% if mode == 'preview' %}<a class="btn" href="{{ url_for('resource_manage', course_id=course.id) }}">Gérer les ressources</a>{% endif %}</div>
-{% if not resources %}<div class="card"><p>Aucune ressource n'est encore publiée pour cette formation.</p></div>{% endif %}
-<div class="grid">{% for r in resources %}<article class="card resource-card">
-  <div class="row between"><span class="tag">{{ resource_kinds.get(r.kind, 'Ressource') }}</span>{% if r.file_name %}<span class="meta">{{ r.file_name }}</span>{% endif %}</div>
-  <h2 style="margin:8px 0 4px"><a href="{{ url_for('resource_view', resource_id=r.id) }}">{{ r.title }}</a></h2>
-  {% if r.description %}<p>{{ r.description }}</p>{% endif %}
-  <a class="btn small" href="{{ url_for('resource_view', resource_id=r.id) }}">Ouvrir la ressource</a>
-</article>{% endfor %}</div>
+<div class="resource-hero">
+  <div>
+    <span class="resource-kicker">RESSOURCES PÉDAGOGIQUES · INPP MATADI</span>
+    <h1>Ressources de {{ course.title }}</h1>
+    <p>Supports de cours, travaux pratiques et fiches de révision à utiliser entre les séances en présentiel.</p>
+  </div>
+  <div class="resource-hero-mark">R</div>
+</div>
+
+<div class="resource-toolbar card">
+  <div class="resource-search">
+    <label for="resourceSearch">Rechercher une ressource</label>
+    <input id="resourceSearch" type="search" placeholder="Ex. SELECT, Word, diagnostic…">
+  </div>
+  <div class="resource-filters" role="group" aria-label="Filtrer les ressources">
+    <button type="button" class="resource-filter active" data-filter="all">Toutes <strong>{{ resources|length }}</strong></button>
+    {% for key,label in resource_kinds.items() %}
+      {% set n = resources|selectattr('kind','equalto',key)|list|length %}
+      {% if n %}<button type="button" class="resource-filter" data-filter="{{ key }}">{{ label }} <strong>{{ n }}</strong></button>{% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+{% if not resources %}
+<div class="empty-resource card">
+  <div class="empty-icon">+</div>
+  <h2>Aucune ressource publiée</h2>
+  <p>Les ressources seront ajoutées par le formateur de cette formation.</p>
+</div>
+{% else %}
+<div id="resourceGrid" class="resource-grid">
+{% for r in resources %}
+<article class="resource-tile" data-kind="{{ r.kind }}" data-search="{{ (r.title ~ ' ' ~ r.description)|lower }}">
+  <div class="resource-tile-top">
+    <span class="resource-icon {{ r.kind }}">{{ 'PDF' if r.kind == 'document' else 'TP' if r.kind == 'exercice' else 'WEB' if r.kind == 'lien' else 'COURS' }}</span>
+    <span class="resource-type">{{ resource_kinds.get(r.kind, 'Ressource') }}</span>
+  </div>
+  <div class="resource-tile-body">
+    <h2>{{ r.title }}</h2>
+    {% if r.description %}<p>{{ r.description }}</p>{% endif %}
+  </div>
+  <div class="resource-tile-foot">
+    {% if r.file_name %}<span class="resource-file">{{ r.file_name }}</span>{% else %}<span class="resource-file">Lecture en ligne</span>{% endif %}
+    <a class="resource-open" href="{{ url_for('resource_view', resource_id=r.id) }}">Consulter →</a>
+  </div>
+</article>
+{% endfor %}
+</div>
+<div id="resourceEmpty" class="empty-resource card" hidden>
+  <h2>Aucun résultat</h2><p>Essayez un autre mot-clé ou un autre type de ressource.</p>
+</div>
+{% endif %}
+<script>
+(() => {
+  const input = document.getElementById('resourceSearch');
+  const cards = [...document.querySelectorAll('.resource-tile')];
+  const empty = document.getElementById('resourceEmpty');
+  const buttons = [...document.querySelectorAll('.resource-filter')];
+  let filter = 'all';
+  function refresh() {
+    const q = (input?.value || '').toLowerCase().trim();
+    let shown = 0;
+    cards.forEach(card => {
+      const okType = filter === 'all' || card.dataset.kind === filter;
+      const okText = !q || card.dataset.search.includes(q);
+      card.hidden = !(okType && okText);
+      if (!card.hidden) shown++;
+    });
+    if (empty) empty.hidden = shown !== 0;
+  }
+  buttons.forEach(btn => btn.addEventListener('click', () => {
+    filter = btn.dataset.filter;
+    buttons.forEach(b => b.classList.toggle('active', b === btn));
+    refresh();
+  }));
+  input?.addEventListener('input', refresh);
+})();
+</script>
 {% endblock %}
