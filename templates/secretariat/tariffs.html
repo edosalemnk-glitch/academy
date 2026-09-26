@@ -69,7 +69,7 @@
 <div>
   <h2>Services</h2>
   <p class="hint">Les services servent à regrouper les filières comme sur la fiche papier.</p>
-  <div class="scroll"><table style="min-width:720px"><thead><tr><th>Service</th><th>Chef</th><th>Filières</th><th>Actif</th><th>Enregistrer</th></tr></thead><tbody>
+  <div class="scroll"><table style="min-width:720px"><thead><tr><th>Service</th><th>Chef</th><th>Formateurs du service</th><th>Filières</th><th>Actif</th><th>Enregistrer</th></tr></thead><tbody>
   {% for sv in services %}
   <tr>
     <td>
@@ -80,17 +80,21 @@
       <input form="edit-service-{{ sv.id }}" name="name" value="{{ sv.name }}" required style="min-width:220px">
     </td>
     <td><select form="edit-service-{{ sv.id }}" name="chef_id"><option value="">À désigner</option>{% for u in formateurs %}<option value="{{ u.id }}" {{ 'selected' if sv.chef_id == u.id }}>{{ u.full_name }}</option>{% endfor %}</select></td>
+    <td><select form="edit-service-{{ sv.id }}" name="formateur_ids" multiple size="4" style="min-width:220px">{% for u in formateurs %}<option value="{{ u.id }}" {{ 'selected' if u.id in service_formateurs.get(sv.id, set()) }}>{{ u.full_name }}</option>{% endfor %}</select></td>
     <td>{{ sv.nb_filieres }}</td>
     <td style="text-align:center"><input form="edit-service-{{ sv.id }}" type="checkbox" name="active" value="1" {{ 'checked' if sv.active }}></td>
     <td><button form="edit-service-{{ sv.id }}" class="btn small">Enregistrer</button></td>
   </tr>
-  {% else %}<tr><td colspan="5">Aucun service pour le moment.</td></tr>{% endfor %}
+  {% else %}<tr><td colspan="6">Aucun service pour le moment.</td></tr>{% endfor %}
   </tbody></table></div>
 </div>
 <div>
   <h3>Ajouter un service</h3>
   <form method="post" class="form">{{ csrf_field() }}<input type="hidden" name="action" value="service_add">
     <label for="sn">Nom</label><input id="sn" type="text" name="name" required minlength="2" placeholder="ex. Service Informatique">
+    <label for="sf">Formateurs du service</label>
+    <select id="sf" name="formateur_ids" multiple size="5">{% for u in formateurs %}<option value="{{ u.id }}">{{ u.full_name }}</option>{% endfor %}</select>
+    <p class="hint">Le chef sélectionné est automatiquement ajouté à l'équipe du service.</p>
     <label for="sc">Chef de service</label>
     <select id="sc" name="chef_id"><option value="">À désigner</option>{% for u in formateurs %}<option value="{{ u.id }}">{{ u.full_name }}</option>{% endfor %}</select>
     <p><button class="btn">Ajouter le service</button></p>
