@@ -1,13 +1,13 @@
-{% extends "base.html" %}{% block title %}Certificat{% endblock %}
+{% extends "base.html" %}{% block title %}Attestation de réussite{% endblock %}
 {% block content %}
 <div class="cert">
   <div class="brand" style="color:var(--navy);justify-content:center"><i></i>INPP Académie</div>
-  <p class="meta" style="margin-top:24px">Certificat de réussite</p>
+  <p class="meta" style="margin-top:24px">Attestation provisoire de réussite</p>
   <h1>Ce certificat atteste que</h1>
   <div class="name">{{ cert.full_name }}</div>
-  <p style="font-size:1.15rem">a suivi avec succès la formation<br><strong>{{ cert.title }}</strong> ({{ cert.level }})<br>et validé tous les quiz du parcours.</p>
+  <p style="font-size:1.15rem">a suivi avec succès la formation<br><strong>{{ cert.title }}</strong> ({{ cert.level }})<br>et satisfait aux conditions de réussite prévues pour le parcours.</p>
   <p class="meta">Délivré le {{ cert.issued_at[:10] }} · Formateur : {{ cert.trainer_name }}</p>
-  <p class="meta">Code de vérification : <strong>{{ cert.code }}</strong><br>Vérifiable à l'adresse {{ request.host_url }}certificat/{{ cert.code }}</p>
+  <p class="meta">Référence de l'attestation : <strong>{{ cert.code }}</strong><br>Cette attestation confirme la réussite dans l'attente de la délivrance du certificat officiel.</p>
 </div>
 <p class="noprint" style="text-align:center;margin-top:18px"><button class="btn" onclick="window.print()">Imprimer ou enregistrer en PDF</button></p>
 {% endblock %}
