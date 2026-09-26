@@ -1107,10 +1107,12 @@ def course_new():
             flash(err, "bad")
         else:
             cur = get_db().execute(
-                "INSERT INTO courses (title, category, level, description, case_study, fee_amount, pass_mark, published, trainer_id) "
-                "VALUES (?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO courses (title, category, level, description, case_study, fee_amount, pass_mark, "
+                "published, start_date, end_date, schedule, location, seats, registration_open, trainer_id) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (data["title"], data["category"], data["level"], data["description"], data["case_study"],
-                 data["fee_amount"], data["pass_mark"], data["published"], g.user["id"]))
+                 data["fee_amount"], data["pass_mark"], data["published"], data["start_date"], data["end_date"],
+                 data["schedule"], data["location"], data["seats"], data["registration_open"], g.user["id"]))
             get_db().commit()
             flash("Cours créé. Ajoutez maintenant des leçons.", "ok")
             return redirect(url_for("course_manage", course_id=cur.lastrowid))
@@ -1128,9 +1130,11 @@ def course_edit(course_id):
         else:
             get_db().execute(
                 "UPDATE courses SET title=?, category=?, level=?, description=?, case_study=?, "
-                "fee_amount=?, pass_mark=?, published=? WHERE id=?",
+                "fee_amount=?, pass_mark=?, published=?, start_date=?, end_date=?, schedule=?, "
+                "location=?, seats=?, registration_open=? WHERE id=?",
                 (data["title"], data["category"], data["level"], data["description"], data["case_study"],
-                 data["fee_amount"], data["pass_mark"], data["published"], course_id))
+                 data["fee_amount"], data["pass_mark"], data["published"], data["start_date"], data["end_date"],
+                 data["schedule"], data["location"], data["seats"], data["registration_open"], course_id))
             get_db().commit()
             flash("Cours mis à jour.", "ok")
             return redirect(url_for("course_manage", course_id=course_id))
