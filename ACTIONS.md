@@ -102,3 +102,14 @@ Données préchargées : 3 cours (SQL Niveau 1, SQL Niveau 2, Bureautique), 13 l
 ## Avant de l'ouvrir à de vrais stagiaires
 
 À faire (détaillé dans le dossier) : hébergement avec HTTPS, sauvegardes automatiques de `formation.db`, changement des mots de passe de démonstration, récupération de mot de passe par e-mail, rôle administrateur, paiement en ligne.
+
+
+## Ressources de révision
+
+Le site distingue désormais clairement la **formation en présentiel à l'INPP Matadi** et l'accompagnement numérique :
+
+- les visiteurs consultent les filières, services, sessions programmées, dates, frais et procédure ;
+- les stagiaires validés disposent d'un espace **Ressources** ;
+- les formateurs peuvent publier des supports de révision, exercices pratiques, documents, liens et fichiers depuis la gestion de chaque formation ;
+- les ressources sont stockées dans Supabase Storage lorsque le stockage est configuré ;
+- les quiz et l'examen final restent des outils d'évaluation/accompagnement, pas une présentation de l'INPP comme école entièrement en ligne.
