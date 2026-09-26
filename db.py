@@ -473,6 +473,49 @@ def _migrate_bank_settings(conn):
     """Conservée pour compatibilité avec les anciennes versions du schéma."""
     return
 
+def _migrate_reference_catalogue(conn):
+    """Aligne une seule fois les écarts visibles sur la fiche papier fournie par l'INPP.
+    
+    Après cette initialisation, les valeurs en base sont la source de vérité :
+    une modification faite par le secrétariat n'est plus écrasée au démarrage.
+    """
+    done = conn.execute("SELECT 1 FROM settings WHERE key='fiche_reference_v1'").fetchone()
+    if done:
+        return
+
+    corrections = [
+        ("Inspecteur de Protection Industrielle", None, 1, 60),
+        ("Froid ménager", None, 6, 90),
+        ("Powerpoint", None, 3, 70),
+        ("Peinture Design", None, 4, 90),
+        ("Académie Cisco : IT Essentials", None, 2, 90),
+        ("Robbot", "Robbobat", 3, 70),
+        ("Technique de maintenance des équipements hydropneumatiques",
+         "Technique de maintenance des installations hydropneumatique", 3, 200),
+    ]
+    for current_name, new_name, duration, material in corrections:
+        if new_name:
+            conn.execute(
+                "UPDATE filieres SET name=?, duration_months=?, material_fee=? WHERE name=?",
+                (new_name, duration, material, current_name),
+            )
+        else:
+            conn.execute(
+                "UPDATE filieres SET duration_months=?, material_fee=? WHERE name=?",
+                (duration, material, current_name),
+            )
+
+    # Trois lignes ajoutées par les données de démonstration ne figurent pas sur la fiche
+    # photographiée : elles restent conservées pour l'historique, mais ne sont plus publiées.
+    for name in ("Informatique de gestion", "Électricité du bâtiment", "Coupe et couture"):
+        conn.execute("UPDATE filieres SET active=0 WHERE name=?", (name,))
+
+    conn.execute(
+        "INSERT INTO settings (key,value) VALUES (?,?)",
+        ("fiche_reference_v1", "1"),
+    )
+
+
 def init_db():
     conn = connect()
     conn.executescript(_postgres_schema(SCHEMA))
@@ -483,5 +526,6 @@ def init_db():
     _migrate_course_case_study(conn)
     _migrate_bank_settings(conn)
     conn.executemany("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", DEFAULT_SETTINGS.items())
+    _migrate_reference_catalogue(conn)
     conn.commit()
     conn.close()
