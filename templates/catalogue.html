@@ -109,7 +109,7 @@
         <h2><a href="{{ url_for('course_public', course_id=c.id) }}">{{ c.title }}</a></h2>
         <p>{{ c.description[:190] }}{% if c.description|length > 190 %}…{% endif %}</p>
         <div class="catalogue-course-info">
-          <div><small>DURÉE</small><strong>{{ c.duration_months if c.duration_months is defined else '—' }}{% if c.duration_months is defined %} mois{% endif %}</strong></div>
+          <div><small>DURÉE</small><strong>{{ (c.fee_amount / 60000)|int }} mois</strong></div>
           <div><small>FRAIS PÉDAGOGIQUES</small><strong>{{ '%g'|format(c.fee_amount) }} {{ c.currency }}</strong></div>
           <div><small>SESSION</small><strong>{% if c.start_date %}{{ c.start_date[:10] }}{% else %}À confirmer{% endif %}</strong></div>
           <div><small>LIEU</small><strong>{{ c.location or 'INPP Matadi' }}</strong></div>
