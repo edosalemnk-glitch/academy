@@ -379,7 +379,7 @@ def register():
                 course = conn.execute(
                     "SELECT * FROM courses WHERE id=? AND published=1", (requested_course_id,)
                 ).fetchone()
-            if course and course["registration_open"]:
+            if course and course_registration_capacity(course):
                 conn.execute(
                     "INSERT INTO enrollments (user_id, course_id) VALUES (?,?)",
                     (cur.lastrowid, requested_course_id),
