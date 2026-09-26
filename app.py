@@ -1,6 +1,7 @@
 """INPP Académie : plateforme de formation avec abonnement, validation par le formateur et quiz."""
 import csv
 import io
+import mimetypes
 import os
 import random
 import re
@@ -1119,29 +1120,30 @@ def remove_image(name):
 
 
 def lesson_image_url(name):
-    """Retourne une URL signée Supabase, ou le chemin local en développement."""
+    """Retourne l’URL interne de diffusion d’une image de leçon."""
     if not name:
         return ""
-    if not (_storage_enabled() and str(name).startswith("lessons/")):
-        return url_for("static", filename=f"uploads/{os.path.basename(name)}")
-    try:
-        raw = _storage_request(
-            "POST",
-            f"object/sign/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe='')}/{urllib.parse.quote(name, safe='')}",
-            body=json.dumps({"expiresIn": SUPABASE_STORAGE_SIGNED_TTL}),
-            content_type="application/json",
-        )
-        data = json.loads(raw.decode("utf-8"))
-        signed = data.get("signedURL") or data.get("signedUrl")
-        if not signed:
-            raise RuntimeError("URL signée absente de la réponse Supabase.")
-        if signed.startswith("http"):
-            return signed
-        return f"{SUPABASE_URL}/storage/v1{signed if signed.startswith('/') else '/' + signed}"
-    except (RuntimeError, ValueError, json.JSONDecodeError):
-        app.logger.exception("Impossible de générer l'URL signée pour %s", name)
-        return ""
+    if _storage_enabled() and str(name).startswith("lessons/"):
+        return url_for("lesson_image_proxy", name=name)
+    return url_for("static", filename=f"uploads/{os.path.basename(name)}")
 
+
+@app.route("/media/lecon/<path:name>")
+@login_required
+def lesson_image_proxy(name):
+    """Diffuse une image du bucket privé sans exposer la clé service-role."""
+    if not str(name).startswith("lessons/") or not _storage_enabled():
+        abort(404)
+    try:
+        body = _storage_request(
+            "GET",
+            f"object/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe="")}/{urllib.parse.quote(name, safe="")}",
+        )
+    except RuntimeError:
+        app.logger.exception("Impossible de récupérer l’image Supabase %s", name)
+        abort(404)
+    mime = mimetypes.guess_type(name)[0] or "application/octet-stream"
+    return Response(body, mimetype=mime)
 
 app.jinja_env.globals["lesson_image_url"] = lesson_image_url
 
