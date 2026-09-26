@@ -1,63 +1,106 @@
-{% extends "base.html" %}{% block title %}Fiche de renseignements | Frais et filières{% endblock %}
-{% block meta_description %}Fiche de renseignements INPP Académie : frais d'inscription, minerval, jury, lettre de stage et catalogue des filières, métiers, durées et frais matériels.{% endblock %}
+{% extends "base.html" %}
+{% block title %}Fiche de renseignements | INPP Matadi{% endblock %}
+{% block meta_description %}Fiche de renseignements INPP Matadi : inscription, minerval, frais de jury, filières, métiers, durées et frais matériels.{% endblock %}
 {% block content %}
-<div class="row between noprint" style="align-items:flex-start">
-  <div><h1>FICHE DE RENSEIGNEMENTS</h1><p class="meta">Catalogue officiel affiché à partir des données enregistrées par le secrétariat.</p></div>
-  <div class="row noprint" style="gap:8px">
-  <a class="btn sun" href="{{ url_for('procedure_pdf') }}">Télécharger le PDF</a>
-  <button class="btn alt" onclick="window.print()">Imprimer la fiche</button>
-</div>
-</div>
-
-<div class="card fiche-head">
-  <div class="row between" style="align-items:flex-start;gap:24px">
-    <div><strong>INPP · Institut National de Préparation Professionnelle</strong><br>Formation professionnelle</div>
-    <div style="text-align:right">
-      <strong>Pour le paiement</strong><br>
-      {{ cfg.bank_name or 'Banque à renseigner' }}{% if cfg.bank_account_usd %}<br>N° CPT en Dollars : {{ cfg.bank_account_usd }}{% endif %}{% if cfg.bank_account_fc %}<br>N° CPT en Francs : {{ cfg.bank_account_fc }}{% endif %}
+<section class="fiche-page">
+  <div class="fiche-toolbar noprint">
+    <div>
+      <span class="fiche-kicker">INPP MATADI · RENSEIGNEMENTS</span>
+      <h1>FICHE DE RENSEIGNEMENTS</h1>
+      <p>Consultez les filières, métiers, durées et frais actuellement enregistrés par le secrétariat.</p>
+    </div>
+    <div class="fiche-actions">
+      <a class="btn sun" href="{{ url_for('procedure_pdf') }}">Télécharger le PDF</a>
+      <button class="btn alt" onclick="window.print()">Imprimer</button>
     </div>
   </div>
-  <hr>
-  <div class="fiche-fees">
-    <div><strong>1. Inscription :</strong> {{ cfg.inscription_fee|float|money('FC') }}</div>
-    <div><strong>2. Lettre de stage :</strong> {{ cfg.lettre_stage_fee|float|money('FC') }} (payable après la formation)</div>
-    <div><strong>3. Frais de jury :</strong> {{ cfg.jury_fee|float|money('FC') }}</div>
-  </div>
-  <p><strong>Les frais de participation (minerval) s'élèvent à {{ cfg.formation_fee|float|money('FC') }} / mois pour toutes les filières.</strong><br>
-  Frais matériels à payer une fois pendant la durée de la formation.</p>
-</div>
 
-<div class="scroll fiche-table">
-<table>
-  <thead><tr><th>Service</th><th>Filière</th><th>Métier</th><th>Durée</th><th>Frais matériels</th></tr></thead>
-  <tbody>
-  {% for group in groups %}
-    {% for f in group.rows %}
-      <tr>
-        {% if loop.first %}<td rowspan="{{ group.rows|length }}" class="service-cell"><strong>{{ group.name|replace('Service ', '') }}</strong></td>{% endif %}
-        <td>{{ f.name }}</td>
-        <td>{{ f.metier or '—' }}</td>
-        <td>{{ f.duration_months }} mois</td>
-        <td>{{ f.material_fee|money('USD') }}</td>
-      </tr>
-    {% endfor %}
-  {% endfor %}
-  </tbody>
-</table>
-</div>
+  <section class="fiche-paper">
+    <header class="fiche-paper-head">
+      <div class="fiche-brand-block">
+        <div class="fiche-emblem">INPP</div>
+        <div>
+          <div class="fiche-republic">RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</div>
+          <div class="fiche-institution">INSTITUT NATIONAL DE PRÉPARATION PROFESSIONNELLE</div>
+          <div class="fiche-direction">CENTRE / DIRECTION PROVINCIALE · MATADI</div>
+        </div>
+      </div>
+      <div class="fiche-payment">
+        <div class="fiche-payment-title">POUR LE PAIEMENT</div>
+        <div>{{ cfg.bank_name or 'Banque à renseigner' }}</div>
+        {% if cfg.bank_account_usd %}<div><strong>N° CPT Dollars :</strong> {{ cfg.bank_account_usd }}</div>{% endif %}
+        {% if cfg.bank_account_fc %}<div><strong>N° CPT Francs :</strong> {{ cfg.bank_account_fc }}</div>{% endif %}
+      </div>
+    </header>
 
-<div class="card fiche-note">
-  <strong>NB :</strong> Les frais payés ne sont pas remboursables.
-  <span class="meta">Les montants affichés sont ceux actuellement enregistrés dans le catalogue. Le secrétariat peut les modifier pour les prochaines inscriptions.</span>
-</div>
+    <div class="fiche-title-band">
+      <span>FICHE DE RENSEIGNEMENTS</span>
+      <small>FORMATION PROFESSIONNELLE · INPP MATADI</small>
+    </div>
 
-<h2 class="noprint">Procédure d'inscription</h2>
-<ol class="steps noprint">
-  <li><strong>Renseignements.</strong> Présentez-vous à la réception et choisissez une filière.</li>
-  <li><strong>Paiement.</strong> Payez les frais au compte indiqué ci-dessus.</li>
-  <li><strong>Enregistrement.</strong> Remettez la preuve de paiement à la réception pour être enregistré.</li>
-  <li><strong>Stagiaire recommandé.</strong> Remettez votre lettre de recommandation au secrétariat pour approbation.</li>
-  <li><strong>Carte de stagiaire.</strong> Les stagiaires en ordre avec les frais reçoivent leur carte.</li>
-  <li><strong>Lettre de stage.</strong> Elle est délivrée après la formation moyennant le tarif affiché.</li>
-</ol>
+    <div class="fiche-fee-grid">
+      <div class="fiche-fee"><span>01</span><div><b>Inscription</b><strong>{{ cfg.inscription_fee|float|money('FC') }}</strong></div></div>
+      <div class="fiche-fee"><span>02</span><div><b>Lettre de stage</b><strong>{{ cfg.lettre_stage_fee|float|money('FC') }}</strong><small>Payable après la formation</small></div></div>
+      <div class="fiche-fee"><span>03</span><div><b>Frais de jury</b><strong>{{ cfg.jury_fee|float|money('FC') }}</strong></div></div>
+    </div>
+
+    <div class="fiche-minerval">
+      <div>
+        <b>Frais de participation (minerval)</b>
+        <span>{{ cfg.formation_fee|float|money('FC') }} / mois</span>
+      </div>
+      <p>Pour toutes les filières · Les frais matériels sont payés une fois pendant la durée de la formation.</p>
+    </div>
+
+    <div class="fiche-table-wrap">
+      <table class="fiche-catalog-table">
+        <thead>
+          <tr>
+            <th class="col-service">Service</th>
+            <th>Filière</th>
+            <th>Métier</th>
+            <th class="col-duration">Durée</th>
+            <th class="col-fee">Frais<br>matériels</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for group in groups %}
+          {% set service_index = loop.index0 %}
+          {% for f in group.rows %}
+          <tr>
+            {% if loop.first %}
+            <td rowspan="{{ group.rows|length }}" class="fiche-service service-{{ service_index % 6 }}">
+              <span>{{ group.name|replace('Service ', '') }}</span>
+            </td>
+            {% endif %}
+            <td class="fiche-filiere">{{ f.name }}</td>
+            <td>{{ f.metier or '—' }}</td>
+            <td class="center">{{ f.duration_months }} mois</td>
+            <td class="center fiche-usd">{{ f.material_fee|money('USD') }}</td>
+          </tr>
+          {% endfor %}
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="fiche-bottom-note">
+      <div class="fiche-warning"><b>NB :</b> Les frais payés ne sont pas remboursables.</div>
+      <div class="fiche-source">Les montants affichés sont ceux actuellement enregistrés dans le catalogue INPP Matadi.</div>
+    </div>
+  </section>
+
+  <section class="fiche-procedure noprint">
+    <div>
+      <span class="fiche-kicker">APRÈS VOTRE CHOIX</span>
+      <h2>Procédure d'inscription</h2>
+    </div>
+    <div class="fiche-step-grid">
+      <div><b>01</b><strong>Renseignements</strong><p>Choisissez votre service et votre filière.</p></div>
+      <div><b>02</b><strong>Paiement</strong><p>Effectuez le paiement selon les informations affichées.</p></div>
+      <div><b>03</b><strong>Enregistrement</strong><p>Présentez la preuve de paiement au secrétariat.</p></div>
+      <div><b>04</b><strong>Formation</strong><p>Rejoignez les séances en présentiel à l'INPP Matadi.</p></div>
+    </div>
+  </section>
+</section>
 {% endblock %}
