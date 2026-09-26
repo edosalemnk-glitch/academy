@@ -1,58 +1,141 @@
-{% extends "base.html" %}{% block title %}Formations programmées | INPP Matadi{% endblock %}
-{% block meta_description %}Consultez les formations INPP Académie programmées, leurs dates, horaires, lieux et modalités d'inscription.{% endblock %}
+{% extends "base.html" %}
+{% block title %}Catalogue des formations | INPP Matadi{% endblock %}
+{% block meta_description %}Catalogue des formations professionnelles de l'INPP Matadi : métiers, services, durées, frais et sessions programmées.{% endblock %}
 {% block content %}
-<section class="hero">
-  <h1>Formations programmées de l'INPP</h1>
-  <p><span class="tag ok">FORMATION EN PRÉSENTIEL À L'INPP MATADI</span><br>Découvrez les prochaines sessions, filtrez par domaine ou niveau, consultez les dates et demandez votre inscription à la session.</p>
-  <div class="row">
-    <a class="btn sun" href="{{ url_for('catalogue_pdf', q=q, category=category, level=level, status=status, month=month, service_id=service_id) }}">Télécharger le programme PDF</a>
-    {% if not g.user %}<a class="btn alt" href="{{ url_for('register') }}" style="background:#fff">Créer un compte</a>{% endif %}
+<section class="hero catalogue-hero">
+  <div>
+    <span class="tag ok">INPP MATADI · FORMATION EN PRÉSENTIEL</span>
+    <h1>Catalogue des formations</h1>
+    <p>Choisissez un service, découvrez les métiers proposés et consultez les sessions programmées à l'INPP Matadi.</p>
+    <div class="row">
+      <a class="btn sun" href="{{ url_for('catalogue_pdf', q=q, category=category, level=level, status=status, month=month, service_id=service_id) }}">Télécharger le programme PDF</a>
+      <button class="btn alt catalogue-menu-btn" type="button" onclick="document.body.classList.toggle('catalogue-drawer-open')">☰ Parcourir par service</button>
+    </div>
   </div>
 </section>
 
-<div class="card schedule-filters" style="margin-bottom:20px">
-  <div class="row between"><div><h2 style="margin-bottom:4px">Trouver une formation</h2><p class="hint">Par défaut, les sessions à venir sont affichées.</p></div>
-  <a class="btn alt small" href="{{ url_for('catalogue') }}">Réinitialiser</a></div>
-  <form method="get" class="filter-grid">
-    <div><label for="q">Recherche</label><input id="q" type="search" name="q" value="{{ q }}" placeholder="Ex. électricité, SQL, soudage"></div>
-    <div><label for="category">Domaine</label><select id="category" name="category"><option value="">Tous les domaines</option>{% for x in categories %}<option value="{{ x }}" {{ 'selected' if category == x }}>{{ x }}</option>{% endfor %}</select></div>
-    <div><label for="service_id">Service</label><select id="service_id" name="service_id"><option value="">Tous les services</option>{% for sv in services %}<option value="{{ sv.id }}" {{ 'selected' if service_id == sv.id }}>{{ sv.name }}</option>{% endfor %}</select></div>
-    <div><label for="level">Niveau</label><select id="level" name="level"><option value="">Tous les niveaux</option>{% for x in levels %}<option value="{{ x }}" {{ 'selected' if level == x }}>{{ x }}</option>{% endfor %}</select></div>
-    <div><label for="status">Période</label><select id="status" name="status"><option value="a_venir" {{ 'selected' if status == 'a_venir' }}>À venir</option><option value="en_cours" {{ 'selected' if status == 'en_cours' }}>En cours</option><option value="terminee" {{ 'selected' if status == 'terminee' }}>Terminées</option><option value="non_programmee" {{ 'selected' if status == 'non_programmee' }}>Date à confirmer</option><option value="toutes" {{ 'selected' if status == 'toutes' }}>Toutes</option></select></div>
-    <div><label for="month">Mois de début</label><select id="month" name="month"><option value="">Tous les mois</option>{% for x in months %}<option value="{{ x }}" {{ 'selected' if month == x }}>{{ x }}</option>{% endfor %}</select></div>
-    <div style="align-self:end"><button class="btn" style="width:100%">Filtrer</button></div>
-  </form>
-</div>
+<div class="catalogue-layout">
+  <aside class="catalogue-drawer" aria-label="Formations par service">
+    <div class="catalogue-drawer-head">
+      <div>
+        <span class="resource-kicker">CATALOGUE</span>
+        <h2>Nos services</h2>
+      </div>
+      <button class="catalogue-close" type="button" aria-label="Fermer" onclick="document.body.classList.remove('catalogue-drawer-open')">×</button>
+    </div>
 
-<div class="row between" style="margin-bottom:12px">
-  <div><h2 style="margin:0">{{ courses|length }} formation(s)</h2><p class="meta">{% if status == 'a_venir' %}Sessions à venir ouvertes à la demande d'inscription.{% else %}Résultats selon vos filtres.{% endif %}</p></div>
-</div>
+    <a class="catalogue-all {{ 'active' if not service_id }}" href="{{ url_for('catalogue', q=q, category=category, level=level, status=status, month=month) }}">
+      <span>Toutes les formations</span><strong>{{ courses|length }}</strong>
+    </a>
 
-{% if not courses %}<div class="card">Aucune formation ne correspond à vos filtres. Revenez sur « Toutes » pour voir les formations publiées dont la date reste à confirmer.</div>{% endif %}
-<div class="grid">{% for c in courses %}{% set e = enrollments.get(c.id) %}
-<article class="card course-card {{ 'sql' if 'données' in c.category else '' }}">
-  <div class="row between"><span class="tag">{{ c.service_name or 'Service à préciser' }}</span><span class="tag">{{ c.category }}</span><span class="tag {{ 'ok' if c.schedule_state == 'a_venir' else ('warn' if c.schedule_state == 'en_cours' else '') }}">{{ c.schedule_label }}</span></div>
-  <h2 style="margin:4px 0"><a href="{{ url_for('course_public', course_id=c.id) }}" style="text-decoration:none;color:inherit">{{ c.title }}</a></h2>
-  <p>{{ c.description[:150] }}{% if c.description|length > 150 %}…{% endif %}</p>
-  <div class="schedule-meta">
-    <div><strong>📅</strong> {% if c.start_date %}{{ c.start_date[:10] }}{% if c.end_date %} → {{ c.end_date[:10] }}{% endif %}{% else %}Date à confirmer{% endif %}</div>
-    <div><strong>🕒</strong> {{ c.schedule or 'Horaire à confirmer' }}</div>
-    <div><strong>📍</strong> {{ c.location or 'Lieu à confirmer' }}</div>
-    <div><strong>👥</strong> {% if c.seats %}{{ c.nb_reserved }}/{{ c.seats }} place(s) réservée(s){% else %}Places non limitées{% endif %}</div>
-  </div>
-  <div class="meta">{{ c.level }} · {{ c.nb_lessons }} leçon(s) · {% if c.fee_amount %}{{ '%g'|format(c.fee_amount) }} {{ c.currency }}{% else %}Gratuit{% endif %}</div>
-  <div class="row">
-    {% if e %}
-      <span class="tag {{ STATUS[e.status][1] }}">{{ STATUS[e.status][0] }}</span>
-      {% if e.status == 'approved' %}<a class="btn small" href="{{ url_for('learn', course_id=c.id) }}">Continuer</a>{% endif %}
-    {% elif c.registration_available %}
-      {% if g.user %}<form method="post" action="{{ url_for('subscribe', course_id=c.id) }}">{{ csrf_field() }}<button class="btn sun small">Demander l'inscription</button></form>
-      {% else %}<a class="btn sun small" href="{{ url_for('register', course_id=c.id) }}">Créer un compte et s'inscrire</a>{% endif %}
-    {% else %}
-      <span class="tag warn">Inscriptions fermées</span>
+    <div class="service-menu">
+      {% for group in service_groups %}
+      <details class="service-menu-group" {% if service_id == group.id or not service_id %}open{% endif %}>
+        <summary>
+          <span>{{ group.name|replace('Service ','') }}</span>
+          <strong>{{ group.courses|length }}</strong>
+        </summary>
+        <div class="service-menu-items">
+          <a href="{{ url_for('catalogue', service_id=group.id, status=status, q=q, category=category, level=level, month=month) }}" class="{{ 'active' if service_id == group.id else '' }}">
+            Voir les {{ group.courses|length }} formation(s)
+          </a>
+          {% for c in group.courses %}
+          <a href="{{ url_for('course_public', course_id=c.id) }}" class="service-course-link">
+            <span>{{ c.title }}</span>
+            <small>{{ '%g'|format(c.fee_amount) }} {{ c.currency }}</small>
+          </a>
+          {% endfor %}
+        </div>
+      </details>
+      {% endfor %}
+    </div>
+
+    <div class="catalogue-filter-box">
+      <h3>Affiner la recherche</h3>
+      <form method="get">
+        <label for="q">Recherche</label>
+        <input id="q" type="search" name="q" value="{{ q }}" placeholder="Métier, formation...">
+        <label for="level">Niveau</label>
+        <select id="level" name="level">
+          <option value="">Tous les niveaux</option>
+          {% for x in levels %}<option value="{{ x }}" {{ 'selected' if level == x }}>{{ x }}</option>{% endfor %}
+        </select>
+        <label for="status">Période</label>
+        <select id="status" name="status">
+          <option value="a_venir" {{ 'selected' if status == 'a_venir' }}>À venir</option>
+          <option value="en_cours" {{ 'selected' if status == 'en_cours' }}>En cours</option>
+          <option value="terminee" {{ 'selected' if status == 'terminee' }}>Terminées</option>
+          <option value="non_programmee" {{ 'selected' if status == 'non_programmee' }}>Date à confirmer</option>
+          <option value="toutes" {{ 'selected' if status == 'toutes' }}>Toutes</option>
+        </select>
+        <label for="month">Mois de début</label>
+        <select id="month" name="month">
+          <option value="">Tous les mois</option>
+          {% for x in months %}<option value="{{ x }}" {{ 'selected' if month == x }}>{{ x }}</option>{% endfor %}
+        </select>
+        <button class="btn" type="submit" style="width:100%;margin-top:14px">Appliquer</button>
+        <a class="catalogue-reset" href="{{ url_for('catalogue') }}">Réinitialiser</a>
+      </form>
+    </div>
+  </aside>
+
+  <div class="catalogue-main">
+    <div class="catalogue-toolbar">
+      <div>
+        <span class="resource-kicker">OFFRE DE FORMATION</span>
+        <h2>{{ courses|length }} formation(s) proposée(s)</h2>
+        <p>Les frais pédagogiques sont calculés à <strong>60 000 FC par mois</strong>. Les frais de matériel sont payés une seule fois selon la filière.</p>
+      </div>
+      <button class="btn alt catalogue-menu-btn" type="button" onclick="document.body.classList.add('catalogue-drawer-open')">☰ Services</button>
+    </div>
+
+    {% if not courses %}
+      <div class="card empty-resource">
+        <div class="empty-icon">⌕</div>
+        <h2>Aucune formation trouvée</h2>
+        <p>Choisissez un autre service ou réinitialisez les filtres.</p>
+        <a class="btn" href="{{ url_for('catalogue') }}">Voir toutes les formations</a>
+      </div>
     {% endif %}
-    <a class="btn alt small" href="{{ url_for('course_public', course_id=c.id) }}">Voir le programme</a>
+
+    <div class="catalogue-cards">
+      {% for c in courses %}
+      {% set e = enrollments.get(c.id) %}
+      <article class="card catalogue-course">
+        <div class="catalogue-course-top">
+          <span class="catalogue-service">{{ c.service_name or 'Service' }}</span>
+          <span class="tag {{ 'ok' if c.schedule_state == 'a_venir' else ('warn' if c.schedule_state == 'en_cours' else '') }}">{{ c.schedule_label }}</span>
+        </div>
+        <h2><a href="{{ url_for('course_public', course_id=c.id) }}">{{ c.title }}</a></h2>
+        <p>{{ c.description[:190] }}{% if c.description|length > 190 %}…{% endif %}</p>
+        <div class="catalogue-course-info">
+          <div><small>DURÉE</small><strong>{{ c.duration_months if c.duration_months is defined else '—' }}{% if c.duration_months is defined %} mois{% endif %}</strong></div>
+          <div><small>FRAIS PÉDAGOGIQUES</small><strong>{{ '%g'|format(c.fee_amount) }} {{ c.currency }}</strong></div>
+          <div><small>SESSION</small><strong>{% if c.start_date %}{{ c.start_date[:10] }}{% else %}À confirmer{% endif %}</strong></div>
+          <div><small>LIEU</small><strong>{{ c.location or 'INPP Matadi' }}</strong></div>
+        </div>
+        <div class="meta">Horaire : {{ c.schedule or 'À confirmer' }} · {{ c.seats or '—' }} places</div>
+        <div class="row catalogue-course-actions">
+          {% if e %}
+            <span class="tag {{ STATUS[e.status][1] }}">{{ STATUS[e.status][0] }}</span>
+            {% if e.status == 'approved' %}<a class="btn small" href="{{ url_for('learn', course_id=c.id) }}">Continuer</a>{% endif %}
+          {% elif c.registration_available %}
+            {% if g.user %}<form method="post" action="{{ url_for('subscribe', course_id=c.id) }}">{{ csrf_field() }}<button class="btn sun small">Demander l'inscription</button></form>
+            {% else %}<a class="btn sun small" href="{{ url_for('register', course_id=c.id) }}">Créer un compte et s'inscrire</a>{% endif %}
+          {% else %}<span class="tag warn">Inscriptions fermées</span>{% endif %}
+          <a class="btn alt small" href="{{ url_for('course_public', course_id=c.id) }}">Voir la formation</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
   </div>
-</article>
-{% endfor %}</div>
+</div>
+
+<script>
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('catalogue-drawer-backdrop')) {
+    document.body.classList.remove('catalogue-drawer-open');
+  }
+});
+</script>
 {% endblock %}
