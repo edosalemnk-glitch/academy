@@ -266,6 +266,23 @@ def lessons_of(course_id):
                             (course_id,)).fetchall()
 
 
+def resources_of(course_id, published_only=False):
+    sql = "SELECT * FROM resources WHERE course_id=?"
+    params = [course_id]
+    if published_only:
+        sql += " AND published=1"
+    sql += " ORDER BY kind, title, id"
+    return get_db().execute(sql, params).fetchall()
+
+
+RESOURCE_KINDS = {
+    "support": "Support de révision",
+    "exercice": "Exercice pratique",
+    "document": "Document",
+    "lien": "Lien utile",
+}
+
+
 def progress_of(user_id, course_id):
     lessons = lessons_of(course_id)
     done = {r["lesson_id"] for r in get_db().execute(
@@ -789,9 +806,13 @@ def course_public(course_id):
     if not course["published"] and not (g.user and g.user["id"] == course["trainer_id"]):
         abort(404)
     enrollment = get_enrollment(g.user["id"], course_id) if g.user else None
+    resource_count = get_db().execute(
+        "SELECT COUNT(*) FROM resources WHERE course_id=? AND published=1", (course_id,)
+    ).fetchone()[0]
     return render_template(
         "course_public.html", course=course, lessons=lessons_of(course_id),
-        enrollment=enrollment, schedule_state=course_schedule_state(course),
+        resource_count=resource_count, enrollment=enrollment,
+        schedule_state=course_schedule_state(course),
         schedule_label=course_schedule_label(course),
         registration_available=course_registration_capacity(course),
     )
@@ -1162,7 +1183,8 @@ def read_course_form():
             "location": f.get("location", "").strip(),
             "seats": seats,
             "registration_open": 1 if f.get("registration_open") else 0,
-            "published": 1 if f.get("published") else 0}, None
+            "published": 1 if f.get("published") else 0,
+            "service_id": f.get("service_id", type=int)}, None
 
 
 @app.route("/formateur/cours/nouveau", methods=["GET", "POST"])
@@ -1175,13 +1197,13 @@ def course_new():
         else:
             cur = get_db().execute(
                 "INSERT INTO courses (title, category, level, description, case_study, fee_amount, pass_mark, "
-                "published, start_date, end_date, schedule, location, seats, registration_open, trainer_id) "
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "published, start_date, end_date, schedule, location, seats, registration_open, trainer_id, service_id) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (data["title"], data["category"], data["level"], data["description"], data["case_study"],
                  data["fee_amount"], data["pass_mark"], data["published"], data["start_date"], data["end_date"],
-                 data["schedule"], data["location"], data["seats"], data["registration_open"], g.user["id"]))
+                 data["schedule"], data["location"], data["seats"], data["registration_open"], g.user["id"], data["service_id"]))
             get_db().commit()
-            flash("Cours créé. Ajoutez maintenant des leçons.", "ok")
+            flash("Formation créée. Ajoutez maintenant les leçons et ressources de révision.", "ok")
             return redirect(url_for("course_manage", course_id=cur.lastrowid))
     services = get_db().execute("SELECT id, name FROM services WHERE active=1 ORDER BY name").fetchall()
     return render_template("formateur/course_form.html", course=None, levels=LEVELS, services=services)
@@ -1232,13 +1254,137 @@ def course_manage(course_id):
     exam = get_exam(course_id)
     exam_nb_questions = 0
     exam_nb_attempts = 0
+    resource_count = get_db().execute("SELECT COUNT(*) FROM resources WHERE course_id=?", (course_id,)).fetchone()[0]
     if exam:
         exam_nb_questions = get_db().execute("SELECT COUNT(*) FROM exam_questions WHERE exam_id=?",
                                              (exam["id"],)).fetchone()[0]
         exam_nb_attempts = get_db().execute("SELECT COUNT(*) FROM exam_attempts WHERE exam_id=?",
                                             (exam["id"],)).fetchone()[0]
     return render_template("formateur/course_manage.html", course=course, lessons=lessons, pending=pending,
-                           exam=exam, exam_nb_questions=exam_nb_questions, exam_nb_attempts=exam_nb_attempts)
+                           resource_count=resource_count, exam=exam, exam_nb_questions=exam_nb_questions,
+                           exam_nb_attempts=exam_nb_attempts)
+
+
+# ------------------------------------------------------------------ ressources de révision
+@app.route("/ressources")
+@login_required
+def my_resources():
+    if g.user["role"] == "formateur":
+        return redirect(url_for("trainer_dashboard"))
+    if g.user["role"] == "secretaire":
+        return redirect(url_for("sec_dashboard"))
+    rows = get_db().execute(
+        "SELECT r.*, c.title AS course_title FROM resources r JOIN courses c ON c.id=r.course_id "
+        "JOIN enrollments e ON e.course_id=c.id AND e.user_id=? AND e.status='approved' "
+        "WHERE r.published=1 ORDER BY c.title, r.kind, r.title", (g.user["id"],)
+    ).fetchall()
+    return render_template("my_resources.html", resources=rows, resource_kinds=RESOURCE_KINDS)
+
+
+@app.route("/apprendre/<int:course_id>/ressources")
+@login_required
+def course_resources(course_id):
+    course = get_course(course_id)
+    mode = course_access(course)
+    resources = resources_of(course_id, published_only=(mode == "learner"))
+    return render_template("resources.html", course=course, resources=resources, mode=mode,
+                           resource_kinds=RESOURCE_KINDS)
+
+
+@app.route("/ressources/<int:resource_id>")
+@login_required
+def resource_view(resource_id):
+    resource = get_db().execute("SELECT * FROM resources WHERE id=?", (resource_id,)).fetchone()
+    if resource is None:
+        abort(404)
+    course = get_course(resource["course_id"])
+    mode = course_access(course)
+    if mode == "learner" and not resource["published"]:
+        abort(404)
+    return render_template("resource_view.html", course=course, resource=resource,
+                           resource_kind=RESOURCE_KINDS.get(resource["kind"], "Ressource"),
+                           file_url=resource_file_url(resource))
+
+
+@app.route("/media/ressource/<path:name>")
+@login_required
+def resource_file_proxy(name):
+    if not str(name).startswith("resources/") or not _storage_enabled():
+        abort(404)
+    try:
+        raw = _storage_request(
+            "POST",
+            f"object/sign/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe='')}/{urllib.parse.quote(name, safe='/')}",
+            body=json.dumps({"expiresIn": SUPABASE_STORAGE_SIGNED_TTL}),
+            content_type="application/json",
+        )
+        data = json.loads(raw.decode("utf-8"))
+        signed = data.get("signedURL") or data.get("signedUrl")
+        if not signed:
+            raise RuntimeError("URL signée absente de la réponse Supabase.")
+        if not signed.startswith("http"):
+            if signed.startswith("/storage/v1/"):
+                signed = f"{SUPABASE_URL}{signed}"
+            else:
+                signed = f"{SUPABASE_URL}/storage/v1/{signed.lstrip('/')}"
+        return redirect(signed)
+    except (RuntimeError, ValueError, json.JSONDecodeError, urllib.error.URLError):
+        app.logger.exception("Impossible de récupérer la ressource Supabase %s", name)
+        abort(404)
+
+
+@app.route("/formateur/cours/<int:course_id>/ressources", methods=["GET", "POST"])
+@trainer_required
+def resource_manage(course_id):
+    course = own_course(course_id)
+    conn = get_db()
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        kind = request.form.get("kind", "support")
+        description = request.form.get("description", "").strip()
+        content = request.form.get("content", "").strip()
+        url = request.form.get("url", "").strip()
+        if kind not in RESOURCE_KINDS:
+            kind = "support"
+        if url and not re.match(r"^https?://", url, re.IGNORECASE):
+            flash("Le lien doit commencer par http:// ou https://.", "bad")
+            return redirect(url_for("resource_manage", course_id=course_id))
+        if len(title) < 3:
+            flash("Donnez un titre à la ressource.", "bad")
+            return redirect(url_for("resource_manage", course_id=course_id))
+        try:
+            file_path, file_name = save_resource_file(request.files.get("file"))
+        except ValueError as exc:
+            flash(str(exc), "bad")
+            return redirect(url_for("resource_manage", course_id=course_id))
+        if not content and not url and not file_path:
+            flash("Ajoutez un contenu, un lien ou un fichier à la ressource.", "bad")
+            return redirect(url_for("resource_manage", course_id=course_id))
+        conn.execute(
+            "INSERT INTO resources (course_id,title,kind,description,content,url,file_path,file_name,published,created_by) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            (course_id, title, kind, description, content, url, file_path, file_name, 1, g.user["id"])
+        )
+        conn.commit()
+        flash("Ressource ajoutée. Elle est maintenant disponible dans l'espace stagiaire.", "ok")
+        return redirect(url_for("resource_manage", course_id=course_id))
+    resources = resources_of(course_id)
+    return render_template("formateur/resources.html", course=course, resources=resources,
+                           resource_kinds=RESOURCE_KINDS)
+
+
+@app.route("/formateur/ressources/<int:resource_id>/supprimer", methods=["POST"])
+@trainer_required
+def resource_delete(resource_id):
+    resource = get_db().execute("SELECT * FROM resources WHERE id=?", (resource_id,)).fetchone()
+    if resource is None:
+        abort(404)
+    course = own_course(resource["course_id"])
+    remove_resource_file(resource["file_path"])
+    get_db().execute("DELETE FROM resources WHERE id=?", (resource_id,))
+    get_db().commit()
+    flash("Ressource supprimée.", "ok")
+    return redirect(url_for("resource_manage", course_id=course["id"]))
 
 
 # --- examen final (distinct des quiz de leçon : fenêtre programmée, tentatives limitées, chrono)
@@ -1383,6 +1529,58 @@ def _storage_request(method, path, body=None, content_type=None):
         raise RuntimeError(f"Supabase Storage ({exc.code}) : {detail[:300]}") from exc
     except urllib.error.URLError as exc:
         raise RuntimeError("Supabase Storage est momentanément inaccessible.") from exc
+
+
+def resource_file_url(resource):
+    if not resource or not resource["file_path"]:
+        return ""
+    path = str(resource["file_path"])
+    if _storage_enabled() and path.startswith("resources/"):
+        return url_for("resource_file_proxy", name=path)
+    return url_for("static", filename=f"uploads/{os.path.basename(path)}")
+
+
+def save_resource_file(file):
+    if not file or not file.filename:
+        return None, None
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
+    allowed = {"pdf","doc","docx","ppt","pptx","xls","xlsx","csv","txt","zip"}
+    if ext not in allowed:
+        raise ValueError("Fichier non accepté. Formats autorisés : PDF, Word, PowerPoint, Excel, CSV, TXT ou ZIP.")
+    safe_name = secure_filename(file.filename)
+    if not safe_name:
+        raise ValueError("Nom de fichier invalide.")
+    if _storage_enabled():
+        name = f"resources/{uuid.uuid4().hex[:12]}_{safe_name}"
+        _storage_request(
+            "POST",
+            f"object/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe='')}/{urllib.parse.quote(name, safe='')}",
+            body=file.read(),
+            content_type=file.mimetype or "application/octet-stream",
+        )
+        return name, safe_name
+    name = f"{uuid.uuid4().hex[:12]}_{safe_name}"
+    file.save(os.path.join(UPLOAD_FOLDER, name))
+    return name, safe_name
+
+
+def remove_resource_file(name):
+    if not name:
+        return
+    if _storage_enabled() and str(name).startswith("resources/"):
+        try:
+            _storage_request(
+                "POST",
+                f"object/remove/{urllib.parse.quote(SUPABASE_STORAGE_BUCKET, safe='')}",
+                body=json.dumps({"prefixes": [name]}),
+                content_type="application/json",
+            )
+        except RuntimeError:
+            app.logger.exception("Impossible de supprimer la ressource Supabase %s", name)
+        return
+    path = os.path.join(UPLOAD_FOLDER, os.path.basename(name))
+    if os.path.exists(path):
+        os.remove(path)
 
 
 def save_image(file):
