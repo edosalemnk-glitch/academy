@@ -3,6 +3,20 @@
 <h1>{{ exam.title }}</h1>
 <div class="flash warn noprint" id="timer-box">Temps restant : <strong id="timer">--:--</strong></div>
 <p class="meta">Réussite à partir de {{ exam.pass_mark }} %. La soumission est automatique lorsque le temps est écoulé.</p>
+{% if practical_exercises %}
+<section class="card" style="margin:18px 0;border-left:5px solid var(--river)">
+  <span class="resource-kicker">ÉPREUVES PRATIQUES</span>
+  <h2>Exercices sélectionnés par le formateur</h2>
+  <p class="meta">Réalisez ces travaux sur poste pendant la séance d’évaluation. Ces exercices pratiques sont sélectionnés séparément des questions à correction automatique.</p>
+  {% for ex in practical_exercises %}
+  <article class="card" style="margin:12px 0;background:#f7f9fa">
+    <div class="row between"><strong>{{ ex.title }}</strong><span class="tag">{{ ex.module|upper }}</span></div>
+    <p>{{ ex.description }}</p>
+    <div class="resource-content">{{ ex.content|render }}</div>
+  </article>
+  {% endfor %}
+</section>
+{% endif %}
 <form method="post" class="form wide" id="exam-form" style="max-width:780px">{{ csrf_field() }}
 {% for it in items %}
   <fieldset class="q" style="border:1px solid var(--line)"><legend style="font-weight:700;padding:0 6px">Question {{ loop.index }} sur {{ items|length }}</legend>
