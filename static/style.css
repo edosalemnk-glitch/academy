@@ -28,3 +28,17 @@
   .fiche-table th,.fiche-table td{padding:4px 5px}
   .fiche-note{margin-top:8px}
 }
+
+
+/* Vitrine des formations programmées */
+.filter-grid{display:grid;grid-template-columns:2fr repeat(4,minmax(130px,1fr)) auto;gap:10px;align-items:end}
+.filter-grid label{margin:0 0 5px}
+.schedule-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin:10px 0;color:var(--muted);font-size:.88rem}
+.schedule-meta div{display:flex;gap:7px;align-items:flex-start}
+.schedule-panel{display:grid;grid-template-columns:repeat(2,minmax(180px,1fr));gap:10px;margin:18px 0;max-width:760px}
+.schedule-panel>div{background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 13px}
+.schedule-panel strong{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:2px}
+.enrollment-card{position:sticky;top:16px}
+.public-callout{border-top:5px solid var(--sun)}
+@media(max-width:1000px){.filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.filter-grid>div:first-child{grid-column:1/-1}}
+@media(max-width:700px){.schedule-meta,.schedule-panel{grid-template-columns:1fr}.enrollment-card{position:static}}
