@@ -634,7 +634,8 @@ def catalogue():
     level = request.args.get("level", "").strip()
     status = request.args.get("status", "a_venir").strip()
     month = request.args.get("month", "").strip()
-    sql = ("SELECT c.*, u.full_name AS trainer_name, "
+    service_id = request.args.get("service_id", type=int)
+    sql = ("SELECT c.*, u.full_name AS trainer_name, s.name AS service_name, "
            "(SELECT COUNT(*) FROM lessons l WHERE l.course_id=c.id) AS nb_lessons, "
            "(SELECT COUNT(*) FROM enrollments e WHERE e.course_id=c.id "
            "AND e.status IN ('pending','approved')) AS nb_reserved "
@@ -649,6 +650,9 @@ def catalogue():
     if level:
         sql += " AND c.level=?"
         params.append(level)
+    if service_id:
+        sql += " AND c.service_id=?"
+        params.append(service_id)
     courses = list(get_db().execute(sql + " ORDER BY c.start_date NULLS LAST, c.category, c.id", params).fetchall())
     for course in courses:
         course["schedule_state"] = course_schedule_state(course)
@@ -664,6 +668,7 @@ def catalogue():
     levels = [r[0] for r in get_db().execute(
         "SELECT DISTINCT level FROM courses WHERE published=1 ORDER BY level"
     ).fetchall()]
+    services = get_db().execute("SELECT id, name FROM services WHERE active=1 ORDER BY name").fetchall()
     months = sorted({
         str(c["start_date"])[:7] for c in get_db().execute(
             "SELECT start_date FROM courses WHERE published=1 AND start_date IS NOT NULL ORDER BY start_date"
