@@ -526,11 +526,11 @@ def _migrate_course_schedule(conn):
     # reste la source de vérité.
     demo_schedule = [
         ("SQL – Niveau 1 : Fondamentaux", "2026-10-05", "2026-12-04",
-         "Lundi–Vendredi · 08h30–12h30", "INPP Kinshasa-Limete", 25),
+         "Lundi–Vendredi · 08h30–12h30", "INPP Matadi", 25),
         ("SQL – Niveau 2 : Jointures et analyses", "2026-11-02", "2026-12-18",
-         "Lundi–Vendredi · 13h30–17h30", "INPP Kinshasa-Limete", 20),
+         "Lundi–Vendredi · 13h30–17h30", "INPP Matadi", 20),
         ("Bureautique – Gérer ses fichiers et dossiers", "2026-10-12", "2026-11-06",
-         "Lundi–Vendredi · 08h30–12h30", "INPP Kinshasa-Limete", 30),
+         "Lundi–Vendredi · 08h30–12h30", "INPP Matadi", 30),
     ]
     for title, start, end, schedule, location, seats in demo_schedule:
         conn.execute(
