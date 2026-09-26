@@ -1,0 +1,45 @@
+{% extends "base.html" %}{% block title %}{{ service.name }} | INPP Matadi{% endblock %}
+{% block meta_description %}{{ service.name }} de l'INPP Matadi : filières, formateurs et formations programmées.{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('services_public') }}">Services</a> / {{ service.name }}</div>
+<div class="hero">
+  <span class="tag ok">INPP · MATADI</span>
+  <h1>{{ service.name }}</h1>
+  {% if service.chef_name %}<p>Chef de service : <strong>{{ service.chef_name }}</strong></p>{% endif %}
+</div>
+
+<div class="lab service-layout">
+  <section>
+    <h2>Filières du service</h2>
+    <div class="grid">
+      {% for f in filieres %}
+      <article class="card"><span class="tag">{{ f.duration_months }} mois</span><h3>{{ f.name }}</h3>{% if f.metier %}<p class="meta">Métier : {{ f.metier }}</p>{% endif %}<p>Frais matériel : {{ '%g'|format(f.material_fee) }} USD</p></article>
+      {% else %}<div class="card">Aucune filière active n'est encore rattachée à ce service.</div>{% endfor %}
+    </div>
+  </section>
+  <aside>
+    <div class="card">
+      <h2>Formateurs du service</h2>
+      {% for u in formateurs %}<div class="trainer-item"><span class="avatar">{{ u.full_name[:1]|upper }}</span><div><strong>{{ u.full_name }}</strong><div class="meta">Formateur INPP</div></div></div>
+      {% else %}<p class="meta">Les formateurs de ce service seront publiés par le secrétariat.</p>{% endfor %}
+    </div>
+  </aside>
+</div>
+
+<h2>Formations programmées</h2>
+<div class="grid">
+{% for c in courses %}
+<article class="card course-card">
+  <div class="row between"><span class="tag">{{ c.level }}</span><span class="tag {{ 'ok' if c.schedule_state == 'a_venir' else ('warn' if c.schedule_state == 'en_cours' else '') }}">{{ c.schedule_label }}</span></div>
+  <h3><a href="{{ url_for('course_public', course_id=c.id) }}" style="text-decoration:none;color:inherit">{{ c.title }}</a></h3>
+  <div class="schedule-meta">
+    <div><strong>📅</strong> {{ c.start_date[:10] if c.start_date else 'Date à confirmer' }}{% if c.end_date %} → {{ c.end_date[:10] }}{% endif %}</div>
+    <div><strong>🕒</strong> {{ c.schedule or 'Horaire à confirmer' }}</div>
+    <div><strong>📍</strong> {{ c.location or 'INPP Matadi' }}</div>
+    <div><strong>👥</strong> {% if c.seats %}{{ c.nb_reserved }}/{{ c.seats }}{% else %}Places non limitées{% endif %}</div>
+  </div>
+  <div class="row"><a class="btn alt small" href="{{ url_for('course_public', course_id=c.id) }}">Voir la formation</a>{% if c.registration_available %}<a class="btn sun small" href="{{ url_for('course_public', course_id=c.id) }}">S'inscrire</a>{% endif %}</div>
+</article>
+{% else %}<div class="card">Aucune formation programmée dans ce service pour le moment.</div>{% endfor %}
+</div>
+{% endblock %}
