@@ -616,8 +616,10 @@ def robots_txt():
 @app.route("/sitemap.xml")
 def sitemap_xml():
     conn = get_db()
-    urls = [url_for("index"), url_for("catalogue"), url_for("apropos"), url_for("filieres_public"),
-url_for("procedure"), url_for("faq"), url_for("contact"), url_for("login"), url_for("register")]
+    urls = [url_for("index"), url_for("catalogue"), url_for("services_public"), url_for("apropos"),
+url_for("filieres_public"), url_for("procedure"), url_for("faq"), url_for("contact"), url_for("login"), url_for("register")]
+    for s in conn.execute("SELECT id FROM services WHERE active=1"):
+        urls.append(url_for("service_public", service_id=s["id"]))
     for c in conn.execute("SELECT id FROM courses WHERE published=1"):
         urls.append(url_for("course_public", course_id=c["id"]))
     body = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
