@@ -721,12 +721,7 @@ Vérifiez que les formules couvrent toutes les lignes et que le tri conserve les
             exists = conn.execute(
                 "SELECT id FROM resources WHERE course_id=? AND title=?", (course["id"], rtitle)
             ).fetchone()
-            if exists:
-                conn.execute(
-                    "UPDATE resources SET kind=?, description=?, content=?, published=1 WHERE id=?",
-                    (kind, description, content, exists["id"])
-                )
-            else:
+            if not exists:
                 conn.execute(
                     "INSERT INTO resources (course_id,title,kind,description,content,published) VALUES (?,?,?,?,?,1)",
                     (course["id"], rtitle, kind, description, content)
