@@ -351,6 +351,9 @@ FICHIERS = {
     "title": "Bureautique – Gérer ses fichiers et dossiers",
     "category": "Bureautique", "level": "Débutant", "fee": 0,
     "description": "Les bases de l'organisation d'un ordinateur Windows : créer, renommer, copier et déplacer dossiers et fichiers.",
+    "start_date": "2026-10-12", "end_date": "2026-11-06",
+    "schedule": "Lundi–Vendredi · 08h30–12h30", "location": "INPP Kinshasa-Limete",
+    "seats": 30,
     "lessons": [
         ("Créer un dossier", """Un **dossier** range vos fichiers, comme un classeur.
 
@@ -494,6 +497,15 @@ def restore_demo(db):
             cid, lids = _add_course(db, fid, course_data)
         course_ids[course_data["title"]] = cid
         lesson_ids[course_data["title"]] = lids
+        existing_schedule = db.execute(
+            "SELECT start_date, end_date, schedule, location, seats FROM courses WHERE id=?", (cid,)
+        ).fetchone()
+        if existing_schedule and not existing_schedule["start_date"]:
+            db.execute(
+                "UPDATE courses SET start_date=?, end_date=?, schedule=?, location=?, seats=?, registration_open=? WHERE id=?",
+                (course_data.get("start_date"), course_data.get("end_date"), course_data.get("schedule", ""),
+                 course_data.get("location", ""), course_data.get("seats", 0), course_data.get("registration_open", 1), cid)
+            )
 
     c1 = course_ids[SQL1["title"]]
     c2 = course_ids[SQL2["title"]]
