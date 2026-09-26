@@ -386,11 +386,28 @@ Pour sélectionner plusieurs fichiers : maintenez Ctrl et cliquez sur chacun, ou
 }
 
 
+def _default_case_study(data):
+    category = data.get("category", "").lower()
+    title = data.get("title", "").lower()
+    if "bases de données" in category and "niveau 1" in title:
+        return ("Vous êtes agent informatique dans un centre de formation. La direction vous demande de retrouver "
+                "rapidement les stagiaires, leurs résultats et les informations utiles dans une base de données. "
+                "Votre mission : interroger les tables, filtrer les données et produire les bons résultats.")
+    if "bases de données" in category and "niveau 2" in title:
+        return ("Le responsable administratif doit consolider les informations pour préparer un rapport mensuel. "
+                "Votre mission : relier les tables, construire des requêtes avancées et extraire des indicateurs fiables.")
+    if "bureautique" in category:
+        return ("Le secrétariat reçoit chaque semaine des documents de plusieurs services. Votre mission : "
+                "organiser les fichiers, retrouver rapidement un document et éviter les erreurs de classement.")
+    return data.get("case_study", "")
+
+
 def _add_course(db, trainer_id, data):
     cur = db.execute(
-        "INSERT INTO courses (title, category, level, description, fee_amount, pass_mark, trainer_id) "
+        "INSERT INTO courses (title, category, level, description, case_study, fee_amount, pass_mark, trainer_id) "
         "VALUES (?,?,?,?,?,70,?)",
-        (data["title"], data["category"], data["level"], data["description"], data["fee"], trainer_id))
+        (data["title"], data["category"], data["level"], data["description"], _default_case_study(data),
+         data["fee"], trainer_id))
     course_id = cur.lastrowid
     lesson_ids = []
     for pos, (title, content, questions) in enumerate(data["lessons"], start=1):
