@@ -1325,6 +1325,81 @@ def course_resources(course_id):
                            resource_kinds=RESOURCE_KINDS)
 
 
+def _resource_pdf_response(resources, course, filename):
+    """Génère un PDF propre des ressources/exercices sélectionnés."""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        rightMargin=18*mm, leftMargin=18*mm, topMargin=28*mm, bottomMargin=18*mm,
+        title=filename.replace(".pdf", ""), author="INPP Matadi",
+    )
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle("ResourcePDFTitle", parent=styles["Title"], fontName="Helvetica-Bold",
+                                 fontSize=17, leading=20, alignment=TA_CENTER,
+                                 textColor=colors.HexColor("#2e6da4"), spaceAfter=5*mm)
+    h_style = ParagraphStyle("ResourcePDFH", parent=styles["Heading2"], fontName="Helvetica-Bold",
+                             fontSize=12, leading=15, textColor=colors.HexColor("#2e6da4"),
+                             spaceBefore=4*mm, spaceAfter=2*mm)
+    body = ParagraphStyle("ResourcePDFBody", parent=styles["BodyText"], fontName="Helvetica",
+                          fontSize=9.5, leading=13, spaceAfter=2.5*mm)
+    meta = ParagraphStyle("ResourcePDFMeta", parent=body, fontSize=8, leading=10,
+                          textColor=colors.HexColor("#666666"))
+    story = [
+        Paragraph("INPP MATADI", title_style),
+        Paragraph(f"<b>{resource_escape(course['title'])}</b>", body),
+        Paragraph("Ressources pédagogiques · Exercices et supports de révision", meta),
+        Spacer(1, 3*mm),
+    ]
+    for idx, resource in enumerate(resources, 1):
+        module = str(resource["module"] or "general").upper()
+        kind = RESOURCE_KINDS.get(resource["kind"], "Ressource")
+        story.append(Paragraph(f"{idx}. {resource_escape(resource['title'])}", h_style))
+        story.append(Paragraph(f"<b>Module :</b> {resource_escape(module)} &nbsp;&nbsp; <b>Type :</b> {resource_escape(kind)}", meta))
+        if resource["description"]:
+            story.append(Paragraph(resource_escape(resource["description"]), body))
+        if resource["content"]:
+            raw = str(resource["content"]).replace("\r", "")
+            for part in re.split(r"\n\s*\n", raw):
+                part = part.strip()
+                if part:
+                    story.append(Paragraph(resource_escape(part).replace("\n", "<br/>"), body))
+        story.append(Spacer(1, 2*mm))
+    doc.build(buffer, onFirstPage=_pdf_logo, onLaterPages=_pdf_logo)
+    buffer.seek(0)
+    return Response(buffer.getvalue(), mimetype="application/pdf",
+                    headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
+
+def resource_escape(value):
+    return (str(value or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            .replace('"', "&quot;"))
+
+
+@app.route("/ressources/<int:resource_id>.pdf")
+@login_required
+def resource_pdf(resource_id):
+    resource = get_db().execute("SELECT * FROM resources WHERE id=?", (resource_id,)).fetchone()
+    if resource is None:
+        abort(404)
+    course = get_course(resource["course_id"])
+    mode = course_access(course)
+    if mode == "learner" and not resource["published"]:
+        abort(404)
+    return _resource_pdf_response([resource], course, f"INPP-Matadi-{resource_id}.pdf")
+
+
+@app.route("/apprendre/<int:course_id>/ressources.pdf")
+@login_required
+def course_resources_pdf(course_id):
+    course = get_course(course_id)
+    mode = course_access(course)
+    resources = resources_of(course_id, published_only=(mode == "learner"))
+    if not resources:
+        flash("Aucune ressource disponible pour générer le PDF.", "info")
+        return redirect(url_for("course_resources", course_id=course_id))
+    return _resource_pdf_response(resources, course, f"INPP-Matadi-{course_id}-ressources.pdf")
+
+
 @app.route("/ressources/<int:resource_id>")
 @login_required
 def resource_view(resource_id):
