@@ -2573,16 +2573,16 @@ def procedure_pdf():
 
     bank = (
         f"<b>POUR LE PAIEMENT</b><br/>"
-        f"{esc(cfg.bank_name or 'Banque à renseigner')}<br/>"
-        f"<b>N° CPT Dollars :</b> {esc(cfg.bank_account_usd or '—')}<br/>"
-        f"<b>N° CPT Francs :</b> {esc(cfg.bank_account_fc or '—')}"
+        f"{esc(cfg.get('bank_name') or 'Banque à renseigner')}<br/>"
+        f"<b>N° CPT Dollars :</b> {esc(cfg.get('bank_account_usd') or '—')}<br/>"
+        f"<b>N° CPT Francs :</b> {esc(cfg.get('bank_account_fc') or '—')}"
     )
 
     fee_table = Table([
         [
-            Paragraph(f"<b>1. Inscription</b><br/>{fc(cfg.inscription_fee)}", cell),
-            Paragraph(f"<b>2. Lettre de stage</b><br/>{fc(cfg.lettre_stage_fee)}<br/><font size='5.8'>Payable après la formation</font>", cell),
-            Paragraph(f"<b>3. Frais de jury</b><br/>{fc(cfg.jury_fee)}", cell),
+            Paragraph(f"<b>1. Inscription</b><br/>{fc(cfg.get('inscription_fee'))}", cell),
+            Paragraph(f"<b>2. Lettre de stage</b><br/>{fc(cfg.get('lettre_stage_fee'))}<br/><font size='5.8'>Payable après la formation</font>", cell),
+            Paragraph(f"<b>3. Frais de jury</b><br/>{fc(cfg.get('jury_fee'))}", cell),
             Paragraph(bank, cell),
         ]
     ], colWidths=[35*mm, 48*mm, 35*mm, 62*mm])
@@ -2601,7 +2601,7 @@ def procedure_pdf():
         Spacer(1, 2.5*mm),
         Paragraph(
             f"<b>Les frais de participation (minerval) s'élèvent à "
-            f"{fc(cfg.formation_fee)} / mois pour toutes les filières.</b>",
+            f"{fc(cfg.get('formation_fee'))} / mois pour toutes les filières.</b>",
             ParagraphStyle("Minerval", parent=cell, fontName="Helvetica-Bold",
                            fontSize=7.2, leading=9, textColor=dark),
         ),
