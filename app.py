@@ -13,6 +13,12 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import json
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from datetime import datetime, timedelta
 from functools import wraps
 
@@ -1823,6 +1829,126 @@ def section_notice_decide(sid, nid):
 def procedure():
     filieres, groups = public_catalogue()
     return render_template("procedure.html", cfg=get_settings(), filieres=filieres, groups=groups)
+
+
+def _pdf_logo(canvas, doc):
+    """Dessine un en-tête institutionnel INPP vectoriel, sans dépendance externe."""
+    width, height = landscape(A4)
+    canvas.saveState()
+    blue = colors.HexColor("#2e6da4")
+    canvas.setStrokeColor(blue)
+    canvas.setFillColor(blue)
+    canvas.setLineWidth(1.2)
+    canvas.ellipse(17*mm, height-28*mm, 49*mm, height-12*mm, stroke=1, fill=0)
+    canvas.setFont("Helvetica-Bold", 13)
+    canvas.drawCentredString(33*mm, height-23*mm, "INPP")
+    canvas.setFont("Helvetica-Bold", 11)
+    canvas.drawString(55*mm, height-17*mm, "INSTITUT NATIONAL DE PRÉPARATION PROFESSIONNELLE")
+    canvas.setFont("Helvetica", 8)
+    canvas.drawString(55*mm, height-22*mm, "RÉPUBLIQUE DÉMOCRATIQUE DU CONGO")
+    canvas.setStrokeColor(colors.HexColor("#b9c9d8"))
+    canvas.line(17*mm, height-31*mm, width-17*mm, height-31*mm)
+    canvas.setFont("Helvetica", 7)
+    canvas.setFillColor(colors.HexColor("#666666"))
+    canvas.drawRightString(width-17*mm, 8*mm, f"Page {doc.page}")
+    canvas.restoreState()
+
+
+@app.route("/procedure-inscription.pdf")
+def procedure_pdf():
+    """Génère la fiche PDF directement depuis le catalogue en base."""
+    cfg = get_settings()
+    _, groups = public_catalogue()
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=landscape(A4),
+        rightMargin=12*mm, leftMargin=12*mm, topMargin=37*mm, bottomMargin=13*mm,
+        title="Fiche de renseignements INPP", author="INPP Académie",
+    )
+    styles = getSampleStyleSheet()
+    cell = ParagraphStyle(
+        "FicheCell", parent=styles["BodyText"], fontName="Helvetica",
+        fontSize=7.2, leading=8.5,
+    )
+    head = ParagraphStyle(
+        "FicheHead", parent=cell, fontName="Helvetica-Bold",
+        fontSize=7.5, leading=9, alignment=TA_CENTER, textColor=colors.white,
+    )
+    title = ParagraphStyle(
+        "FicheTitle", parent=styles["Title"], fontName="Helvetica-Bold",
+        fontSize=17, leading=20, alignment=TA_CENTER,
+        textColor=colors.HexColor("#2e6da4"), spaceAfter=3*mm,
+    )
+    story = [
+        Paragraph("FICHE DE RENSEIGNEMENTS", title),
+        Paragraph("Catalogue des filières · métiers · durées · frais matériels et frais généraux",
+                  ParagraphStyle("Sub", parent=cell, alignment=TA_CENTER, fontSize=8.5)),
+        Spacer(1, 4*mm),
+    ]
+
+    def fc(value):
+        return f"{float(value):,.0f}".replace(",", " ") + " FC"
+
+    bank = (f"<b>Pour le paiement :</b> {cfg.bank_name or 'Banque à renseigner'}"
+            f"<br/>Compte USD : {cfg.bank_account_usd or '—'}"
+            f"<br/>Compte FC : {cfg.bank_account_fc or '—'}")
+    fees_table = Table([[
+        Paragraph(f"<b>1. Inscription :</b> {fc(cfg.inscription_fee)}", cell),
+        Paragraph(f"<b>2. Lettre de stage :</b> {fc(cfg.lettre_stage_fee)}", cell),
+        Paragraph(f"<b>3. Frais de jury :</b> {fc(cfg.jury_fee)}", cell),
+        Paragraph(bank, cell),
+    ]], colWidths=[45*mm, 55*mm, 45*mm, 120*mm])
+    fees_table.setStyle(TableStyle([
+        ("BOX",(0,0),(-1,-1),0.7,colors.HexColor("#8ea8bd")),
+        ("INNERGRID",(0,0),(-1,-1),0.35,colors.HexColor("#c7d4df")),
+        ("BACKGROUND",(0,0),(-1,-1),colors.HexColor("#f5f8fb")),
+        ("VALIGN",(0,0),(-1,-1),"MIDDLE"),
+        ("LEFTPADDING",(0,0),(-1,-1),6), ("RIGHTPADDING",(0,0),(-1,-1),6),
+        ("TOPPADDING",(0,0),(-1,-1),5), ("BOTTOMPADDING",(0,0),(-1,-1),5),
+    ]))
+    story += [
+        fees_table, Spacer(1, 3*mm),
+        Paragraph(f"<b>Minerval :</b> {fc(cfg.formation_fee)} / mois pour toutes les filières. "
+                  "Les frais matériels sont payés une fois pendant la durée de la formation.", cell),
+        Spacer(1, 3*mm),
+    ]
+
+    data = [[Paragraph("SERVICE", head), Paragraph("FILIÈRE", head),
+             Paragraph("MÉTIER", head), Paragraph("DURÉE", head),
+             Paragraph("FRAIS MATÉRIELS", head)]]
+    for group in groups:
+        first = True
+        for f in group["rows"]:
+            data.append([
+                Paragraph(group["name"].replace("Service ", "", 1) if first else "", cell),
+                Paragraph(str(f["name"] or "—"), cell),
+                Paragraph(str(f["metier"] or "—"), cell),
+                Paragraph(f"{f['duration_months']} mois", cell),
+                Paragraph(f"{float(f['material_fee']):g} USD", cell),
+            ])
+            first = False
+
+    table = Table(data, repeatRows=1,
+                  colWidths=[40*mm, 70*mm, 88*mm, 30*mm, 35*mm])
+    table.setStyle(TableStyle([
+        ("BACKGROUND",(0,0),(-1,0),colors.HexColor("#2e6da4")),
+        ("TEXTCOLOR",(0,0),(-1,0),colors.white),
+        ("BOX",(0,0),(-1,-1),0.8,colors.HexColor("#2e6da4")),
+        ("INNERGRID",(0,0),(-1,-1),0.35,colors.HexColor("#9fb5c7")),
+        ("VALIGN",(0,0),(-1,-1),"MIDDLE"),
+        ("ALIGN",(3,1),(-1,-1),"CENTER"),
+        ("LEFTPADDING",(0,0),(-1,-1),4), ("RIGHTPADDING",(0,0),(-1,-1),4),
+        ("TOPPADDING",(0,0),(-1,-1),3), ("BOTTOMPADDING",(0,0),(-1,-1),3),
+    ]))
+    story += [
+        table, Spacer(1, 3*mm),
+        Paragraph("<b>NB :</b> Les frais payés ne sont pas remboursables. "
+                  "Les montants affichés correspondent aux valeurs actuellement enregistrées dans le catalogue.", cell),
+    ]
+    doc.build(story, onFirstPage=_pdf_logo, onLaterPages=_pdf_logo)
+    response = Response(buffer.getvalue(), mimetype="application/pdf")
+    response.headers["Content-Disposition"] = 'attachment; filename="fiche-renseignements-INPP.pdf"'
+    return response
 
 
 @app.route("/carte/<code>")
