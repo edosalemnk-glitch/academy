@@ -6,6 +6,7 @@
   <p><strong>Durée :</strong> {{ exam.duration_minutes }} minutes, une fois commencé — pas de pause.</p>
   <p><strong>Seuil de réussite :</strong> {{ exam.pass_mark }} %</p>
   <p><strong>Tentatives :</strong> {{ attempts|length }} / {{ exam.max_attempts }} utilisée(s)</p>
+  <p><strong>Épreuves pratiques :</strong> {{ practical_count }} exercice(s) sélectionné(s) par le formateur</p>
   {% if exam.opens_at or exam.closes_at %}
   <p><strong>Créneau :</strong>
     {% if exam.opens_at %}à partir du {{ exam.opens_at }}{% endif %}
