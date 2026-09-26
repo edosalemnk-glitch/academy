@@ -32,6 +32,16 @@ Séparée de l'espace connecté, une vitrine accessible sans compte donne à l'I
 - **Catalogue** (déjà existant) et **procédure d'inscription** restent accessibles depuis la vitrine.
 - **Référencement** : `robots.txt` et `sitemap.xml` générés automatiquement ; chaque page publique a sa propre balise `<meta name="description">`.
 
+## Formations programmées : vitrine publique et inscription
+
+Le catalogue public fonctionne aussi comme un **planning de publicité des sessions INPP** :
+
+- les visiteurs voient par défaut les formations à venir avec dates, horaires, lieu et places ;
+- filtres par recherche, domaine, niveau, période et mois de début ;
+- téléchargement d'un **PDF de programmation** correspondant aux filtres ;
+- un visiteur peut ouvrir une session, créer son compte stagiaire et envoyer sa demande d'inscription directement au formateur ;
+- le formateur programme chaque session depuis *Modifier le cours* (dates, horaires, lieu, capacité et ouverture des inscriptions).
+
 ## Examen final (distinct des quiz de leçon)
 
 Un cours en ligne peut avoir, en plus des quiz de chaque leçon, un **examen final** unique, géré par le formateur depuis *Gérer le cours* :
