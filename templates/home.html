@@ -1,9 +1,9 @@
 {% extends "base.html" %}{% block title %}Formation professionnelle à l'INPP Matadi | Kongo-Central{% endblock %}
-{% block meta_description %}INPP Académie : le site de l'Institut National de Préparation Professionnelle. Informez-vous sur les filières, inscrivez-vous au centre et, une fois stagiaire, entraînez-vous en ligne entre les séances.{% endblock %}
+{% block meta_description %}INPP Matadi : le site de l'Institut National de Préparation Professionnelle. Informez-vous sur les filières, inscrivez-vous au centre et, une fois stagiaire, entraînez-vous en ligne entre les séances.{% endblock %}
 {% block content %}
 <section class="hero">
   <h1>Formation professionnelle à l'INPP Matadi</h1>
-  <p>Retrouvez ici les filières de l'Institut National de Préparation Professionnelle à Matadi, la procédure et les frais d'inscription, et — une fois inscrit au centre — des cours en ligne pour vous entraîner entre les séances en salle.</p>
+  <p>Retrouvez ici les filières de l'Institut National de Préparation Professionnelle à Matadi, la procédure et les frais d'inscription, et — une fois inscrit au centre — des ressources de révision pour vous entraîner entre les séances en salle.</p>
   <div class="row">
     <a class="btn sun" href="{{ url_for('procedure') }}">S'inscrire au centre</a>
     <a class="btn alt" href="{{ url_for('catalogue') }}" style="background:#fff">Voir les formations programmées</a>
@@ -38,7 +38,7 @@
 {% endif %}
 <div class="stats">
   <div class="stat"><b>{{ stats.filieres }}</b><span class="meta">filières ouvertes</span></div>
-  <div class="stat"><b>{{ stats.cours }}</b><span class="meta">cours en ligne publiés</span></div>
+  <div class="stat"><b>{{ stats.cours }}</b><span class="meta">formations publiées</span></div>
   <div class="stat"><b>{{ stats.stagiaires }}</b><span class="meta">stagiaires inscrits au centre</span></div>
   <div class="stat"><b>{{ stats.certificats }}</b><span class="meta">certificats délivrés</span></div>
 </div>
@@ -46,7 +46,7 @@
 <div class="grid" style="margin-bottom:26px">
   <div class="card"><h3>1. Vous vous informez ici</h3><p>Sans créer de compte, consultez les filières, les frais et la procédure d'inscription au centre. C'est ouvert à tous, où que vous soyez.</p></div>
   <div class="card"><h3>2. La formation se donne au centre</h3><p>L'explication en direct — travaux pratiques, matériel, salles de l'INPP — se fait en présentiel avec un formateur, comme dans les académies partenaires de programmes tels que Cisco NetAcad.</p></div>
-  <div class="card"><h3>3. Le site sert à s'entraîner et à passer l'examen</h3><p>Une fois inscrit et validé par votre formateur, vous accédez à des leçons, des quiz et un examen final en ligne, pour vous exercer entre les séances et prouver ce que vous savez.</p></div>
+  <div class="card"><h3>3. Le site sert à réviser et à suivre ses résultats</h3><p>Une fois inscrit et validé par votre formateur, vous accédez à des supports de révision, des exercices, des quiz et, lorsqu'il est prévu par le formateur, un examen final. Ces outils accompagnent les séances en présentiel.</p></div>
 </div>
 <div class="card" style="margin-bottom:26px"><h3>Vous êtes déjà stagiaire ou formateur ?</h3><p class="meta">Connectez-vous pour accéder à votre espace. Un stagiaire non encore inscrit au centre peut créer un compte pour parcourir le catalogue et demander une inscription en ligne.</p><div class="row"><a class="btn" href="{{ url_for('login') }}">Se connecter</a><a class="btn alt" href="{{ url_for('register') }}">Créer un compte</a></div></div>
 <p class="meta">Besoin de comprendre en détail le fonctionnement du site ? Consultez la <a href="{{ url_for('apropos') }}">page À propos</a> ou la <a href="{{ url_for('faq') }}">FAQ</a>.</p>
