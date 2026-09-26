@@ -379,7 +379,8 @@ def register():
                 course = conn.execute(
                     "SELECT * FROM courses WHERE id=? AND published=1", (requested_course_id,)
                 ).fetchone()
-            if course and course_registration_capacity(course):
+            joined_course = bool(course and course_registration_capacity(course))
+            if joined_course:
                 conn.execute(
                     "INSERT INTO enrollments (user_id, course_id) VALUES (?,?)",
                     (cur.lastrowid, requested_course_id),
@@ -388,7 +389,10 @@ def register():
             session.clear()
             session["uid"] = cur.lastrowid
             if course:
-                flash("Compte créé. Votre demande d'inscription à cette formation a été envoyée au formateur.", "ok")
+                if joined_course:
+                    flash("Compte créé. Votre demande d'inscription à cette formation a été envoyée au formateur.", "ok")
+                else:
+                    flash("Compte créé. Cette session n'accepte pas actuellement de nouvelles inscriptions.", "warn")
                 return redirect(url_for("course_public", course_id=course["id"]))
             flash("Compte créé. Choisissez une formation et demandez votre inscription.", "ok")
             return redirect(url_for("catalogue"))
