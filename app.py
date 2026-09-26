@@ -18,6 +18,7 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
+from reportlab.lib.utils import ImageReader
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle, LongTable
 from datetime import datetime, timedelta
 from functools import wraps
@@ -2475,12 +2476,26 @@ def _pdf_logo(canvas, doc):
 
     canvas.setFillColor(light)
     canvas.rect(0, height - 34*mm, width, 34*mm, fill=1, stroke=0)
-    canvas.setStrokeColor(blue)
-    canvas.setLineWidth(1.2)
-    canvas.circle(24*mm, height - 17*mm, 10*mm, stroke=1, fill=0)
-    canvas.setFont("Helvetica-Bold", 11)
-    canvas.setFillColor(blue)
-    canvas.drawCentredString(24*mm, height - 20*mm, "INPP")
+    # Emblème officiel stocké dans Supabase Storage.
+    logo_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/branding/inpp-catalogue.jpg"
+    try:
+        with urllib.request.urlopen(logo_url, timeout=4) as resp:
+            logo_bytes = resp.read()
+        logo = ImageReader(io.BytesIO(logo_bytes))
+        canvas.drawImage(
+            logo, 14*mm, height - 29*mm, width=20*mm, height=20*mm,
+            preserveAspectRatio=True, mask="auto",
+        )
+        canvas.setStrokeColor(blue)
+        canvas.setLineWidth(1.2)
+        canvas.circle(24*mm, height - 19*mm, 10*mm, stroke=1, fill=0)
+    except Exception:
+        canvas.setStrokeColor(blue)
+        canvas.setLineWidth(1.2)
+        canvas.circle(24*mm, height - 17*mm, 10*mm, stroke=1, fill=0)
+        canvas.setFont("Helvetica-Bold", 11)
+        canvas.setFillColor(blue)
+        canvas.drawCentredString(24*mm, height - 20*mm, "INPP")
 
     canvas.setFillColor(dark)
     canvas.setFont("Helvetica-Bold", 10)
