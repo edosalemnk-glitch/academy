@@ -1080,6 +1080,10 @@ def exam_take(attempt_id):
     conn = get_db()
     questions = conn.execute("SELECT * FROM exam_questions WHERE exam_id=? ORDER BY id",
                              (attempt["exam_id"],)).fetchall()
+    practical_exercises = conn.execute(
+        "SELECT r.* FROM resources r WHERE r.course_id=? AND r.kind='exercice' AND r.published=1 AND r.exam_selected=1 ORDER BY r.module, r.id",
+        (course["id"],)
+    ).fetchall()
     deadline = (datetime.strptime(attempt["started_at"], "%Y-%m-%d %H:%M:%S")
                + timedelta(minutes=attempt["duration_minutes"]))
     now = datetime.now()
@@ -1111,7 +1115,7 @@ def exam_take(attempt_id):
         random.shuffle(opts)
         shuffled.append({"q": q, "opts": opts})
     return render_template("exam_take.html", course=course, exam=attempt, items=shuffled,
-                           seconds_left=seconds_left)
+                           practical_exercises=practical_exercises, seconds_left=seconds_left)
 
 
 @app.route("/examen/<int:attempt_id>/resultat")
@@ -1380,10 +1384,14 @@ def resource_manage(course_id):
         if not content and not url and not file_path:
             flash("Ajoutez un contenu, un lien ou un fichier à la ressource.", "bad")
             return redirect(url_for("resource_manage", course_id=course_id))
+        module = request.form.get("module", "general").strip().lower()
+        if module not in ("word", "excel", "general"):
+            module = "general"
+        exam_selected = 1 if kind == "exercice" and request.form.get("exam_selected") else 0
         conn.execute(
-            "INSERT INTO resources (course_id,title,kind,description,content,url,file_path,file_name,published,created_by) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (course_id, title, kind, description, content, url, file_path, file_name, 1, g.user["id"])
+            "INSERT INTO resources (course_id,title,kind,module,description,content,url,file_path,file_name,published,created_by,exam_selected,exam_points) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (course_id, title, kind, module, description, content, url, file_path, file_name, 1, g.user["id"], exam_selected, 10)
         )
         conn.commit()
         flash("Ressource ajoutée. Elle est maintenant disponible dans l'espace stagiaire.", "ok")
@@ -1404,6 +1412,23 @@ def resource_delete(resource_id):
     get_db().execute("DELETE FROM resources WHERE id=?", (resource_id,))
     get_db().commit()
     flash("Ressource supprimée.", "ok")
+    return redirect(url_for("resource_manage", course_id=course["id"]))
+
+
+@app.route("/formateur/ressources/<int:resource_id>/examen", methods=["POST"])
+@trainer_required
+def resource_toggle_exam(resource_id):
+    resource = get_db().execute("SELECT * FROM resources WHERE id=?", (resource_id,)).fetchone()
+    if resource is None:
+        abort(404)
+    course = own_course(resource["course_id"])
+    if resource["kind"] != "exercice":
+        flash("Seuls les exercices pratiques peuvent être sélectionnés pour l'examen.", "warn")
+        return redirect(url_for("resource_manage", course_id=course["id"]))
+    new_state = 0 if resource["exam_selected"] else 1
+    get_db().execute("UPDATE resources SET exam_selected=? WHERE id=?", (new_state, resource_id))
+    get_db().commit()
+    flash("Exercice ajouté à l'examen final." if new_state else "Exercice retiré de l'examen final.", "ok")
     return redirect(url_for("resource_manage", course_id=course["id"]))
 
 
