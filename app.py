@@ -2483,6 +2483,50 @@ def card_verify(code):
     return render_template("card_verify.html", reg=reg, valid=summary["en_ordre"])
 
 
+
+@app.route("/secretariat/programmation", methods=["GET", "POST"])
+@secretary_required
+def sec_programming():
+    conn = get_db()
+    if request.method == "POST":
+        course_id = request.form.get("course_id", type=int)
+        if not course_id:
+            abort(400)
+        course = conn.execute("SELECT * FROM courses WHERE id=?", (course_id,)).fetchone()
+        if not course:
+            abort(404)
+        start_date = request.form.get("start_date", "").strip() or None
+        end_date = request.form.get("end_date", "").strip() or None
+        schedule = request.form.get("schedule", "").strip()
+        location = request.form.get("location", "").strip()
+        try:
+            if start_date:
+                datetime.strptime(start_date, "%Y-%m-%d")
+            if end_date:
+                datetime.strptime(end_date, "%Y-%m-%d")
+            if start_date and end_date and end_date < start_date:
+                raise ValueError
+            seats = max(0, int(request.form.get("seats", "0") or 0))
+        except ValueError:
+            flash("Les dates ou le nombre de places sont invalides.", "bad")
+            return redirect(url_for("sec_programming"))
+        conn.execute(
+            "UPDATE courses SET start_date=?, end_date=?, schedule=?, location=?, seats=?, "
+            "registration_open=? WHERE id=?",
+            (start_date, end_date, schedule, location, seats,
+             1 if request.form.get("registration_open") else 0, course_id),
+        )
+        conn.commit()
+        flash("Programmation de la formation mise à jour.", "ok")
+        return redirect(url_for("sec_programming"))
+    courses = conn.execute(
+        "SELECT c.*, s.name AS service_name, u.full_name AS trainer_name, "
+        "(SELECT COUNT(*) FROM enrollments e WHERE e.course_id=c.id AND e.status='approved') AS nb_reserved "
+        "FROM courses c JOIN users u ON u.id=c.trainer_id LEFT JOIN services s ON s.id=c.service_id "
+        "ORDER BY CASE WHEN c.start_date IS NULL THEN 1 ELSE 0 END, c.start_date, c.title"
+    ).fetchall()
+    return render_template("secretariat/programming.html", courses=courses)
+
 @app.route("/secretariat")
 @secretary_required
 def sec_dashboard():
